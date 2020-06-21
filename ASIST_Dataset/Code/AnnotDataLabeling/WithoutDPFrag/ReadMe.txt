@@ -1,1 +1,0 @@
-Softwares in this folder extracts the sketch piece combinations from a folder and labels them.
