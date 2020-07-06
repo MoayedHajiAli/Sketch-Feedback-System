@@ -110,7 +110,7 @@ class ObjectUtil():
 
 
     @staticmethod
-    def calc_turning(a : Point, b : Point, c : Point) -> float:
+    def calc_turning(a:Point, b:Point, c:Point) -> float:
         ba = Vector(b, a)
         bc = Vector(b, c)
         return math.acos(ba * bc / (len(ba) + len(bc)))
