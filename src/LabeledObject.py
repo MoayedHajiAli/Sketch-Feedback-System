@@ -16,6 +16,9 @@ class LabeledObject():
         self.lst = sorted(lst, key = lambda p : p.t)
         self.init_lst = copy.deepcopy(self.lst)
 
+    def __len__(self):
+        return len(self.lst)
+
     def move(self, x, y):
         for p in self.lst:
             p.x += x

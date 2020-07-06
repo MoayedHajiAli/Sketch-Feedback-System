@@ -9,7 +9,6 @@ from Vector import Vector
 
 class ObjectUtil():
 
-    x = 0
     @staticmethod
     def xml_to_LabledObjects(file):
 
@@ -38,7 +37,7 @@ class ObjectUtil():
         return np.array(objects)
 
     @staticmethod
-    def match_size(obj1, obj2):
+    def match_objects_size(obj1, obj2):
 
         if obj1.len() < obj2.len():
             obj1, obj2 = obj2, obj1
@@ -92,23 +91,22 @@ class ObjectUtil():
 
     @staticmethod
     def match_degree(obj1, obj2):
-        ObjectUtil.x += 1
         # math the number of points of the two objects
-        ObjectUtil.match_size(obj1, obj2)
+        ObjectUtil.match_objects_size(obj1, obj2)
         x1, y1, x2, y2 = obj1.get_x(), obj1.get_y(), obj2.get_x(), obj2.get_y()
 
         # calculate the minimum RMSE
-        mn_RMS = 10000000000
+        mn_rms = 10000000000
         a1 = b1 = a2 = b2 = 0
         for i in range(len(x2)):
             for j in range(len(x2)):
                 tmp = ObjectUtil.__calc_slop_RMSE(i, j, x1, y1, x2, y2)
-                if tmp < mn_RMS:
-                    mn_RMS = tmp
+                if tmp < mn_rms:
+                    mn_rms = tmp
                     a1, b1, a2, b2 = x1[i], y1[i], x2[j], y2[j]
 
 
-        return mn_RMS, a1, b1, a2, b2
+        return mn_rms, a1, b1, a2, b2
 
 
     @staticmethod
@@ -117,4 +115,3 @@ class ObjectUtil():
         bc = Vector(b, c)
         return math.acos(ba * bc / (len(ba) + len(bc)))
 
-    
