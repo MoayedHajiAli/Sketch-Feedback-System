@@ -3,10 +3,13 @@ from Point import Point
 from LabeledObject import LabeledObject
 from math import sqrt
 from math import ceil
+import math
 import numpy as np
+from Vector import Vector
 
 class ObjectUtil():
 
+    x = 0
     @staticmethod
     def xml_to_LabledObjects(file):
 
@@ -53,7 +56,6 @@ class ObjectUtil():
                     x1, y1 = obj2.lst[i].x, obj2.lst[i].y
                     x2, y2 = obj2.lst[i+1].x, obj2.lst[i+1].y
                     tm = obj2.lst[i].t
-                    tm2 = obj2.lst[i+1].t
                     kx, ky = (x2-x1)/(t+1), (y2-y1)/(t+1)
                     eps = float(0.0001)
                     x, y, tm = x1 + kx, y1 + ky, tm+eps
@@ -67,38 +69,52 @@ class ObjectUtil():
                         tm += eps
             tem.append(obj2.lst[-1])
             obj2.lst = tem
-        print("tst", obj1.len(), obj2.len())
 
 
     @staticmethod
-    def match_degree(obj1, obj2):
+    def __calc_slop_RMSE(ind1, ind2, x1, y1, x2, y2):
+        ln = len(x1)
+        tot = tot2 = 0
+        for i in range(0, ln):
+            slop1 = slop2 = 0
+            if (x1[(ind1+i)%ln]-x1[ind1]) != 0:
+                slop1 = (y1[(ind1+i)%ln]-y1[ind1])/(x1[(ind1+i)%ln]-x1[ind1])
+            if (x2[(ind2+i)%ln]-x2[ind2]) != 0:
+                slop2 = (y2[(ind2+i)%ln]-y2[ind2])/(x2[(ind2+i)%ln]-x2[ind2])
 
+            tot += sqrt((y2[(ind2+i)%ln] - y1[(ind1+i)%ln] - y2[ind2] + y1[ind1])**2)
+            tot += sqrt((x2[(ind2+i)%ln] - x1[(ind1+i)%ln] - x2[ind2] + x1[ind1])**2)
+            tot2 += sqrt((y2[(ind2 + i) % ln] - y1[(ind1 - i + ln) % ln] - y2[ind2] + y1[ind1]) ** 2)
+            tot2 += sqrt((x2[(ind2 + i) % ln] - x1[(ind1 - i + ln) % ln] - x2[ind2] + x1[ind1]) ** 2)
+            #tot += sqrt((slop1 - slop2) ** 2)
+
+        return min(tot, tot2)
+
+    @staticmethod
+    def match_degree(obj1, obj2):
+        ObjectUtil.x += 1
         # math the number of points of the two objects
         ObjectUtil.match_size(obj1, obj2)
         x1, y1, x2, y2 = obj1.get_x(), obj1.get_y(), obj2.get_x(), obj2.get_y()
-        x1 = x1 + x1
-        y1 = y1 + y1
-
-        print("Match", len(x1), len(x2))
 
         # calculate the minimum RMSE
-        mn_RMS, ind = 1000, 0
+        mn_RMS = 10000000000
+        a1 = b1 = a2 = b2 = 0
         for i in range(len(x2)):
-            k, RMS = i+1, 0
-            for j in range(1, len(x2)):
-                slop1, slop2 = 0, 0
-                if (x1[k] - x1[k - 1]) != 0:
-                    slop1 = (y1[k] - y1[k - 1]) / (x1[k] - x1[k - 1])
-                if (x2[j] - x2[j - 1]) != 0:
-                    slop2 = (y2[j] - y2[j - 1]) / (x2[j] - x2[j - 1])
-                if slop1 != 0:
-                    slop1/=slop1
-                if slop2 != 0:
-                    slop2/=slop2
-                RMS += sqrt((slop1-slop2)**2)
-                k += 1
-            RMS /= len(x2)
-            if RMS < mn_RMS:
-                mn_RMS, ind = RMS, i
+            for j in range(len(x2)):
+                tmp = ObjectUtil.__calc_slop_RMSE(i, j, x1, y1, x2, y2)
+                if tmp < mn_RMS:
+                    mn_RMS = tmp
+                    a1, b1, a2, b2 = x1[i], y1[i], x2[j], y2[j]
 
-        return mn_RMS, x1[ind], y1[ind], x2[0], y2[0]
+
+        return mn_RMS, a1, b1, a2, b2
+
+
+    @staticmethod
+    def calc_turning(a : Point, b : Point, c : Point) -> float:
+        ba = Vector(b, a)
+        bc = Vector(b, c)
+        return math.acos(ba * bc / (len(ba) + len(bc)))
+
+    

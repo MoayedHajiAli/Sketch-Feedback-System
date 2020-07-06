@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
-
+import copy
 
 class LabeledObject():
 
     # list of points
     lst = []
-    init_list = []
+    init_lst = []
 
     def __print_points(self):
         for p in self.lst:
@@ -14,7 +14,7 @@ class LabeledObject():
 
     def __init__(self, lst):
         self.lst = sorted(lst, key = lambda p : p.t)
-        self.init_list = self.lst.copy()
+        self.init_lst = copy.deepcopy(self.lst)
 
     def move(self, x, y):
         for p in self.lst:
@@ -42,5 +42,4 @@ class LabeledObject():
         return [p.y for p in self.lst]
 
     def reset(self):
-        self.lst = self.init_list.copy()
-
+        self.lst = copy.deepcopy(self.init_lst)
