@@ -1,9 +1,11 @@
+from math import sqrt
+
 class Point():
     x = y = t = 0
 
     def __init__(self, x, y, t = -1.0):
-        self.x = int(x)
-        self.y = int(y)
+        self.x = float(x)
+        self.y = float(y)
         self.t = float(t)
 
     def __mul__(self, o):

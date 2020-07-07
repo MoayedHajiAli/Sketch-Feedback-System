@@ -19,8 +19,8 @@ class ObjectUtil():
         # create dictionary for id -> point
         point_dic = {}
         for el in points:
-            x = int(el.attributes['x'].value)
-            y = int(el.attributes['y'].value)
+            x = float(el.attributes['x'].value)
+            y = float(el.attributes['y'].value)
             time = float(el.attributes['time'].value)
             point_dic[el.attributes['id'].value] = (x, y, time)
 
@@ -109,9 +109,6 @@ class ObjectUtil():
         return mn_rms, a1, b1, a2, b2
 
 
-    @staticmethod
-    def calc_turning(a:Point, b:Point, c:Point) -> float:
-        ba = Vector(b, a)
-        bc = Vector(b, c)
-        return math.acos(ba * bc / (len(ba) + len(bc)))
+
+
 
