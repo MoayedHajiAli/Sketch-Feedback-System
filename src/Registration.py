@@ -7,17 +7,18 @@ from autograd import grad
 import numpy as npn
 from autograd.numpy.numpy_boxes import ArrayBox
 from scipy.optimize import minimize
-from Nearest_search import Nearest_search
 
 
 class Registration:
 
-    # obj1 is the target object, and obj2 is the referenced obj
-    def __init__(self, obj1:LabeledObject, obj2:LabeledObject):
+    def __init__(self, obj1, obj2):
         self.obj1 = obj1
         self.obj2 = obj2
-        self.x1, self.y1, self.x2, self.y2 = obj1.get_x(), obj1.get_y(), obj2.get_x(), obj2.get_y()
-        self.target_nn = Nearest_search(self.x1, self.x2)
+        self.p1, self.p2 = self.obj1.get_points(), self.obj2.get_points()
+        self.x1 = np.array([float(p.x) for p in self.p1])
+        self.y1 = np.array([float(p.y) for p in self.p1])
+        self.x2 = np.array([float(p.x) for p in self.p2])
+        self.y2 = np.array([float(p.y) for p in self.p2])
 
     # Transform a single point
     def transform(self, x, y, a11, a12, a13, a21, a22, a23):
@@ -65,6 +66,7 @@ class Registration:
         i = j = 0
 
         for _ in range(len(self.obj1)):
+
             if j + 2 < len(self.obj1):
                 t1 = self.calc_turning(x[j], y[j], x[j + 1], y[j + 1], x[j + 2], y[j + 2]) * a11 / a11
                 t2 = self.calc_turning(self.x1[i], self.y1[i], self.x1[i + 1], self.y1[i + 1], self.x1[i + 2],
@@ -89,9 +91,6 @@ class Registration:
                 if debug:
                     print("length", ln1, ln2, tot)
 
-            reference_nn = Nearest_search(x, y)
-            #tot += self.target_nn.query(x, y)
-            #tot += reference_nn.query(self.x1, self.x2)
             mn = 10000000
             for k in range(len(x)):
                 mn = min(mn, (x[k] - self.x1[i]) ** 2 + (y[k] - self.y1[i]) ** 2)
@@ -148,5 +147,6 @@ class Registration:
 
     # track function for scipy minimize
     @staticmethod
-    def _track(xk):
+    def _track(xk, state):
         print(xk)
+        print(state.fun)

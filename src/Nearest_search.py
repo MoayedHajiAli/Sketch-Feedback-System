@@ -13,5 +13,5 @@ class Nearest_search():
     def query(self, X, Y):
         tot = 0.0
         for x, y in zip(X, Y):
-            tot += self.tree.query([[x, y]], k=1)
+            tot += self.tree.query([[x, y]], k=1)[0]
         return tot

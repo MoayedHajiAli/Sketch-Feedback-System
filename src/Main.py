@@ -22,9 +22,9 @@ def main():
     morph.target[ind2] = ObjectUtil.stroke_restructure(morph.target[ind2], 200)
     ObjectUtil.match_objects_size(morph.original[ind1], morph.target[ind2])
     reg = Registration(morph.target[ind2], morph.original[ind1])
-    # t = reg.optimize()
-    t = np.array([-8.93154420e-01,  3.41597988e-01,  1.26656397e+03 , 4.09735746e-01,
-  6.25855296e-01, -8.38676869e+02])
+    t = reg.optimize()
+  #   t = np.array([ 8.64936522e-01,  2.46025570e-01, -1.25916808e+03, -4.49504403e-01,
+  # 6.89620841e-01,  3.80008269e+02])
     print(t)
     fig = plt.figure()
     ax = fig.add_subplot()
@@ -45,6 +45,7 @@ def main():
     print("Original x", morph.original[ind1].get_x())
     print("Original y", morph.original[ind1].get_y())
     plt.show()
+
 
 def test(obj:LabeledObject):
     fig = plt.figure()
