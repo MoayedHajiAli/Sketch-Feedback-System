@@ -1,13 +1,9 @@
 from scipy.interpolate import interp1d
 import numpy as np
+from Nearest_search import Nearest_search
 
 x = [1, 2, 3]
 y = [4, 5, 6]
-x = np.reshape(x, (3, 1))
-y = np.reshape(y, (3, 1))
-print(x)
-print(y)
-X = np.concatenate((x, y), axis=1)
-print(X)
-
+tree = Nearest_search(x, y)
+print(tree.query([2.1, 1], [5.1, 3]))
 

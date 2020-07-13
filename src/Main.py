@@ -1,4 +1,4 @@
-import LabeledObject
+from LabeledObject import LabeledObject
 from Point import Point
 from Morph import Morph
 from Registration import Registration
@@ -16,15 +16,14 @@ def main():
     # morph.start()
     # test(morph.original[0])
     # return
-    ind1 = 2
-    ind2 = 3
+    ind1 = 4
+    ind2 = 4
     morph.original[ind1] = ObjectUtil.stroke_restructure(morph.original[ind1], 200)
     morph.target[ind2] = ObjectUtil.stroke_restructure(morph.target[ind2], 200)
     ObjectUtil.match_objects_size(morph.original[ind1], morph.target[ind2])
     reg = Registration(morph.target[ind2], morph.original[ind1])
     t = reg.optimize()
-  #   t = np.array([ 8.64936522e-01,  2.46025570e-01, -1.25916808e+03, -4.49504403e-01,
-  # 6.89620841e-01,  3.80008269e+02])
+    #t = np.array([0.11259395, 0.41326422, 0.48151469, 0.11873428, 0.31300482, 0.39850865])
     print(t)
     fig = plt.figure()
     ax = fig.add_subplot()
