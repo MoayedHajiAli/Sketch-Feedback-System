@@ -147,6 +147,5 @@ class Registration:
 
     # track function for scipy minimize
     @staticmethod
-    def _track(xk, state):
+    def _track(xk):
         print(xk)
-        print(state.fun)
