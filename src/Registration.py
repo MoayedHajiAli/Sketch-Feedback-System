@@ -8,12 +8,39 @@ import numpy as npn
 from autograd.numpy.numpy_boxes import ArrayBox
 from scipy.optimize import minimize
 from Nearest_search import Nearest_search
-
+from lapjv import lapjv
 
 class Registration:
 
-    # obj1 is the target stroke and obj2 is the referenced stroke
-    def __init__(self, obj1, obj2):
+    def __init__(self, org_file, tar_file):
+        self.original = ObjectUtil.xml_to_LabledObjects(org_file)
+        self.target = ObjectUtil.xml_to_LabledObjects(tar_file)
+
+    # alpha is a function that serves as the factor of translation
+    def register(self, translation_factor=lambda x:x):
+        n, m = len(self.original), len(self.target)
+        res_matrix = npn.zeros((n, m))
+        tra_matrix = npn.zeros((n, m, 6))
+        for i in range(n):
+            print(i)
+            t = npn.random.rand(6)
+            for j in range(m):
+                d, t = RegisterTwoObjects(self.original[i], self.target[j]).optimize(t)
+                res_matrix[i, j] = d * translation_factor(d)
+                tra_matrix[i, j] = t
+
+        # calculate the minimum assignment
+        row_ind, col_ind, tot = lapjv(res_matrix)
+        print(row_ind)
+        final_transformation = []
+        for i, ind in enumerate(row_ind):
+            final_transformation.append(tra_matrix[i, ind])
+        return final_transformation
+
+
+class RegisterTwoObjects:
+    # obj2 is the target stroke and obj1 is the referenced stroke
+    def __init__(self, obj2, obj1):
         self.obj1 = obj1
         self.obj2 = obj2
         self.x1, self.y1, self.x2, self.y2 = obj1.get_x(), obj1.get_y(), obj2.get_x(), obj2.get_y()
@@ -25,7 +52,7 @@ class Registration:
         b = a21 * x + a22 * y + a23
         return a, b
 
-    # calculate the turning angle based on three points coordincates
+    # calculate the turning angle based on three points coordinates
     def calc_turning(self, x0, y0, x1, y1, x2, y2) -> float:
         dot = (x0 - x1) * (x2 - x1) + (y0 - y1) * (y2 - y1)
         det = (x0 - x1) * (y2 - y1) - (y0 - y1) * (x2 - x1)
@@ -120,16 +147,14 @@ class Registration:
     def find_grad(self):
         return grad(self.calc_dissimilarity, argnum=(0))
 
-    def optimize(self):
+    def optimize(self, t = npn.random.rand(6)):
         # current similarity function uses kd-tree, which is not suitable for symbolic automatic differentiation
         # grad = self.find_grad()
-        t = npn.random.rand(6)
-        res = minimize(self.calc_dissimilarity, t, method="BFGS", options={'gtol': 1e-3, 'disp': True}, callback = Registration._track)
-        print(res)
-        return res.x
 
+        # track function for scipy minimize
+        def _track(xk):
+            pass
+            #print(xk)
 
-    # track function for scipy minimize
-    @staticmethod
-    def _track(xk):
-        print(xk)
+        res = minimize(self.calc_dissimilarity, t, method="BFGS", options={'gtol': 1e-3, 'disp': True}, callback = _track)
+        return res.fun, res.x

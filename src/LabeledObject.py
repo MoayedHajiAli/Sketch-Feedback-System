@@ -3,9 +3,6 @@ import copy
 
 
 class LabeledObject():
-    # list of points
-    lst = []
-    init_lst = []
 
     def __print_points(self):
         for p in self.lst:
@@ -15,14 +12,16 @@ class LabeledObject():
     def __init__(self, lst):
         self.lst = sorted(lst, key=lambda p: p.t)
         self.init_lst = copy.deepcopy(self.lst)
+        self.step_vector = []
 
     def __len__(self):
         return len(self.lst)
 
-    def move(self, x, y):
-        for p in self.lst:
-            p.x += x
-            p.y += y
+    def move_step(self, steps):
+        #print(len(self.step_vector))
+        for p, v in zip(self.lst, self.step_vector):
+            p.x += v[0]/steps
+            p.y += v[1]/steps
 
     def visualize(self, show=True, axis=[], ax=plt.gca()):
         x = [pt.x for pt in self.lst]
@@ -56,4 +55,5 @@ class LabeledObject():
         for p in self.lst:
             x = p.x * t[0] + p.y * t[1] + t[2]
             y = p.x * t[3] + p.y * t[4] + t[5]
+            self.step_vector.append((x - p.x, y - p.y))
             p.x, p.y = x, y
