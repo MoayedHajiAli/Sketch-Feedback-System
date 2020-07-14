@@ -78,7 +78,7 @@ class RegisterTwoObjects:
             ang = cum2 - cum1
         tot = 0.0
 
-        # the following black is dedicated to take into account
+        # the following block is dedicated to take into account
         # the turning angle, length, and distance. I am commenting them until I perform separated tests on them.
 
 

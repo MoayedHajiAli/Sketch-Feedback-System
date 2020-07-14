@@ -50,7 +50,6 @@ class LabeledObject():
         self.lst = copy.deepcopy(self.init_lst)
 
     # for a given transformation parameters, transform all the points
-
     def transform(self, t):
         for p in self.lst:
             x = p.x * t[0] + p.y * t[1] + t[2]
