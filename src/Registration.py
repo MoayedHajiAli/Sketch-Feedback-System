@@ -1,4 +1,4 @@
-from LabeledObject import LabeledObject
+from Stroke import Stroke
 from ObjectUtil import ObjectUtil
 from Vector import Vector
 from Point import Point
@@ -9,25 +9,39 @@ from autograd.numpy.numpy_boxes import ArrayBox
 from scipy.optimize import minimize
 from Nearest_search import Nearest_search
 from lapjv import lapjv
+from RegisterationUtils import RegsiterationUtils
+from UnlabeledObject import UnlabeledObject
+
 
 class Registration:
 
-    def __init__(self, org_file, tar_file):
-        self.original = ObjectUtil.xml_to_LabledObjects(org_file)
-        self.target = ObjectUtil.xml_to_LabledObjects(tar_file)
+    # matplotlib default color cycle
+    # blue -> orange -> green -> red -> purple -> brown -> pink -> gray -> yellow -> light-blue
+    # manual strokes collections for a2 -> b2
+    original_strokes_collection = [[0], [1], [2, 3], [4, 5, 6], [7, 8], [9, 10, 11, 12]]
+    target_strokes_collection = [[0], [1, 2], [3, 4], [5, 6], [7, 8], [9, 10, 11, 12]]
 
-    # alpha is a function that serves as the factor of translation
-    def register(self, translation_factor=lambda x:x):
-        n, m = len(self.original), len(self.target)
+    def __init__(self, org_file, tar_file, re_sampling=1.0, mn_stroke_len=0,
+                 shearing_cost=RegsiterationUtils._shearing_cost, translation_cost=RegsiterationUtils._translation_cost,
+                 rotation_cost=RegsiterationUtils._rotation_cost, scaling_cost=RegsiterationUtils._scaling_cost):
+
+        self.sh_cost, self.tr_cost, self.ro_cost, self.sc_cost = shearing_cost, translation_cost, rotation_cost, scaling_cost
+
+        self.original_obj = ObjectUtil.xml_to_UnlabeledObjects(org_file, self.original_strokes_collection, re_sampling=re_sampling, mn_len=mn_stroke_len)
+        self.target_obj = ObjectUtil.xml_to_UnlabeledObjects(tar_file, self.target_strokes_collection, re_sampling=re_sampling, mn_len=mn_stroke_len)
+
+    def register(self):
+        n, m = len(self.original_obj), len(self.target_obj)
         res_matrix = npn.zeros((n, m))
-        tra_matrix = npn.zeros((n, m, 6))
+        tra_matrix = npn.zeros((n, m, 7))
         for i in range(n):
             print(i)
-            t = npn.random.rand(6)
+            t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
             for j in range(m):
-                d, t = RegisterTwoObjects(self.original[i], self.target[j]).optimize(t)
-                res_matrix[i, j] = d * translation_factor(d)
-                tra_matrix[i, j] = t
+                d, p = RegisterTwoObjects(self.original_obj[i], self.target_obj[j], self.total_cost).optimize(t)
+                res_matrix[i, j] = d/len(self.original_obj[i])
+                tra_matrix[i, j] = p
+        print(res_matrix)
 
         # calculate the minimum assignment
         row_ind, col_ind, tot = lapjv(res_matrix)
@@ -37,50 +51,63 @@ class Registration:
             final_transformation.append(tra_matrix[i, ind])
         return final_transformation
 
+    # obtain total transformation **parameters** cost
+    def total_cost(self, p, mn_x, mx_x, mn_y, mx_y, ln):
+        tot = 0.0
+        tot += self.sc_cost(p[0], p[1], ln)
+        tot += self.ro_cost(p[2], ln)
+        tot += self.sh_cost(p[3], p[4], mn_x, mn_y, mx_x, mx_y, ln)
+        tot += self.tr_cost(p[5], p[6], ln)
+        return tot
+
 
 class RegisterTwoObjects:
-    # obj2 is the target stroke and obj1 is the referenced stroke
-    def __init__(self, obj2, obj1):
-        self.obj1 = obj1
-        self.obj2 = obj2
-        self.x1, self.y1, self.x2, self.y2 = obj1.get_x(), obj1.get_y(), obj2.get_x(), obj2.get_y()
+    # obj2 is the referenced object and obj1 is the target object
+    def __init__(self, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, cost_fun):
+        self.tar_obj = tar_obj
+        self.ref_obj = ref_obj
+        self.total_cost = cost_fun
+        # transform both object to the origin of the referenced object
+        RegsiterationUtils.normalize_coords(self.ref_obj, self.tar_obj, -1)
+
+        self.x1, self.y1 = np.array(tar_obj.get_x()), np.array(tar_obj.get_y())
+        self.x2, self.y2 = np.array(ref_obj.get_x()), np.array(ref_obj.get_y())
         self.target_nn = Nearest_search(self.x1, self.y1)
 
-    # Transform a single point
-    def transform(self, x, y, a11, a12, a13, a21, a22, a23):
-        a = a11 * x + a12 * y + a13
-        b = a21 * x + a22 * y + a23
-        return a, b
-
-    # calculate the turning angle based on three points coordinates
-    def calc_turning(self, x0, y0, x1, y1, x2, y2) -> float:
-        dot = (x0 - x1) * (x2 - x1) + (y0 - y1) * (y2 - y1)
-        det = (x0 - x1) * (y2 - y1) - (y0 - y1) * (x2 - x1)
-        if dot == 0 or det == 0:
-            return 0.0
-        return np.arctan2(-det, -dot) * 180.0 / np.pi + 180
+        # calculate min/max coordinates for the referenced object
+        self.mn_x, self.mx_x = min(self.x2), max(self.x2)
+        self.mn_y, self.mx_y = min(self.y2), max(self.y2)
 
     # dissimilarity function for the two objects of the class
-    def calc_dissimilarity(self, t):
+    # p has 7 parameters:
+        # p[0]: the scaling the x direction
+        # p[1]: the scaling the y direction
+        # p[2]: rotation for theta degrees (counter clock-wise in radian)
+        # p[3]: shearing in the x axis
+        # p[4]: shearing in the y axis
+        # p[5]: translation in the x direction
+        # p[6]: translation in the y direction
+    def calc_dissimilarity(self, p):
         x = []
         y = []
-        a11, a12, a13, a21, a22, a23 = t
+        t = RegsiterationUtils.obtain_transformation_matrix(p)
+
         for i in range(len(self.x2)):
-            x.append(a11 * self.x2[i] + a12 * self.y2[i] + a13)
-            y.append(a21 * self.x2[i] + a22 * self.y2[i] + a23)
+            x.append(t[0] * self.x2[i] + t[1] * self.y2[i] + t[2])
+            y.append(t[3] * self.x2[i] + t[4] * self.y2[i] + t[5])
 
-        cum1 = self.calc_turning(x[0] - 1, y[0], x[0], y[0], x[1], y[1]) * a11 / a11
-        cum2 = self.calc_turning(self.x1[0] - 1, self.y1[0], self.x1[0], self.y1[0], self.x1[1],
-                                 self.y1[1]) * a11 / a11
-
-        ang = 360.0 - (cum2 - cum1)
-        if ang > cum2 - cum1:
-            ang = cum2 - cum1
-        tot = 0.0
 
         # the following block is dedicated to take into account
         # the turning angle, length, and distance. I am commenting them until I perform separated tests on them.
 
+        # cum1 = self.calc_turning(x[0] - 1, y[0], x[0], y[0], x[1], y[1]) * a11 / a11
+        # cum2 = self.calc_turning(self.x1[0] - 1, self.y1[0], self.x1[0], self.y1[0], self.x1[1],
+        #                          self.y1[1]) * a11 / a11
+        #
+        # ang = 360.0 - (cum2 - cum1)
+        # if ang > cum2 - cum1:
+        #     ang = cum2 - cum1
+        # tot = ang
 
         # tot = (ang/180.0) ** 2
         # tot = ((x[0] - self.x1[0])**2 + (y[0] - self.y1[0])**2) * 0.01
@@ -130,6 +157,8 @@ class RegisterTwoObjects:
         #     i = i + 1
         #     j = j + 1
 
+        tot = 0.0
+
         x = list(map(lambda q: q if isinstance(q, np.float64) else q._value, x))
         y = list(map(lambda q: q if isinstance(q, np.float64) else q._value, y))
         reference_nn = Nearest_search(np.array(x), np.array(y))
@@ -142,19 +171,25 @@ class RegisterTwoObjects:
         # # of the target stroke
         tot += reference_nn.query(self.x1, self.y1)
 
-        return tot
+        return tot + self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(x))
 
     def find_grad(self):
         return grad(self.calc_dissimilarity, argnum=(0))
 
-    def optimize(self, t = npn.random.rand(6)):
+    def optimize(self, t=npn.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])):
         # current similarity function uses kd-tree, which is not suitable for symbolic automatic differentiation
         # grad = self.find_grad()
 
         # track function for scipy minimize
         def _track(xk):
-            pass
-            #print(xk)
+            print(xk)
 
-        res = minimize(self.calc_dissimilarity, t, method="BFGS", options={'gtol': 1e-3, 'disp': True}, callback = _track)
-        return res.fun, res.x
+        res = minimize(self.calc_dissimilarity, t, method="BFGS", options={'gtol': 1e-6})
+        d, p = res.fun, res.x
+
+        # restore the origin
+        # transform both object to the origin of the referenced object
+        RegsiterationUtils.normalize_coords(self.ref_obj, self.tar_obj, 1)
+
+        return d, p
+

@@ -1,5 +1,5 @@
 from scipy.spatial import cKDTree
-from LabeledObject import LabeledObject
+from Stroke import Stroke
 import numpy as np
 
 class Nearest_search():

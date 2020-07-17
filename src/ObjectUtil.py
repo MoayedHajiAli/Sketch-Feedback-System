@@ -1,20 +1,19 @@
 from xml.dom import minidom
 from Point import Point
-from LabeledObject import LabeledObject
+from Stroke import Stroke
 from math import sqrt
 from math import ceil
 import math
 import numpy as np
 from Vector import Vector
 from scipy.interpolate import interp1d
+from UnlabeledObject import UnlabeledObject
 
+class ObjectUtil:
 
-
-class ObjectUtil():
-
-    # for a given file, read the file and transform it to an array of objects
+    # for a given file, read the file and transform it to an array of strokes
     @staticmethod
-    def xml_to_LabledObjects(file):
+    def xml_to_Strokes(file, mn_len=0):
 
         data = minidom.parse(file)
         points = data.getElementsByTagName('point')
@@ -37,8 +36,22 @@ class ObjectUtil():
                 id = pt.firstChild.nodeValue
                 x, y, t = point_dic[id]
                 stroke.append(Point(x, y, t))
-            objects.append(LabeledObject(stroke))
+            if len(stroke) >= mn_len:
+                objects.append(Stroke(stroke))
         return np.array(objects)
+
+    # for a given file, read the file and transform it to an array of objects
+    @ staticmethod
+    def xml_to_UnlabeledObjects(file, strokes_labels, mn_len=0, re_sampling = 1.0):
+        strokes = ObjectUtil.xml_to_Strokes(file, mn_len=mn_len)
+        print(len(strokes))
+        objs = ObjectUtil.collect_strokes(strokes, strokes_labels)
+
+        # re-sample the objects
+        if re_sampling != 0.0:
+            for i in range(len(objs)):
+                objs[i] = ObjectUtil.object_restructure(objs[i], re_sampling)
+        return objs
 
     # for given two objects, match their size by adding dummy points
     @staticmethod
@@ -73,7 +86,7 @@ class ObjectUtil():
             tem.append(obj2.lst[-1])
             obj2.lst = tem
 
-    # calculating dissimilarity based on ordered points coordinates RMSE
+    # calculating dissimilarity based on ordered points coordinates RMSE // Deprecated
     @staticmethod
     def __calc_dissimilarity(ind1, ind2, x1, y1, x2, y2):
         ln = len(x1)
@@ -114,7 +127,7 @@ class ObjectUtil():
 
     # for a given object, calculate its perimeter
     @staticmethod
-    def calc_perimeter(obj:LabeledObject) -> float:
+    def calc_perimeter(obj:Stroke) -> float:
         tot, i = 0, 1
         while i < len(obj):
             tot += Point.euclidean_distance(obj.get_points()[i], obj.get_points()[i-1])
@@ -122,11 +135,12 @@ class ObjectUtil():
 
         return tot
 
-    # for a given object, and target number of points, restructure the objects by placing
-    # the points are equal distance
+    # for a given stroke, and target number of points, restructure the objects by placing
+    # the points at equal distances
     @staticmethod
-    def stroke_restructure(obj:LabeledObject, n:int) -> LabeledObject:
-        perimeter = ObjectUtil.calc_perimeter(obj)
+    def stroke_restructure(stroke:Stroke, ratio=0.0) -> Stroke:
+        n = int(len(stroke) * ratio)
+        perimeter = ObjectUtil.calc_perimeter(stroke)
         p = perimeter / (n - 1)
 
         # given two points, return a placed new point at a distance x between p1, p2
@@ -138,12 +152,12 @@ class ObjectUtil():
             return Point(p1.x + d * r, f(p1.x + d * r), p1.t + td * r)
 
         # list to hold the new points
-        lst = [obj.get_points()[0]]
+        lst = [stroke.get_points()[0]]
 
         # j: remaining distance to be traversed from the last iteration
         j = p
-        for i in range(len(obj)-1):
-            p1, p2 = obj.get_points()[i], obj.get_points()[i+1]
+        for i in range(len(stroke) - 1):
+            p1, p2 = stroke.get_points()[i], stroke.get_points()[i + 1]
             d = Point.euclidean_distance(p1, p2)
             # c: how much distance from the first point has been traversed toward the second point
             c = 0
@@ -153,7 +167,22 @@ class ObjectUtil():
                 lst.append(_place(p1, p2, c))
             j -= d - c
 
-        return LabeledObject(lst)
+        return Stroke(lst)
 
+    @staticmethod
+    def object_restructure(obj:UnlabeledObject, ratio):
+        tmp_lst = []
+        for stroke in obj.get_strokes():
+            tmp_lst.append(ObjectUtil.stroke_restructure(stroke, ratio))
+        return UnlabeledObject(tmp_lst)
 
-
+    # obtain object from strokes according to collections matrix
+    # collection matrix should have a shape of (n objects, k strokes for each object)
+    # the number of strokes can differ from one object to another
+    @staticmethod
+    def collect_strokes(strokes, collections):
+        strokes = np.array(strokes)
+        object_lst = []
+        for col in collections:
+            object_lst.append(UnlabeledObject(strokes[col]))
+        return object_lst
