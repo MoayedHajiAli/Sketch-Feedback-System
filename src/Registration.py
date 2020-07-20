@@ -1,12 +1,8 @@
-from Stroke import Stroke
 from ObjectUtil import ObjectUtil
-from Vector import Vector
-from Point import Point
 import autograd.numpy as np
 from autograd import grad
 import numpy as npn
-from autograd.numpy.numpy_boxes import ArrayBox
-from scipy.optimize import minimize
+from scipy.optimize import minimize, basinhopping
 from Nearest_search import Nearest_search
 from lapjv import lapjv
 from RegisterationUtils import RegsiterationUtils
@@ -18,17 +14,30 @@ class Registration:
     # matplotlib default color cycle
     # blue -> orange -> green -> red -> purple -> brown -> pink -> gray -> yellow -> light-blue
     # manual strokes collections for a2 -> b2
-    original_strokes_collection = [[0], [1], [2, 3], [4, 5, 6], [7, 8], [9, 10, 11, 12]]
-    target_strokes_collection = [[0], [1, 2], [3, 4], [5, 6], [7, 8], [9, 10, 11, 12]]
 
-    def __init__(self, org_file, tar_file, re_sampling=1.0, mn_stroke_len=0,
+    # #example3
+    # original_strokes_collection = [[0], [1], [2, 3], [4, 5, 6], [7, 8], [9, 10, 11, 12]]
+    # target_strokes_collection = [[0], [1, 2], [3, 4], [5, 6], [7, 8], [9, 10, 11, 12]]
+
+    # example4
+    original_strokes_collection = [[0], [1], [2, 3], [4, 5], [6], [7], [8]]
+    target_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8, 9, 10]]
+
+    # # example5
+    # original_strokes_collection = [[0], [1], [2, 3, 4, 5], [6], [7, 8, 9, 10]]
+    # target_strokes_collection = [[0], [1], [2, 3], [4, 5, 6], [7, 8]]
+
+
+    def __init__(self, org_file, tar_file, re_sampling=1.0, mn_stroke_len=0, flip=False, shift_target_x = 0.0, shift_target_y = 0.0,
                  shearing_cost=RegsiterationUtils._shearing_cost, translation_cost=RegsiterationUtils._translation_cost,
                  rotation_cost=RegsiterationUtils._rotation_cost, scaling_cost=RegsiterationUtils._scaling_cost):
 
         self.sh_cost, self.tr_cost, self.ro_cost, self.sc_cost = shearing_cost, translation_cost, rotation_cost, scaling_cost
 
-        self.original_obj = ObjectUtil.xml_to_UnlabeledObjects(org_file, self.original_strokes_collection, re_sampling=re_sampling, mn_len=mn_stroke_len)
-        self.target_obj = ObjectUtil.xml_to_UnlabeledObjects(tar_file, self.target_strokes_collection, re_sampling=re_sampling, mn_len=mn_stroke_len)
+        self.original_obj = ObjectUtil.xml_to_UnlabeledObjects(org_file, self.original_strokes_collection,
+                                                               re_sampling=re_sampling, mn_len=mn_stroke_len, flip=flip)
+        self.target_obj = ObjectUtil.xml_to_UnlabeledObjects(tar_file, self.target_strokes_collection,
+                                                             re_sampling=re_sampling, mn_len=mn_stroke_len, flip=flip, shift_y=shift_target_y, shift_x=shift_target_x)
 
     def register(self):
         n, m = len(self.original_obj), len(self.target_obj)
@@ -36,10 +45,11 @@ class Registration:
         tra_matrix = npn.zeros((n, m, 7))
         for i in range(n):
             print(i)
+            # t = npn.random.rand(7)
             t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
             for j in range(m):
                 d, p = RegisterTwoObjects(self.original_obj[i], self.target_obj[j], self.total_cost).optimize(t)
-                res_matrix[i, j] = d/len(self.original_obj[i])
+                res_matrix[i, j] = d
                 tra_matrix[i, j] = p
         print(res_matrix)
 
@@ -166,12 +176,14 @@ class RegisterTwoObjects:
         # find nearest point from the target stroke to the points
         # of the referenced stroke
         tot += self.target_nn.query(x, y)
-
+        # print("tot1", tot)
         # find nearest point from the referenced stroke to the ith point
         # # of the target stroke
         tot += reference_nn.query(self.x1, self.y1)
-
-        return tot + self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(x))
+        # print("tot2", tot)
+        tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(x))
+        # print("tran cost", tran_cost/len(x))
+        return (tot + tran_cost)/(len(x) + len(self.x1))
 
     def find_grad(self):
         return grad(self.calc_dissimilarity, argnum=(0))
@@ -184,7 +196,9 @@ class RegisterTwoObjects:
         def _track(xk):
             print(xk)
 
-        res = minimize(self.calc_dissimilarity, t, method="BFGS", options={'gtol': 1e-6})
+        minimizer_kwargs = {"method": "BFGS"}
+        res = basinhopping(self.calc_dissimilarity, t, minimizer_kwargs=minimizer_kwargs, disp=True, niter=1)
+        # res = basinhopping(self.calc_dissimilarity, t, method="BFGS", options={'gtol': 1e-6})
         d, p = res.fun, res.x
 
         # restore the origin

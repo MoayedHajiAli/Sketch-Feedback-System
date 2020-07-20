@@ -1,5 +1,5 @@
-from Point import Point
-from Stroke import Stroke
+import time
+
 from ObjectUtil import ObjectUtil
 import matplotlib.pyplot as plt
 from matplotlib import animation
@@ -65,8 +65,8 @@ class Morph():
 
     # initial function for animation
     def _init_animation(self):
-        self.ax.set_xlim(0, 3000)
-        self.ax.set_ylim(-100, 1200)
+        self.ax.set_xlim(0, 1500)
+        self.ax.set_ylim(-500, 1000)
 
         for pt_lst, obj in zip(self.original_patches, self.original_obj):
             obj.reset()
@@ -120,7 +120,7 @@ class Morph():
         # animate
         anim = animation.FuncAnimation(self.fig, func=self._animate,
                                        init_func=self._init_animation, frames=steps, interval=1, blit=True,
-                                       repeat_delay=2000, fargs=[steps], repeat=False)
+                                       repeat_delay=2000, fargs=[steps], repeat=True)
         if save:
             self._save_anim(anim, file)
         plt.show()
@@ -144,6 +144,7 @@ class Morph():
             ind = int(i/steps)
             for obj, t in zip(self.original_obj, trans_matrix):
                 obj.upd_step_vector(t[ind])
+            time.sleep(0.5)
 
         # move objects
         self.move_all(self.original_obj, steps)
@@ -173,7 +174,7 @@ class Morph():
         # animate
         anim = animation.FuncAnimation(self.fig, func=self._seq_anim,
                                        init_func=self._init_animation, frames=5 * steps, interval=1, blit=True,
-                                       repeat_delay=2000, fargs=[steps, t], repeat=False)
+                                       repeat_delay=2000, fargs=[steps, t], repeat=True)
         if save:
             self._save_anim(anim, file)
         plt.show()

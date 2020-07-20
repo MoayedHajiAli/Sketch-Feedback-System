@@ -3,9 +3,7 @@ from Point import Point
 from Stroke import Stroke
 from math import sqrt
 from math import ceil
-import math
 import numpy as np
-from Vector import Vector
 from scipy.interpolate import interp1d
 from UnlabeledObject import UnlabeledObject
 
@@ -13,7 +11,7 @@ class ObjectUtil:
 
     # for a given file, read the file and transform it to an array of strokes
     @staticmethod
-    def xml_to_Strokes(file, mn_len=0):
+    def xml_to_Strokes(file, mn_len=0, flip=False, shift_x=0.0, shift_y=0.0):
 
         data = minidom.parse(file)
         points = data.getElementsByTagName('point')
@@ -25,6 +23,13 @@ class ObjectUtil:
             x = float(el.attributes['x'].value)
             y = float(el.attributes['y'].value)
             time = float(el.attributes['time'].value)
+
+            if flip:
+                y *= -1
+
+            x += shift_x
+            y += shift_y
+
             point_dic[el.attributes['id'].value] = (x, y, time)
 
         objects = []
@@ -42,8 +47,8 @@ class ObjectUtil:
 
     # for a given file, read the file and transform it to an array of objects
     @ staticmethod
-    def xml_to_UnlabeledObjects(file, strokes_labels, mn_len=0, re_sampling = 1.0):
-        strokes = ObjectUtil.xml_to_Strokes(file, mn_len=mn_len)
+    def xml_to_UnlabeledObjects(file, strokes_labels, mn_len=0, re_sampling=1.0, flip=False, shift_x=0.0, shift_y = 0.0):
+        strokes = ObjectUtil.xml_to_Strokes(file, mn_len=mn_len, flip=flip, shift_x=shift_x, shift_y=shift_y)
         print(len(strokes))
         objs = ObjectUtil.collect_strokes(strokes, strokes_labels)
 
@@ -138,10 +143,11 @@ class ObjectUtil:
     # for a given stroke, and target number of points, restructure the objects by placing
     # the points at equal distances
     @staticmethod
-    def stroke_restructure(stroke:Stroke, ratio=0.0) -> Stroke:
-        n = int(len(stroke) * ratio)
+    def stroke_restructure(stroke:Stroke, ratio=0.0, mn_len=10) -> Stroke:
+        n = max(mn_len, int(len(stroke) * ratio))
         perimeter = ObjectUtil.calc_perimeter(stroke)
-        p = perimeter / (n - 1)
+        p = perimeter / (n)
+        # print("Before", len(stroke), perimeter, p)
 
         # given two points, return a placed new point at a distance x between p1, p2
         def _place(p1, p2, x):
@@ -156,6 +162,7 @@ class ObjectUtil:
 
         # j: remaining distance to be traversed from the last iteration
         j = p
+        tot = 0
         for i in range(len(stroke) - 1):
             p1, p2 = stroke.get_points()[i], stroke.get_points()[i + 1]
             d = Point.euclidean_distance(p1, p2)
@@ -163,11 +170,16 @@ class ObjectUtil:
             c = 0
             while c + j <= d:
                 c += j
+                tot += j
                 j = p
                 lst.append(_place(p1, p2, c))
+            tot += d - c
             j -= d - c
 
-        return Stroke(lst)
+        new_stroke = Stroke(lst)
+        perimeter = ObjectUtil.calc_perimeter(new_stroke)
+        # print("After", len(new_stroke), perimeter, tot)
+        return new_stroke
 
     @staticmethod
     def object_restructure(obj:UnlabeledObject, ratio):

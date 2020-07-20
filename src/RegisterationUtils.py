@@ -6,29 +6,55 @@ class RegsiterationUtils:
         # a is the shearing parallel to the x axis
         # b is the shearing parallel to the y axis
     @staticmethod
-    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=100, fac_y=100):
-        return ln * (fac_x * ((a * (mx_y - mn_y - (mx_x - mn_x))) ** 4) + fac_y * ((b * (mx_x - mn_x - (mx_y - mn_y))) ** 4))
+    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=500, fac_y=500):
+        a = abs(a)
+        b = abs(b)
+
+
+        cost = ln * (fac_x * a + fac_y * b)
+        #cost = ln * (fac_x * ((a * (1 + (mx_y - mn_y)/(mx_x - mn_x))) + fac_y * ((b * (1 + (mx_x - mn_x)/(mx_y - mn_y))))))
+        return cost
 
     # default translation cost function where
         # a is the translation along to the x axis
         # b is the translation along to the y axis
     @staticmethod
-    def _translation_cost(a, b, ln, fac_x=1, fac_y=1):
-        return ln * (fac_x * abs(a) + fac_y * abs(b))
+    def _translation_cost(a, b, ln, fac_x=0.00, fac_y=0.00):
+        a = abs(a)
+        b = abs(b)
+        return ln * (fac_x * a + fac_y * b)
 
     # default translation cost function where
         # a is the translation along to the x axis
         # b is the translation along to the y axis
     @staticmethod
-    def _scaling_cost(a, b, ln, fac_x=0, fac_y=0):
-        return ln * (fac_x * abs(a) + fac_y * abs(b))
+    def _scaling_cost(a, b, ln, fac_x=50, fac_y=50, flip_x=-1, flip_y=-1):
+        if flip_x == -1:
+            flip_x = fac_x * 10
+        if flip_y == -1:
+            flip_y = fac_y * 10
+        if a < 0:
+            fac_x = flip_x
+        if b < 0:
+            fac_y = flip_y
+
+        a = abs(a)
+        b = abs(b)
+        if a < 1:
+            a = 1/a
+        if b < 1:
+            b = 1/b
+
+        return ln * (fac_x * a + fac_y * b)
+
 
 
     # default rotation cost functionreg.total_cost(reg.original_obj[], t)
     @staticmethod
     def _rotation_cost(r, ln, fac_r=100):
-        return ln * (fac_r * (np.e ** abs(r)))
-
+        r = abs(r)
+        cost = ln * (fac_r * r)
+        return cost
 
     # for given parameters obtain the transformation matrix, according to the following order
     #   p[0]: the scaling the x direction

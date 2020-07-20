@@ -1,5 +1,4 @@
 from scipy.spatial import cKDTree
-from Stroke import Stroke
 import numpy as np
 
 class Nearest_search():
@@ -14,5 +13,5 @@ class Nearest_search():
         tot = 0.0
         for x, y in zip(X, Y):
             dd, ind = self.tree.query([[x, y]], k=1)
-            tot += dd[0] ** 2
+            tot += dd[0] ** 2 * (1 + np.log2(dd[0]) ** 2)
         return tot
