@@ -9,16 +9,13 @@ class Nearest_search():
         P = np.concatenate((x, y), axis=1)
         self.tree = cKDTree(P, leafsize=2)
 
-    def _func(self, n, a, b):
-        # 0.02 , 0.98 is the criteria where the y become meaningful in the function 2e^x / (1 + e^x) - 1
-        c = np.log((1 + 0.02) / (1 - 0.02)) ** (1 / n)
-        d = np.log((1 + 0.98) / (1 - 0.98)) ** (1 / n)
-        def f(x):
-            x2 = (x - a) * (d - c) / (b - a) + c
-            return (2 * (np.e ** x2) / (1 + np.e ** x2)) - 1
-        return f
+    def _func(self, n, c, d):
+        # 0.02 , 0.98 is the criteria where the y become meaningful in the function e^x / (1 + e^x)
+        a = np.ln(0.02 / (2 - 0.02)) ** (1 / n)
+        b = np.ln(0.98 / (2 - 0.98)) ** (1 / n)
+        return lambda x: (x - a) * (d - c) / (b - a) + c
 
-    def query(self, X, Y, step=4, mn_dis=4, mx_dis=50, fac=1000):
+    def query(self, X, Y, step=4, mn_dis=2, mx_dis=30, fac=1000):
         f = self._func(step, mn_dis, mx_dis)
         tot = 0.0
         for x, y in zip(X, Y):

@@ -15,7 +15,7 @@ class Registration:
     # blue -> orange -> green -> red -> purple -> brown -> pink -> gray -> yellow -> light-blue
     # manual strokes collections for a2 -> b2
 
-    # #example3
+    #example3
     # original_strokes_collection = [[0], [1], [2, 3], [4, 5, 6], [7, 8], [9, 10, 11, 12]]
     # target_strokes_collection = [[0], [1, 2], [3, 4], [5, 6], [7, 8], [9, 10, 11, 12]]
 
@@ -23,7 +23,7 @@ class Registration:
     original_strokes_collection = [[0], [1], [2, 3], [4, 5], [6], [7], [8]]
     target_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8, 9, 10]]
 
-    # # example5
+    # # # example5
     # original_strokes_collection = [[0], [1], [2, 3, 4, 5], [6], [7, 8, 9, 10]]
     # target_strokes_collection = [[0], [1], [2, 3], [4, 5, 6], [7, 8]]
 
@@ -46,8 +46,10 @@ class Registration:
         for i in range(n):
             print(i)
             # t = npn.random.rand(7)
-            t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
             for j in range(m):
+                x_dif = self.target_obj[j].origin_x - self.original_obj[i].origin_x
+                y_dif = self.target_obj[j].origin_y - self.original_obj[i].origin_y
+                t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
                 d, p = RegisterTwoObjects(self.original_obj[i], self.target_obj[j], self.total_cost).optimize(t)
                 res_matrix[i, j] = d
                 tra_matrix[i, j] = p
@@ -188,7 +190,7 @@ class RegisterTwoObjects:
     def find_grad(self):
         return grad(self.calc_dissimilarity, argnum=(0))
 
-    def optimize(self, t=npn.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])):
+    def optimize(self, t):
         # current similarity function uses kd-tree, which is not suitable for symbolic automatic differentiation
         # grad = self.find_grad()
 
@@ -198,7 +200,7 @@ class RegisterTwoObjects:
 
         minimizer_kwargs = {"method": "BFGS"}
         res = basinhopping(self.calc_dissimilarity, t, minimizer_kwargs=minimizer_kwargs, disp=True, niter=1)
-        # res = basinhopping(self.calc_dissimilarity, t, method="BFGS", options={'gtol': 1e-6})
+        # res = minimize(self.calc_dissimilarity, t, method="BFGS")
         d, p = res.fun, res.x
 
         # restore the origin
