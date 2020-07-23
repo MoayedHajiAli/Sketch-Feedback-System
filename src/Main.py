@@ -1,50 +1,73 @@
-from LabeledObject import LabeledObject
-from Point import Point
 from Morph import Morph
-from Registration import Registration
-from ObjectUtil import ObjectUtil
+from Registration import Registration, RegisterTwoObjects
 from matplotlib import pyplot as plt
-import pandas as pd
 import numpy as np
+from RegisterationUtils import RegsiterationUtils
 
+array = np.array
+
+# import sys
+# sys.stdout = open('results.txt', 'w')
 
 def main():
-
-    reg = Registration('./test_samples/a1.xml', './test_samples/b1.xml')
-    #print(len(reg.original), len(reg.target))
-    t = reg.register()
- #    t = [ [ 1.15486147e+00 , 1.30689773e-01 ,-9.01251974e+02 ,-2.03297045e-01,
- #  5.45067943e-01, -1.77410387e+02],[-5.37882914e-01,  5.38213965e-01,  8.83387451e+02 ,-7.05033356e-01,
- # -1.77113356e-01,  1.09829809e+03],[ 5.94574881e-01 , 5.66680239e-01 ,-9.31690734e+02 , 7.73525398e-01,
- # -2.81408830e-01, -7.44952052e+02],[-8.59521477e-01,  3.09320939e-02,  1.76955465e+03 ,-2.07680950e-01,
- # -8.24981297e-01 , 1.47310151e+03],[ 8.94498836e-01, -2.77762901e-01 ,-1.14543000e+03 , 1.28229238e-01,
- #  8.07712227e-01, -6.59892149e+02],[-9.12940478e-01,  9.54378559e-02 , 2.82242401e+03 , 1.41318641e-01,
- # -7.95573252e-01,  7.98774326e+02] ]
- #
- #    t2 = [[7.13886756e-01,-4.88776254e-01,6.69453413e+02,4.84104502e-01,3.93501924e-01,-2.41914235e+02],[7.31576612e-01,-2.24359612e-02,3.12301042e+02,1.40973402e-01,6.13162765e-01,-1.52914604e+02],[-5.37672730e-01,1.56887336e-01,2.35072254e+03,8.43622183e-01,-6.69032453e-01,-2.43154201e+02],[-1.04228371e+00,3.02001652e+00,7.64406041e+02,-6.98929400e-01,1.22309348e+00,3.96434017e+02],[8.87176278e-01,-2.04374310e-01,1.01597127e+02,-8.09974192e-02,-7.06976350e-01,1.06360104e+03],[5.07812064e-01,4.84988516e-01,2.78593778e+02,7.29621852e-01,-4.67259337e-01,-5.27188628e+02],[8.43031875e-01,-5.74740101e-01,4.15820106e+02,2.66369116e-01,2.72194165e-02,-1.44648304e+02],[8.93363298e-02,5.67784991e+00,-2.92845644e+03,-7.49535573e-03,-6.80986296e-01,9.53719689e+02],[3.72872770e-01,3.31824457e-01,7.45737594e+02,3.38756956e+00,3.08667179e+00,-8.59701405e+03],[1.82185708e+00,-2.34006048e+00,-8.42731218e+02,-3.41370770e-02,4.81108398e-02,4.68178208e+02]]
-
-    morph = Morph('./test_samples/a1.xml', './test_samples/b1.xml')
-    morph.animate_all(t)
+    reg = Registration('./test_samples/a4.xml', './test_samples/b4.xml', mn_stroke_len=4, re_sampling=0.5, flip=True, shift_target_y = 1000)
+    a, b = map(int, input().split())
+    if a != -1 and b != -1:
+        test_single_obj(reg, a, b)
+    else:
+        # p = reg.register()
+        p = [[ 1.01049440e+00,  9.71895748e-01, -2.55353196e-02,
+        -5.00257524e-09, -2.40657639e-06,  2.25546066e+01,
+         9.11585938e+02],
+       [ 8.24319572e-01,  8.56894458e-01, -5.96849955e-03,
+         4.15145123e-08,  2.47234290e-10, -1.33946786e+01,
+         1.01065715e+03],
+       [ 1.15680505e+00,  1.29259509e+00,  8.53470471e-02,
+        -3.22740300e-07, -2.13792893e-08, -1.31558136e+02,
+         9.06720368e+02],
+       [ 9.91147142e-01,  8.21106549e-01, -9.99346020e-09,
+        -1.03305373e-08, -2.09306092e-09,  1.40735694e+01,
+         5.64907224e+02],
+       [ 7.36101608e-01,  7.74184577e-01, -4.92438191e-09,
+        -3.68027886e-01, -3.08126609e-02,  3.67767322e+02,
+         1.04390950e+03],
+       [ 1.10047000e+00,  1.63904051e+00,  4.44146567e-02,
+        -3.33387140e-02, -1.06906138e-08,  5.54971915e+01,
+         9.21884591e+02],
+       [ 9.36940387e-01,  6.64989239e-01, -2.07135393e-09,
+        -1.84137426e-01, -5.06033056e-02,  2.05018341e+02,
+         1.05442516e+03]]
+        print([np.array(p)])
+        t = []
+        for lst in p:
+            t.append(RegsiterationUtils.obtain_transformation_matrix(lst))
+        print(t)
+        morph = Morph(reg.original_obj, reg.target_obj)
+        morph.seq_animate_all(p, save=True
+                              , file="./test_videos/example4-seq.mp4")
 
 
 def print_lst(lst):
     st = ','.join(map(str, lst))
     print('[', st, ']')
 
-def test(obj:LabeledObject):
-    fig = plt.figure()
-    ax = fig.add_subplot()
-    obj.visualize(ax=ax, show = False)
-    obj = ObjectUtil.stroke_restructure(obj, 400)
-    print(obj.get_x())
-    print(obj.get_y())
-    obj.visualize(ax=ax, show = False)
+
+def test_single_obj(reg, org_ind, tar_ind):
+    obj1, obj2 = reg.original_obj[org_ind], reg.target_obj[tar_ind]
+    i, j = org_ind, tar_ind
+    x_dif = reg.target_obj[j].origin_x - reg.original_obj[i].origin_x
+    y_dif = reg.target_obj[j].origin_y - reg.original_obj[i].origin_y
+    d, t = RegisterTwoObjects(reg.original_obj[org_ind], reg.target_obj[tar_ind], reg.total_cost).optimize(np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif]))
+    print(len(reg.original_obj[org_ind]), d)
+    # t = array([1.28221351e+00, 1.73830158e+00, 1.00440837e-01, 4.65917198e-07,
+    #        1.45163205e-07, 7.60385866e+01, 6.17645329e+02])
+    print([np.array(t)])
+    morph = Morph([reg.original_obj[org_ind]], [reg.target_obj[tar_ind]])
+    morph.seq_animate_all([t], save=False, file="./test_videos/example5-seq-obj3.mp4")
     plt.show()
 
-    print(len(obj))
-    for i in range(len(obj)-1):
-        print(Point.euclidean_distance(obj.get_points()[i], obj.get_points()[i + 1]))
-
+def trans(obj1, reg, org_ind, t):
+    reg.original_obj[org_ind].transform(t)
 
 if __name__ == '__main__':
     main()
