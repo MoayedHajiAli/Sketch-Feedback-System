@@ -20,13 +20,16 @@ class Registration:
     # target_strokes_collection = [[0], [1, 2], [3, 4], [5, 6], [7, 8], [9, 10, 11, 12]]
 
     # example4
-    original_strokes_collection = [[0], [1], [2, 3], [4, 5], [6], [7], [8]]
-    target_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8, 9, 10]]
+    # original_strokes_collection = [[0], [1], [2, 3], [4, 5], [6], [7], [8]]
+    # target_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8, 9, 10]]
 
     # # # example5
     # original_strokes_collection = [[0], [1], [2, 3, 4, 5], [6], [7, 8, 9, 10]]
     # target_strokes_collection = [[0], [1], [2, 3], [4, 5, 6], [7, 8]]
 
+    # example6
+    original_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8], [9, 10], [11], [12], [13, 14, 15], [16]]
+    target_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8], [9, 10], [11], [12, 13, 14, 15], [16], [17, 18]]
 
     def __init__(self, org_file, tar_file, re_sampling=1.0, mn_stroke_len=0, flip=False, shift_target_x = 0.0, shift_target_y = 0.0,
                  shearing_cost=RegsiterationUtils._shearing_cost, translation_cost=RegsiterationUtils._translation_cost,
@@ -184,7 +187,7 @@ class RegisterTwoObjects:
         tot += reference_nn.query(self.x1, self.y1)
         # print("tot2", tot)
         tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(x))
-        # print("tran cost", tran_cost/len(x))
+        # print(tot, tran_cost, len(x), len(self.x1))
         return (tot + tran_cost)/(len(x) + len(self.x1))
 
     def find_grad(self):

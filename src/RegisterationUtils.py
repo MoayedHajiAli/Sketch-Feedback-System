@@ -6,7 +6,7 @@ class RegsiterationUtils:
         # a is the shearing parallel to the x axis
         # b is the shearing parallel to the y axis
     @staticmethod
-    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=100, fac_y=100):
+    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=30, fac_y=30):
         a = abs(a)
         b = abs(b)
 
@@ -19,7 +19,7 @@ class RegsiterationUtils:
         # a is the translation along to the x axis
         # b is the translation along to the y axis
     @staticmethod
-    def _translation_cost(a, b, ln, fac_x=0.00, fac_y=0.00):
+    def _translation_cost(a, b, ln, fac_x=0.0, fac_y=0.0):
         a = abs(a)
         b = abs(b)
         return ln * (fac_x * a + fac_y * b)
@@ -30,9 +30,9 @@ class RegsiterationUtils:
     @staticmethod
     def _scaling_cost(a, b, ln, fac_x=10, fac_y=10, flip_x=-1, flip_y=-1):
         if flip_x == -1:
-            flip_x = fac_x * 50
+            flip_x = fac_x * 10
         if flip_y == -1:
-            flip_y = fac_y * 50
+            flip_y = fac_y * 10
         if a < 0:
             fac_x = flip_x
         if b < 0:
@@ -51,7 +51,7 @@ class RegsiterationUtils:
 
     # default rotation cost functionreg.total_cost(reg.original_obj[], t)
     @staticmethod
-    def _rotation_cost(r, ln, fac_r=70):
+    def _rotation_cost(r, ln, fac_r=25):
         r = abs(r)
         cost = ln * (fac_r * r)
         return cost
