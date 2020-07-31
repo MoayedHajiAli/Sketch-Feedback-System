@@ -12,9 +12,9 @@ class UnlabeledObject:
         ind = np.argmin(self.get_x())
         self.origin_x, self.origin_y = self.get_x()[ind], self.get_y()[ind]
 
-    def __print_strokes(self):
+    def print_strokes(self):
         for i, stroke in enumerate(self.strokes_lst):
-            stroke.points_lst()
+            stroke.print_points()
 
     def __len__(self):
         return sum([len(stroke) for stroke in self.strokes_lst])

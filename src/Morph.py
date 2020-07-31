@@ -65,8 +65,8 @@ class Morph():
 
     # initial function for animation
     def _init_animation(self):
-        self.ax.set_xlim(-500, 1000)
-        self.ax.set_ylim(-1000, 1500)
+        self.ax.set_xlim(0, 1500)
+        self.ax.set_ylim(-700, 1000)
 
         for pt_lst, obj in zip(self.original_patches, self.original_obj):
             obj.reset()
