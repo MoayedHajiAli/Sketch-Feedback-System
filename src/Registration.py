@@ -1,13 +1,14 @@
 from ObjectUtil import ObjectUtil
-import autograd.numpy as np
 from autograd import grad
-import numpy as npn
+import numpy as np
 from scipy.optimize import minimize, basinhopping
 from Nearest_search import Nearest_search
 from lapjv import lapjv
 from RegisterationUtils import RegsiterationUtils
 from UnlabeledObject import UnlabeledObject
-
+import copy
+from multiprocessing import Pool
+import multiprocessing
 
 class Registration:
 
@@ -21,15 +22,15 @@ class Registration:
 
     # example4
     # original_strokes_collection = [[0], [1], [2, 3], [4, 5], [6], [7], [8]]
-    # target_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8, 9, 10]]
+    target_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8, 9, 10]]
 
     # # # example5
-    # original_strokes_collection = [[0], [1], [2, 3, 4, 5], [6], [7, 8, 9, 10]]
+    original_strokes_collection = [[0], [1], [2, 3, 4, 5], [6], [7, 8, 9, 10]]
     # target_strokes_collection = [[0], [1], [2, 3], [4, 5, 6], [7, 8]]
 
     # example6
-    original_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8], [9, 10], [11], [12], [13, 14, 15], [16]]
-    target_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8], [9, 10], [11], [12, 13, 14, 15], [16], [17, 18]]
+    # original_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8], [9, 10], [11], [12], [13, 14, 15], [16]]
+    # target_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8], [9, 10], [11], [12, 13, 14, 15], [16], [17, 18]]
 
     def __init__(self, org_file, tar_file, re_sampling=1.0, mn_stroke_len=0, flip=False, shift_target_x = 0.0, shift_target_y = 0.0,
                  shearing_cost=RegsiterationUtils._shearing_cost, translation_cost=RegsiterationUtils._translation_cost,
@@ -41,21 +42,39 @@ class Registration:
                                                                re_sampling=re_sampling, mn_len=mn_stroke_len, flip=flip)
         self.target_obj = ObjectUtil.xml_to_UnlabeledObjects(tar_file, self.target_strokes_collection,
                                                              re_sampling=re_sampling, mn_len=mn_stroke_len, flip=flip, shift_y=shift_target_y, shift_x=shift_target_x)
-
-    def register(self):
+        self.core_cnt = multiprocessing.cpu_count()
+    
+    def register(self, mx_dissimilarity = 500):
         n, m = len(self.original_obj), len(self.target_obj)
-        res_matrix = npn.zeros((n, m))
-        tra_matrix = npn.zeros((n, m, 7))
-        for i in range(n):
+        dim = max(n,m)
+        res_matrix = np.zeros((dim, dim))
+        tra_matrix = np.zeros((dim, dim, 7))
+
+        # prepare queue of regiteration objects for multiprocessing
+        pro_queue = []
+        for obj1 in self.original_obj:
+            for obj2 in self.target_obj:
+                pro_queue.append(RegisterTwoObjects(obj1, obj2, self.total_cost))
+        
+        # register all the objects using pooling
+        res = []
+        with Pool(self.core_cnt) as p:
+            res = list(p.map(self._optimize, pro_queue))
+        
+        # fill the result in the res_matrix
+        t = 0
+        for i in range(dim):
             print(i)
-            # t = npn.random.rand(7)
-            for j in range(m):
-                x_dif = self.target_obj[j].origin_x - self.original_obj[i].origin_x
-                y_dif = self.target_obj[j].origin_y - self.original_obj[i].origin_y
-                t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
-                d, p = RegisterTwoObjects(self.original_obj[i], self.target_obj[j], self.total_cost).optimize(t)
+            # t = np.random.rand(7)
+            for j in range(dim):
+                if i >= n or j >= m:
+                    d, p = RegsiterationUtils.inf, np.zeros(7)
+                else:
+                    d, p = res[t]
+                    t += 1
                 res_matrix[i, j] = d
                 tra_matrix[i, j] = p
+        
         print(res_matrix)
 
         # calculate the minimum assignment
@@ -63,8 +82,37 @@ class Registration:
         print(row_ind)
         final_transformation = []
         for i, ind in enumerate(row_ind):
+            # check if one of the objects is dummy
+            if res_matrix[i, ind] == RegsiterationUtils.inf:
+                 # handle the case when n > m by making the object vanish into its origin:
+                if n > m:
+                    tra_matrix[i, ind] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, self.original_obj[i].origin_x, self.original_obj[j].origin_y])        
+                # handle the case when m > n by creating a new object in the orginal sketch, identical to the target sketch but scalled by a very small scale
+                else:
+                    tmp = copy.deepcopy(obj.get_strokes())
+                    new_obj = UnlabeledObject(tmp)
+                    obj.print_strokes()
+                    eps = 0.001
+                    tmp = []
+                    for st in new_obj.get_strokes():
+                        for pt in st.get_points():
+                            pt.x = pt.x * eps + (1 - eps) * new_obj.origin_x
+                            pt.y = pt.y * eps + (1 - eps) * new_obj.origin_y
+                        tmp.append(Stroke(st.get_points()))
+                    new_obj = UnlabeledObject(tmp)
+                    reg.original_obj.append(new_obj)
+                    tra_matrix[i, ind] = np.array([1/eps, 1/eps, 0.0, 0.0, 0.0, 0.0, 0.0])
+                    self.original_obj.append(new_obj)
+
             final_transformation.append(tra_matrix[i, ind])
         return final_transformation
+
+    # wrapper function for calling optimize on a RegisterTwoObjects
+    def _optimize(self, reg):
+        x_dif = reg.tar_obj.origin_x - reg.ref_obj.origin_x
+        y_dif = reg.tar_obj.origin_y - reg.ref_obj.origin_y
+        t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
+        return reg.optimize(t)
 
     # obtain total transformation **parameters** cost
     def total_cost(self, p, mn_x, mx_x, mn_y, mx_y, ln):
@@ -75,24 +123,13 @@ class Registration:
         tot += self.tr_cost(p[5], p[6], ln)
         return tot
 
-
 class RegisterTwoObjects:
     # obj2 is the referenced object and obj1 is the target object
     def __init__(self, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, cost_fun):
         self.tar_obj = tar_obj
         self.ref_obj = ref_obj
         self.total_cost = cost_fun
-        # transform both object to the origin of the referenced object
-        RegsiterationUtils.normalize_coords(self.ref_obj, self.tar_obj, -1)
-
-        self.x1, self.y1 = np.array(tar_obj.get_x()), np.array(tar_obj.get_y())
-        self.x2, self.y2 = np.array(ref_obj.get_x()), np.array(ref_obj.get_y())
-        self.target_nn = Nearest_search(self.x1, self.y1)
-
-        # calculate min/max coordinates for the referenced object
-        self.mn_x, self.mx_x = min(self.x2), max(self.x2)
-        self.mn_y, self.mx_y = min(self.y2), max(self.y2)
-
+        
     # dissimilarity function for the two objects of the class
     # p has 7 parameters:
         # p[0]: the scaling the x direction
@@ -187,11 +224,11 @@ class RegisterTwoObjects:
         tot += reference_nn.query(self.x1, self.y1)
         # print("tot2", tot)
         tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(x))
-        # print(tot, tran_cost, len(x), len(self.x1))
+        # print("tran cost", tran_cost/len(x))
         return (tot + tran_cost)/(len(x) + len(self.x1))
 
-    def find_grad(self):
-        return grad(self.calc_dissimilarity, argnum=(0))
+    # def find_grad(self):
+    #     return grad(self.calc_dissimilarity, argnum=(0))
 
     def optimize(self, t):
         # current similarity function uses kd-tree, which is not suitable for symbolic automatic differentiation
@@ -201,14 +238,26 @@ class RegisterTwoObjects:
         def _track(xk):
             print(xk)
 
+        # transform both object to the origin of the referenced object
+        RegsiterationUtils.normalize_coords(self.ref_obj, self.tar_obj, -1)
+
+        self.x1, self.y1 = np.array(self.tar_obj.get_x()), np.array(self.tar_obj.get_y())
+        self.x2, self.y2 = np.array(self.ref_obj.get_x()), np.array(self.ref_obj.get_y())
+        self.target_nn = Nearest_search(self.x1, self.y1)
+
+        # calculate min/max coordinates for the referenced object
+        self.mn_x, self.mx_x = min(self.x2), max(self.x2)
+        self.mn_y, self.mx_y = min(self.y2), max(self.y2)
+
+        # minimize
         minimizer_kwargs = {"method": "BFGS"}
         res = basinhopping(self.calc_dissimilarity, t, minimizer_kwargs=minimizer_kwargs, disp=True, niter=1)
-        # res = minimize(self.calc_dissimilarity, t, method="BFGS")
         d, p = res.fun, res.x
 
-        # restore the origin
-        # transform both object to the origin of the referenced object
+        # restore the origin by transforming both object to the (0,0) coords
         RegsiterationUtils.normalize_coords(self.ref_obj, self.tar_obj, 1)
 
         return d, p
 
+if __name__ == '__main__':
+    pass

@@ -43,44 +43,13 @@
 # #     st = ','.join(map(str, lst))
 # #     print('[', st, ']')
 # #
+from Stroke import Stroke
+from Point import Point
 
-
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-
-fig, ax = plt.subplots()
-xdata, ydata = [], []
-ln, = plt.plot([], [], 'ro')
-f = np.sin
-def init():
-    global xdata, ydata, ln
-    ax.set_xlim(0, 2*np.pi)
-    ax.set_ylim(-1, 1)
-    xdata, ydata = [], []
-    ln.set_data(xdata, ydata)
-    return ln,
-
-def update(frame):
-    global f
-    xdata.append(frame)
-    ydata.append(f(frame))
-    print(len(xdata))
-    ln.set_data(xdata, ydata)
-    if frame == 9:
-        if f == np.sin:
-            f = np.cos
-        else:
-            f = np.sin
-    return ln,
-
-ani = FuncAnimation(fig, update, frames = 10,
-                    init_func=init, blit=False)
-plt.show()
-# ani.event_source.start()
-
-
-
+st = Stroke([Point(1, 2), Point(10, 11)])
+for p in st.get_points():
+    p.x = 10
+st.print_points()
 #last test
 # [[ 1727.39867741  1701.94595468  1586.53257562  2298.43686836
 #    6284.83997886  4924.33331182]

@@ -2,6 +2,7 @@ import numpy as np
 
 class RegsiterationUtils:
 
+    inf = 1e9+7
     # default shearing cost function where
         # a is the shearing parallel to the x axis
         # b is the shearing parallel to the y axis
