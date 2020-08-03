@@ -2,7 +2,7 @@ from Morph import Morph
 from Registration import Registration, RegisterTwoObjects
 from matplotlib import pyplot as plt
 import numpy as np
-from RegisterationUtils import RegsiterationUtils
+from RegistrationUtils import RegistrationUtils
 import copy
 array = np.array
 from UnlabeledObject import UnlabeledObject
@@ -12,40 +12,42 @@ from Stroke import Stroke
 # sys.stdout = open('results.txt', 'w')
 
 def main():
-    reg = Registration('./test_samples/a5.xml', './test_samples/b4.xml', mn_stroke_len=6, re_sampling=1.0, flip=True, shift_target_y = 1000)
+    reg = Registration('./test_samples/a7.xml', './test_samples/b7.xml', mn_stroke_len=6, re_sampling=1.0, flip=True, shift_target_y = 1000)
     a, b = map(int, input().split())
     if a != -1 and b != -1:
         test_single_obj(reg, a, b)
     else:
         # add missing objects
-        add_obj(reg, reg.target_obj[3])
-        add_obj(reg, reg.target_obj[2])
+        add_objects(reg, [])
         # p = reg.register()
-        p = [[ 9.99999618e-01,  8.67910670e-01, -1.61348840e-01,
-        -7.48704891e-10,  4.86081810e-07,  2.13155474e+02,
-         9.57682057e+02],
-       [ 1.00735391e+00,  9.99999989e-01, -3.84887913e-02,
-        -1.95178502e-09, -7.28796116e-08,  1.43759252e+02,
-         8.87648048e+02],
-       [ 1.15910153e+00,  8.96285942e-01, -1.84709959e-01,
-         2.35241702e-02, -5.81943246e-10,  7.33532999e+02,
-         1.03772778e+03],
-       [ 1.33156979e+00,  1.17358312e+00,  1.32067401e+00,
-        -6.18955158e-09,  5.14391489e-03,  3.34658053e+02,
-         7.86647592e+02],
-       [ 6.14374676e-01,  1.48277551e+00, -1.28539648e-10,
-        -1.34846179e-02, -6.79510281e-02,  2.63227503e+02,
-         9.68753503e+02],
-       [ 1.00000000e+03,  1.00000000e+03,  0.00000000e+00,
-         0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
-         0.00000000e+00],
-       [ 1.00000000e+03,  1.00000000e+03,  0.00000000e+00,
-         0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
-         0.00000000e+00]]
+        p = [[ 2.61272810e+00,  2.80665102e+00,  1.40671684e-09,
+        -7.42421390e-02, -9.61967871e-02,  1.24531506e+03,
+         2.57588633e+02],
+       [ 2.46507804e+00,  2.49869560e+00, -2.59036878e-02,
+        -8.93862373e-09, -6.27860131e-02,  4.98804972e+02,
+         3.33768332e+02],
+       [ 2.48606838e+00,  2.79560685e+00, -2.30429246e-10,
+        -1.02455528e-01, -6.92126905e-09,  6.35468178e+02,
+         2.93362099e+02],
+       [ 3.16425057e+00,  3.57798657e+00, -8.00930776e-09,
+        -1.86098312e-07, -8.08472029e-07,  1.16239580e+03,
+         3.31343756e+02],
+       [ 2.78896120e+00,  3.04152740e+00, -3.65477184e-09,
+        -1.26453594e-01, -3.91518487e-07,  1.39655731e+03,
+         3.34479979e+02],
+       [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+         0.00000000e+00,  0.00000000e+00,  7.17016643e+02,
+        -2.41950072e+02],
+       [ 2.82865698e+00,  3.05806181e+00,  1.98919413e-01,
+        -2.59705614e-01, -7.26457662e-09,  1.41807860e+03,
+         2.37146113e+02],
+       [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+         0.00000000e+00,  0.00000000e+00,  6.30536515e+02,
+        -3.58926970e+02]]
         print([np.array(p)])
         t = []
         for lst in p:
-            t.append(RegsiterationUtils.obtain_transformation_matrix(lst))
+            t.append(RegistrationUtils.obtain_transformation_matrix(lst))
         print(t)
         morph = Morph(reg.original_obj, reg.target_obj)
         morph.seq_animate_all(p, save=False
@@ -55,6 +57,11 @@ def main():
 def print_lst(lst):
     st = ','.join(map(str, lst))
     print('[', st, ']')
+
+def add_objects(reg, lst):
+    for ind in lst:
+        add_obj(reg, reg.target_obj[ind])
+
 
 def add_obj(reg, obj):
   tmp = copy.deepcopy(obj.get_strokes())
@@ -77,7 +84,10 @@ def test_single_obj(reg, org_ind, tar_ind):
     i, j = org_ind, tar_ind
     x_dif = reg.target_obj[j].origin_x - reg.original_obj[i].origin_x
     y_dif = reg.target_obj[j].origin_y - reg.original_obj[i].origin_y
-    d, t = RegisterTwoObjects(reg.original_obj[org_ind], reg.target_obj[tar_ind], reg.total_cost).optimize(np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif+80]))
+    d = RegisterTwoObjects(reg.original_obj[org_ind], reg.target_obj[tar_ind], reg.total_cost).calc_dissimilarity(t)
+    t = [ 1.14772552e+00,  9.33270160e-01, -1.48902180e-01,
+         6.30043243e-02, -7.14737512e-09,  7.34028622e+02,
+         1.13881862e+03]
     print(len(reg.original_obj[org_ind]), d)
     # t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
     print([np.array(t)])

@@ -4,7 +4,7 @@ from ObjectUtil import ObjectUtil
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
-from RegisterationUtils import RegsiterationUtils
+from RegistrationUtils import RegistrationUtils
 
 
 class Morph():
@@ -65,7 +65,7 @@ class Morph():
 
     # initial function for animation
     def _init_animation(self):
-        self.ax.set_xlim(0, 1500)
+        self.ax.set_xlim(0, 2500)
         self.ax.set_ylim(-700, 1000)
 
         for pt_lst, obj in zip(self.original_patches, self.original_obj):
@@ -169,7 +169,7 @@ class Morph():
 
         # add scaling transformation matrix
         for p in transformation_params:
-            t.append(RegsiterationUtils.get_seq_translation_matrices(p))
+            t.append(RegistrationUtils.get_seq_translation_matrices(p))
 
         # animate
         anim = animation.FuncAnimation(self.fig, func=self._seq_anim,
