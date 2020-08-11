@@ -4,18 +4,11 @@ from ObjectUtil import ObjectUtil
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
-from RegisterationUtils import RegsiterationUtils
+from RegistrationUtils import RegistrationUtils
 
 
 class Morph():
-    original_labels = np.array([0, 0, 0, 1, 2, 2])
-    target_labels = np.array([0, 0, 0, 1, 2, 2])
-
     fig, ax = plt.gcf(), plt.gca()
-
-    # manual strokes collections for a2 -> b2
-    original_strokes_collection = [[0], [1], [2, 3], [4, 5, 6], [7, 8], [9, 10, 11, 12]]
-    target_strokes_collection = [[0], [1, 2], [3, 4], [5, 6], [7, 8], [9, 10, 11, 12]]
 
     def __init__(self, original_obj, target_obj):
         self.original_obj = original_obj
@@ -65,7 +58,7 @@ class Morph():
 
     # initial function for animation
     def _init_animation(self):
-        self.ax.set_xlim(0, 1500)
+        self.ax.set_xlim(0, 2500)
         self.ax.set_ylim(-700, 1000)
 
         for pt_lst, obj in zip(self.original_patches, self.original_obj):
@@ -169,7 +162,7 @@ class Morph():
 
         # add scaling transformation matrix
         for p in transformation_params:
-            t.append(RegsiterationUtils.get_seq_translation_matrices(p))
+            t.append(RegistrationUtils.get_seq_translation_matrices(p))
 
         # animate
         anim = animation.FuncAnimation(self.fig, func=self._seq_anim,

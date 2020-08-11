@@ -68,7 +68,6 @@ class ObjectUtil:
             d = obj1.len() - obj2.len()
             t = ceil(d / (obj2.len() - 1))
             step = max(1, int((obj2.len() - 1) / d))
-            print(obj1.len(), obj2.len(), d, t, step)
             tem = []
             for i in range(0, obj2.len() - 1):
                 tem.append(obj2.lst[i])
