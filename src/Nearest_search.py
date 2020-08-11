@@ -2,7 +2,6 @@ from scipy.spatial import cKDTree
 import numpy as np
 import warnings
 
-warnings.filterwarnings("error")
 
 class Nearest_search():
 
@@ -28,7 +27,7 @@ class Nearest_search():
                 print(x, x2)
         return f
 
-    def query(self, X, Y, step=5, mn_dis=2, mx_dis=100, fac=1000, dynamic=True, ration_mn=0.01, ration_mx=0.40):
+    def query(self, X, Y, step=10, mn_dis=2, mx_dis=100, fac=1000, dynamic=True, ration_mn=0.05, ration_mx=0.10):
         if dynamic:
             mn_dis = max(self.x_dia, self.y_dia) * ration_mn
             mx_dis = max(self.x_dia, self.y_dia) * ration_mx
