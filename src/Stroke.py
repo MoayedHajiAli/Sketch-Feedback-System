@@ -3,7 +3,7 @@ import copy
 
 
 class Stroke:
-    def print_points(self):
+    def __print_points(self):
         for p in self.points_lst:
             print(p.x, p.y, p.t)
         print("")

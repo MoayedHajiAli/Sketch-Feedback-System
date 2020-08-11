@@ -10,7 +10,7 @@ class RegistrationUtils:
         # a is the shearing parallel to the x axis
         # b is the shearing parallel to the y axis
     @staticmethod
-    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=10, fac_y=10):
+    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=15, fac_y=15):
         a = abs(a)
         b = abs(b)
 
@@ -54,7 +54,7 @@ class RegistrationUtils:
 
     # default rotation cost functionreg.total_cost(reg.original_obj[], t)
     @staticmethod
-    def _rotation_cost(r, ln, fac_r=10):
+    def _rotation_cost(r, ln, fac_r=12):
         r = abs(r)
         cost = ln * (fac_r * r)
         return cost
@@ -163,7 +163,7 @@ class RegistrationUtils:
         tot += reference_nn.query(x1, y1)
         return tot / (len(ref_obj) + len(tar_obj))
 
-        
+
         # TODO: the following block is dedicated to take into account
         # the turning angle, length, and distance. I am commenting them until I perform separated tests on them.
 

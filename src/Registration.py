@@ -50,7 +50,7 @@ class Registration:
                                                              re_sampling=re_sampling, mn_len=mn_stroke_len, flip=flip, shift_y=shift_target_y, shift_x=shift_target_x)
         self.core_cnt = multiprocessing.cpu_count()
     
-    def register(self, mx_dissimilarity = 100):
+    def register(self, mx_dissimilarity = 40):
         n, m = len(self.original_obj), len(self.target_obj)
         dim = max(n,m)
         res_matrix = np.zeros((dim, dim))
@@ -92,7 +92,9 @@ class Registration:
         for i, ind in enumerate(row_ind):
             dissimilarity = res_matrix[i, ind]
             if i < n and ind < m:
+                RegistrationUtils.normalize_coords(self.original_obj[i], self.target_obj[ind], -1)
                 dissimilarity = RegistrationUtils.calc_dissimilarity(self.original_obj[i], self.target_obj[ind], tra_matrix[i, ind])
+                RegistrationUtils.normalize_coords(self.original_obj[i], self.target_obj[ind], 1)
             print(dissimilarity, res_matrix[i, ind])
             # check if one of the objects is dummy or their dissimilarity is above the maximum threshold
             if dissimilarity > mx_dissimilarity:
