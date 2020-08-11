@@ -8,8 +8,12 @@ from RegistrationUtils import RegistrationUtils
 
 
 class Morph():
-    fig, ax = plt.gcf(), plt.gca()
 
+    original_labels = []
+    target_labels = []
+    
+    fig, ax = plt.gcf(), plt.gca()
+    
     def __init__(self, original_obj, target_obj):
         self.original_obj = original_obj
         self.target_obj = target_obj

@@ -84,7 +84,7 @@ class Registration:
         print("res_matrix", res_matrix)
 
         # calculate the minimum assignment
-        row_ind, col_ind, tot = lapjv(res_matrix)
+        row_ind, col_ind, total_cost = lapjv(res_matrix)
         print("selection", row_ind)
         final_transformation = np.zeros((n, 7))
         added_objects = []
