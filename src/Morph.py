@@ -8,14 +8,7 @@ from RegistrationUtils import RegistrationUtils
 
 
 class Morph():
-    original_labels = np.array([0, 0, 0, 1, 2, 2])
-    target_labels = np.array([0, 0, 0, 1, 2, 2])
-
     fig, ax = plt.gcf(), plt.gca()
-
-    # manual strokes collections for a2 -> b2
-    original_strokes_collection = [[0], [1], [2, 3], [4, 5, 6], [7, 8], [9, 10, 11, 12]]
-    target_strokes_collection = [[0], [1, 2], [3, 4], [5, 6], [7, 8], [9, 10, 11, 12]]
 
     def __init__(self, original_obj, target_obj):
         self.original_obj = original_obj
