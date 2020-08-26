@@ -180,13 +180,20 @@ class RegistrationUtils:
         # p[5]: translation in the x direction
         # p[6]: translation in the y direction
     @staticmethod
-    def calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, p, target_nn:Nearest_search = None, turning_ang=False,
+    def calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, t, target_nn:Nearest_search = None, turning_ang=False,
      cum_ang=False, length=False, turning_fac = 0.05, cum_fac = 0.3, len_fac = 0.01):
+
+        # transform both object to the origin of the referenced object
+        RegistrationUtils.normalize_coords(ref_obj, tar_obj, -1)
+
+        # store transformed points
         x, y = np.array(copy.deepcopy(ref_obj.get_x())), np.array(copy.deepcopy(ref_obj.get_y()))
         x1, y1 = np.array(copy.deepcopy(tar_obj.get_x())), np.array(copy.deepcopy(tar_obj.get_y()))
 
+        # transform both object to the origin of the referenced object
+        RegistrationUtils.normalize_coords(ref_obj, tar_obj, 1)
+
         # transform the org_obj
-        t = RegistrationUtils.obtain_transformation_matrix(p)
         x, y = RegistrationUtils.transfer(x, y, t)
 
         # obtain KDtree of the target obj
@@ -248,16 +255,39 @@ class RegistrationUtils:
         return tot / (len(ref_obj) + len(tar_obj))
         
     @staticmethod
-    def identify_similarity(obj1:UnlabeledObject, obj2:UnlabeledObject, t) -> bool:
+    def identify_similarity(obj1:UnlabeledObject, obj2:UnlabeledObject, t, turning_f = 0.05, perimeter_f = 1) -> float:
+        tot_cost = 0.0
         obj1 = copy.deepcopy(obj1)
         obj2 = copy.deepcopy(obj2)
-        d, t = RegisterTwoObjects(obj1, obj2, lambda p : 0).optimize(t)
+        d, t = RegisterTwoObjects(obj1, obj2, lambda p : 0).optimize(t, params = False)
+        tot_cost += d
         obj1.transform(t)
-        strokes = []
+
+        last_stroke = None
         obj1_kd = Nearest_search(obj1.get_x, obj2.get_y)
-        for s in obj2.get_strokes():
+        for i in len(obj2.get_strokes()):
+            s = obj2.get_strokes()[i]
             tmp = []
             for p in s.get_points():
                 tmp.append(obj1_kd.query_point(p))
-            
-            strokes.append(Stroke(tmp))
+            tmp_obj1 = UnlabeledObject([s])
+            cur_stroke = Stroke(tmp)
+            tmp_obj2 = UnlabeledObject([cur_stroke])
+            d, t = RegisterTwoObjects(tmp_obj1, tmp_obj2, lambda p : 0).optimize(params=False)
+            tmp_obj1.transform(t)
+
+            # add dissimilarity cost
+            tot_cost += d
+            # add turning angle cost
+            if i > 0:
+                p0, p1, p2 = obj2.get_strokes()[i-1].get_points()[-2], obj2.get_strokes()[i-1].get_points()[-1], obj2.get_strokes()[i].get_points()[0] 
+                t0 = RegistrationUtils.calc_turning(p0.get_x(), p0.get_y(), p1.get_x(), p1.get_y(), p2.get_x(), p2.get_y())
+                p0, p1, p2 = last_stroke.get_points()[-2], last_stroke.get_points()[-1], cur_stroke.get_points()[0]
+                t1 = RegistrationUtils.calc_turning(p0.get_x(), p0.get_y(), p1.get_x(), p1.get_y(), p2.get_x(), p2.get_y())  
+                tot_cost += turning_f * abs(t1 - t0)
+            # add the perimeter cost
+            tot_cost += perimeter_f * abs(ObjectUtil.calc_perimeter(s) - ObjectUtil.calc_perimeter(cur_stroke))
+
+            last_stroke = cur_stroke
+
+        return tot_cost / (len(obj1) + len(obj2))

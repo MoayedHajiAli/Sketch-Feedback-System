@@ -61,7 +61,7 @@ def test_single_obj(reg, i, j):
          6.30043243e-02, -7.14737512e-09,  7.34028622e+02,
          1.13881862e+03]
     # t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-    d, p = RegisterTwoObjects(reg.original_obj[i], reg.target_obj[j], reg.total_cost).optimize(t)
+    d, p = RegisterTwoObjects(reg.original_obj[i], reg.target_obj[j], reg.total_cost).sub_register(t)
 
     print([np.array(t)])
     morph = Morph([reg.original_obj[i]], [reg.target_obj[j]])

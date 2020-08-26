@@ -94,9 +94,7 @@ class Registration:
                 ln = max(len(self.original_obj[i]), len(self.target_obj[ind]))
                 ref_obj = ObjectUtil.object_restructure(self.original_obj[i], n=ln)
                 tar_obj = ObjectUtil.object_restructure(self.target_obj[ind], n=ln)
-                RegistrationUtils.normalize_coords(ref_obj, tar_obj, -1)
                 dissimilarity = RegistrationUtils.calc_dissimilarity(ref_obj, tar_obj, tra_matrix[i, ind], cum_ang=True, turning_ang=False)
-                RegistrationUtils.normalize_coords(ref_obj, tar_obj, 1)
             print(dissimilarity, res_matrix[i, ind])
             # check if one of the objects is dummy or their dissimilarity is above the maximum threshold
             if dissimilarity > mx_dissimilarity:
@@ -151,29 +149,29 @@ class RegisterTwoObjects:
         self.total_cost = cost_fun
 
     # total dissimilarity including the cost of the transformation
-    def total_dissimalirity(self, p):
+    def total_dissimalirity(self, p, params = True):
         tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(self.ref_obj))
-        dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, p, target_nn = self.target_nn) 
+        if params:
+            t = RegistrationUtils.obtain_transformation_matrix(p)
+        dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, t, target_nn = self.target_nn) 
         return dissimilarity + (tran_cost / (len(self.ref_obj) + len(self.tar_obj)))   
 
-    # def find_grad(self):
-    #     return grad(self.calc_dissimilarity, argnum=(0))
-
-    def optimize(self, t = None):
+    def optimize(self, p = None, params = True):
         # TODO: current similarity function uses kd-tree, which is not suitable for symbolic automatic differentiation
         # grad = self.find_grad()
 
         # find t if not specifies
-        if t == None:
+        if p == None:
             x_dif = self.tar_obj.origin_x - self.ref_obj.origin_x
             y_dif = self.tar_obj.origin_y - self.ref_obj.origin_y
-            t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
+            if params:
+                p = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
+            else:
+                p = np.array([1.0, 0.0, x_dif, 0.0, 1.0, y_dif])  
+
         # track function for scipy minimize
         def _track(xk):
             print(xk)
-
-        # transform both object to the origin of the referenced object
-        RegistrationUtils.normalize_coords(self.ref_obj, self.tar_obj, -1)
 
         self.target_nn = Nearest_search(self.tar_obj.get_x(), self.tar_obj.get_y())
 
@@ -183,14 +181,11 @@ class RegisterTwoObjects:
 
         # minimize
         minimizer_kwargs = {"method": "BFGS"}
-        res = basinhopping(self.total_dissimalirity, t, minimizer_kwargs=minimizer_kwargs, disp=True, niter=1)
+        res = basinhopping(self.total_dissimalirity, p, params, minimizer_kwargs=minimizer_kwargs, disp=True, niter=1)
         d, p = res.fun, res.x
 
-        # restore the origin by transforming both object to the (0,0) coords
-        RegistrationUtils.normalize_coords(self.ref_obj, self.tar_obj, 1)
-
         return d, p
-
+        
 
 if __name__ == '__main__':
     pass
