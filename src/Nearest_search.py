@@ -1,7 +1,7 @@
 from scipy.spatial import cKDTree
 import numpy as np
 import warnings
-
+from Point import Point
 
 class Nearest_search():
 
@@ -10,8 +10,8 @@ class Nearest_search():
         self.y_dia = max(y) - min(y)
         x = np.reshape(x, (len(x), 1))
         y = np.reshape(y, (len(y), 1))
-        P = np.concatenate((x, y), axis=1)
-        self.tree = cKDTree(P, leafsize=2)
+        self.P = np.concatenate((x, y), axis=1)
+        self.tree = cKDTree(self.P, leafsize=2)
 
     def _func(self, n, a, b):
         # 0.02 , 0.98 is the criteria where the y become meaningful in the function 2e^x / (1 + e^x) - 1
@@ -27,7 +27,7 @@ class Nearest_search():
                 print(x, x2)
         return f
 
-    def query(self, X, Y, step=10, mn_dis=2, mx_dis=100, fac=1000, dynamic=True, ration_mn=0.05, ration_mx=0.10):
+    def query(self, X, Y, step=10, mn_dis=2, mx_dis=100, fac=1000, dynamic=True, ration_mn=0.05, ration_mx=0.60):
         if dynamic:
             mn_dis = max(self.x_dia, self.y_dia) * ration_mn
             mx_dis = max(self.x_dia, self.y_dia) * ration_mx
@@ -39,3 +39,12 @@ class Nearest_search():
             res = f(dd[0])
             tot += fac * res
         return tot
+
+    def query_ind(self, x, y):
+        dd, ind = self.tree.query([[x, y]], k=1)
+        return ind
+
+    def query_point(self, p:Point) -> Point:
+        x, y = p.get_x(), p.get_y()
+        dd, ind = self.tree.query([x, y], k = 1)
+        return Point(self.P[ind][0], self.P[ind][1])

@@ -181,11 +181,14 @@ class ObjectUtil:
         return new_stroke
 
     @staticmethod
-    def object_restructure(obj:UnlabeledObject, ratio):
+    def object_restructure(obj:UnlabeledObject, ratio=1.0, n = 0, mn_len=10) -> UnlabeledObject:
+        if n != 0:
+            ratio, mn_len = n / len(obj), 1
         tmp_lst = []
         for stroke in obj.get_strokes():
-            tmp_lst.append(ObjectUtil.stroke_restructure(stroke, ratio))
+            tmp_lst.append(ObjectUtil.stroke_restructure(stroke, ratio, mn_len=mn_len))
         return UnlabeledObject(tmp_lst)
+
 
     # obtain object from strokes according to collections matrix
     # collection matrix should have a shape of (n objects, k strokes for each object)

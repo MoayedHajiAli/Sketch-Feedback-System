@@ -1,7 +1,11 @@
+from Stroke import Stroke
+from Nearest_search import Nearest_search
+from Registration import RegisterTwoObjects
 import numpy as np
 from UnlabeledObject import UnlabeledObject
 import copy
 from Nearest_search import Nearest_search
+from ObjectUtil import ObjectUtil
 
 class RegistrationUtils:
     """this static class provides basic functuionality for registering
@@ -36,13 +40,12 @@ class RegistrationUtils:
         transform the coordinates x, and y according the transformation params t
     
     calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, p:array-type of shape(7),
-                                                                target_nn:Nearest_search = None)
+                      target_nn:Nearest_search = None, turning_ang=False, cum_and=False, distance=False)
         calculate the dissimilarity of two objects after transforming ref_obj according to 
         parameters p which are of the order (scaling-x, scaling-y, roation, shearing-x, 
-        shearing-y, translation-x, translation-y)
-    
-
-        
+        shearing-y, translation-x, translation-y).
+        Dissimilarity is calculated based on the distance of the nearest point of the opposite 
+        object for every given point the object      
     """
     
     inf = 1e9+7
@@ -126,7 +129,7 @@ class RegistrationUtils:
         det = (x0 - x1) * (y2 - y1) - (y0 - y1) * (x2 - x1)
         if dot == 0 or det == 0:
             return 0.0
-        return np.arctan2(-det, -dot) * 180.0 / np.pi + 180
+        return np.arctan2(-det, -dot) * 180.0 / np.pi
 
     # change the coordinates of obj1, obj2 by translating them by xo, and yo
     @staticmethod
@@ -177,7 +180,8 @@ class RegistrationUtils:
         # p[5]: translation in the x direction
         # p[6]: translation in the y direction
     @staticmethod
-    def calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, p, target_nn = None):
+    def calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, p, target_nn:Nearest_search = None, turning_ang=False,
+     cum_ang=False, length=False, turning_fac = 0.05, cum_fac = 0.3, len_fac = 0.01):
         x, y = np.array(copy.deepcopy(ref_obj.get_x())), np.array(copy.deepcopy(ref_obj.get_y()))
         x1, y1 = np.array(copy.deepcopy(tar_obj.get_x())), np.array(copy.deepcopy(tar_obj.get_y()))
 
@@ -185,9 +189,6 @@ class RegistrationUtils:
         t = RegistrationUtils.obtain_transformation_matrix(p)
         x, y = RegistrationUtils.transfer(x, y, t)
 
-        x = list(map(lambda q: q if isinstance(q, np.float64) else q._value, x))
-        y = list(map(lambda q: q if isinstance(q, np.float64) else q._value, y))
-        
         # obtain KDtree of the target obj
         if target_nn == None:
             target_nn = Nearest_search(x1, y1)
@@ -201,65 +202,62 @@ class RegistrationUtils:
 
         # find nearest point from the referenced object to the ith point of the target object
         tot += reference_nn.query(x1, y1)
+
+        if not turning_ang and not cum_ang and not length:
+            return tot / (len(ref_obj) + len(tar_obj))
+ 
+        # cum1 = RegistrationUtils.calc_turning(x[0] - 1, y[0], x[0], y[0], x[1], y[1])
+        # cum2 = RegistrationUtils.calc_turning(x1[0] - 1, y1[0], x1[0], y1[0], x1[1], y1[1])
+        # ang = min(abs(cum2 - cum1), 360.0 - (cum2 - cum1))
+        
+        # if turning_ang:
+        #     tot += turning_fac * ang
+
+        # if cum_ang:
+        #     tot += cum_fac * ang
+        cum1 = cum2 = 0
+
+        # i, j represent the current points of the target and the referenced objects respectively
+        j, i = 0, target_nn.query_ind(x[0], y[0])
+        for _ in range(len(ref_obj)):
+            if j + 2 < len(x1):
+                i_1 = (i - 1 + len(tar_obj)) % len(tar_obj)
+                i_2 = (i - 2 + len(tar_obj)) % len(tar_obj)
+                t1 = RegistrationUtils.calc_turning(x[j], y[j], x[j + 1], y[j + 1], x[j + 2], y[j + 2])
+                t2 = RegistrationUtils.calc_turning(x1[i], y1[i], x1[i_1], y1[i_1], x1[i_2], y1[i_2])
+                if turning_ang:
+                    print(t1, t2)
+                    ang = abs(t1 - t2)
+                    tot += turning_fac * ang * (len(ref_obj) + len(tar_obj))
+        
+
+                if cum_ang:
+                    cum1 = (t1 + cum1) % 180
+                    cum2 = (t2 + cum2) % 180
+                    print(cum1, cum2)
+                    ang = abs(cum2 - cum1)
+                    tot += cum_fac * ang
+        
+            if length and j + 1 < len(ref_obj):
+                i_1 = (i - 1 + len(tar_obj)) % len(tar_obj)
+                ln1 = np.sqrt((x[j + 1] - x[j]) ** 2 + (y[j + 1] - y[j]) ** 2)
+                ln2 = np.sqrt((x1[i_1] - x1[j]) ** 2 + (y1[i_1] - y1[i]) ** 2)
+                tot += len_fac * abs(ln2 - ln1)
+            j += 1
+            i = (i + 1 + len(tar_obj)) % len(tar_obj)
         return tot / (len(ref_obj) + len(tar_obj))
-
-
-        # TODO: the following block is dedicated to take into account
-        # the turning angle, length, and distance. I am commenting them until I perform separated tests on them.
-
-        # cum1 = self.calc_turning(x[0] - 1, y[0], x[0], y[0], x[1], y[1]) * a11 / a11
-        # cum2 = self.calc_turning(self.x1[0] - 1, self.y1[0], self.x1[0], self.y1[0], self.x1[1],
-        #                          self.y1[1]) * a11 / a11
-        #
-        # ang = 360.0 - (cum2 - cum1)
-        # if ang > cum2 - cum1:
-        #     ang = cum2 - cum1
-        # tot = ang
-
-        # tot = (ang/180.0) ** 2
-        # tot = ((x[0] - self.x1[0])**2 + (y[0] - self.y1[0])**2) * 0.01
-        # i, j represent the current points target, referenced stroke respectively
-        # i = j = 0
-        # for _ in range(len(self.obj1)):
-        #
-        #     if j + 2 < len(self.obj1):
-        #         t1 = self.calc_turning(x[j], y[j], x[j + 1], y[j + 1], x[j + 2], y[j + 2]) * a11 / a11
-        #         t2 = self.calc_turning(self.x1[i], self.y1[i], self.x1[i + 1], self.y1[i + 1], self.x1[i + 2],
-        #                                self.y1[i + 2]) * a11 / a11
-        #
-        #         ang = 360.0 - (t2 - t1)
-        #         if ang > t2 - t1:
-        #             ang = t2 - t1
-        #         # tot += (ang/180.0) ** 2
-        #
-        #         cum1 += t1
-        #         cum2 += t2
-        #         ang = 360.0 - (cum2 - cum1)
-        #         if ang > cum2 - cum1:
-        #             ang = cum2 - cum1
-        #         #tot += (ang / 180.0) ** 2
-        #
-        #     if i + 1 < len(self.obj1):
-        #         ln1 = np.sqrt((x[j + 1] - x[j]) ** 2 + (y[j + 1] - y[j]) ** 2)
-        #         ln2 = np.sqrt((self.x1[i + 1] - self.x1[j]) ** 2 + (self.y1[i + 1] - self.y1[i]) ** 2)
-        #         #tot += (ln2 - ln1) ** 2
-        #
-        #     # # find nearest point from the referenced stroke to the ith point
-        #     # # of the target stroke
-        #     # mn = 1000000000
-        #     # for k in range(len(x)):
-        #     #     mn = min(mn, (x[k] - self.x1[i]) ** 2 + (y[k] - self.y1[i]) ** 2)
-        #     # tot += mn
-        #     #
-        #     # # find nearest point from the target stroke to the jth point
-        #     # # of the referenced stroke
-        #     # mn = 1000000000
-        #     # for k in range(len(x)):
-        #     #     mn = min(mn, (x[j] - self.x1[k]) ** 2 + (y[j] - self.y1[k]) ** 2)
-        #     # tot += mn
-        #
-        #     # print(x[0], self.x1[0])
-        #     # tot += ((x[j] - self.x1[i])**2 + (y[j] - self.y1[i])**2) * 0.01
-        #
-        #     i = i + 1
-        #     j = j + 1
+        
+    @staticmethod
+    def identify_similarity(obj1:UnlabeledObject, obj2:UnlabeledObject, t) -> bool:
+        obj1 = copy.deepcopy(obj1)
+        obj2 = copy.deepcopy(obj2)
+        d, t = RegisterTwoObjects(obj1, obj2, lambda p : 0).optimize(t)
+        obj1.transform(t)
+        strokes = []
+        obj1_kd = Nearest_search(obj1.get_x, obj2.get_y)
+        for s in obj2.get_strokes():
+            tmp = []
+            for p in s.get_points():
+                tmp.append(obj1_kd.query_point(p))
+            
+            strokes.append(Stroke(tmp))

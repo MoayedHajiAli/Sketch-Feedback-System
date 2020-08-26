@@ -65,6 +65,8 @@ def test_single_obj(reg, i, j):
 
     print([np.array(t)])
     morph = Morph([reg.original_obj[i]], [reg.target_obj[j]])
+    print("original len", len(reg.original_obj[i]))
+    print("target len", len(reg.target_obj[j]))
     morph.seq_animate_all([t], save=False, file="./test_videos/example5-seq-obj3.mp4")
     plt.show()
 

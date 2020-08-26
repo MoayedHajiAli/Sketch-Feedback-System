@@ -1,5 +1,4 @@
 from ObjectUtil import ObjectUtil
-from autograd import grad
 import numpy as np
 from scipy.optimize import minimize, basinhopping
 from Nearest_search import Nearest_search
@@ -50,7 +49,7 @@ class Registration:
                                                              re_sampling=re_sampling, mn_len=mn_stroke_len, flip=flip, shift_y=shift_target_y, shift_x=shift_target_x)
         self.core_cnt = multiprocessing.cpu_count()
     
-    def register(self, mx_dissimilarity = 40):
+    def register(self, mx_dissimilarity = 50):
         n, m = len(self.original_obj), len(self.target_obj)
         dim = max(n,m)
         res_matrix = np.zeros((dim, dim))
@@ -92,9 +91,12 @@ class Registration:
         for i, ind in enumerate(row_ind):
             dissimilarity = res_matrix[i, ind]
             if i < n and ind < m:
-                RegistrationUtils.normalize_coords(self.original_obj[i], self.target_obj[ind], -1)
-                dissimilarity = RegistrationUtils.calc_dissimilarity(self.original_obj[i], self.target_obj[ind], tra_matrix[i, ind])
-                RegistrationUtils.normalize_coords(self.original_obj[i], self.target_obj[ind], 1)
+                ln = max(len(self.original_obj[i]), len(self.target_obj[ind]))
+                ref_obj = ObjectUtil.object_restructure(self.original_obj[i], n=ln)
+                tar_obj = ObjectUtil.object_restructure(self.target_obj[ind], n=ln)
+                RegistrationUtils.normalize_coords(ref_obj, tar_obj, -1)
+                dissimilarity = RegistrationUtils.calc_dissimilarity(ref_obj, tar_obj, tra_matrix[i, ind], cum_ang=True, turning_ang=False)
+                RegistrationUtils.normalize_coords(ref_obj, tar_obj, 1)
             print(dissimilarity, res_matrix[i, ind])
             # check if one of the objects is dummy or their dissimilarity is above the maximum threshold
             if dissimilarity > mx_dissimilarity:
@@ -132,6 +134,7 @@ class Registration:
         t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
         return reg.optimize(t)
 
+
     # obtain total transformation **parameters** cost
     def total_cost(self, p, mn_x, mx_x, mn_y, mx_y, ln):
         tot = 0.0
@@ -142,7 +145,6 @@ class Registration:
         return tot
 
 class RegisterTwoObjects:
-
     def __init__(self, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, cost_fun):
         self.tar_obj = tar_obj
         self.ref_obj = ref_obj
@@ -157,10 +159,15 @@ class RegisterTwoObjects:
     # def find_grad(self):
     #     return grad(self.calc_dissimilarity, argnum=(0))
 
-    def optimize(self, t):
+    def optimize(self, t = None):
         # TODO: current similarity function uses kd-tree, which is not suitable for symbolic automatic differentiation
         # grad = self.find_grad()
 
+        # find t if not specifies
+        if t == None:
+            x_dif = self.tar_obj.origin_x - self.ref_obj.origin_x
+            y_dif = self.tar_obj.origin_y - self.ref_obj.origin_y
+            t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
         # track function for scipy minimize
         def _track(xk):
             print(xk)
