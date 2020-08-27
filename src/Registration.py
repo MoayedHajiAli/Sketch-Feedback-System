@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import minimize, basinhopping
 from Nearest_search import Nearest_search
 from lapjv import lapjv
-from RegistrationUtils import RegistrationUtils
+from RegistrationUtils import RegistrationUtils, RegisterTwoObjects
 from UnlabeledObject import UnlabeledObject
 import copy
 from multiprocessing import Pool
@@ -142,50 +142,3 @@ class Registration:
         tot += self.tr_cost(p[5], p[6], ln)
         return tot
 
-class RegisterTwoObjects:
-    def __init__(self, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, cost_fun):
-        self.tar_obj = tar_obj
-        self.ref_obj = ref_obj
-        self.total_cost = cost_fun
-
-    # total dissimilarity including the cost of the transformation
-    def total_dissimalirity(self, p, params = True):
-        tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(self.ref_obj))
-        if params:
-            t = RegistrationUtils.obtain_transformation_matrix(p)
-        dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, t, target_nn = self.target_nn) 
-        return dissimilarity + (tran_cost / (len(self.ref_obj) + len(self.tar_obj)))   
-
-    def optimize(self, p = None, params = True):
-        # TODO: current similarity function uses kd-tree, which is not suitable for symbolic automatic differentiation
-        # grad = self.find_grad()
-
-        # find t if not specifies
-        if p == None:
-            x_dif = self.tar_obj.origin_x - self.ref_obj.origin_x
-            y_dif = self.tar_obj.origin_y - self.ref_obj.origin_y
-            if params:
-                p = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
-            else:
-                p = np.array([1.0, 0.0, x_dif, 0.0, 1.0, y_dif])  
-
-        # track function for scipy minimize
-        def _track(xk):
-            print(xk)
-
-        self.target_nn = Nearest_search(self.tar_obj.get_x(), self.tar_obj.get_y())
-
-        # calculate min/max coordinates for the referenced object
-        self.mn_x, self.mx_x = min(self.ref_obj.get_x()), max(self.ref_obj.get_x())
-        self.mn_y, self.mx_y = min(self.ref_obj.get_x()), max(self.ref_obj.get_y())
-
-        # minimize
-        minimizer_kwargs = {"method": "BFGS"}
-        res = basinhopping(self.total_dissimalirity, p, params, minimizer_kwargs=minimizer_kwargs, disp=True, niter=1)
-        d, p = res.fun, res.x
-
-        return d, p
-        
-
-if __name__ == '__main__':
-    pass

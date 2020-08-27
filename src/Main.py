@@ -1,13 +1,15 @@
 from Morph import Morph
-from Registration import Registration, RegisterTwoObjects
+from Registration import Registration
 from matplotlib import pyplot as plt
 import numpy as np
-from RegistrationUtils import RegistrationUtils
+from RegistrationUtils import RegistrationUtils, RegisterTwoObjects
 import copy
-array = np.array
 from UnlabeledObject import UnlabeledObject
 from Stroke import Stroke
 
+array = np.array
+# TODO
+# currently, whenever we need to transform an object
 def main():
     reg = Registration('./test_samples/a7.xml', './test_samples/b7.xml', mn_stroke_len=6, re_sampling=1.0, flip=True, shift_target_y = 1000)
     a, b = map(int, input().split())
@@ -61,7 +63,7 @@ def test_single_obj(reg, i, j):
          6.30043243e-02, -7.14737512e-09,  7.34028622e+02,
          1.13881862e+03]
     # t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-    d, p = RegisterTwoObjects(reg.original_obj[i], reg.target_obj[j], reg.total_cost).sub_register(t)
+    d, p = RegisterTwoObjects(reg.original_obj[i], reg.target_obj[j], reg.total_cost).optimize(t)
 
     print([np.array(t)])
     morph = Morph([reg.original_obj[i]], [reg.target_obj[j]])
