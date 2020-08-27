@@ -5,6 +5,8 @@ from UnlabeledObject import UnlabeledObject
 import copy
 from Nearest_search import Nearest_search
 from ObjectUtil import ObjectUtil
+from scipy.optimize import minimize, basinhopping
+import sys
 
 class RegistrationUtils:
     """this static class provides basic functuionality for registering
@@ -196,7 +198,7 @@ class RegistrationUtils:
         x, y = RegistrationUtils.transfer(x, y, t)
 
         # obtain KDtree of the target obj
-        if target_nn == None:
+        if target_nn is None:
             target_nn = Nearest_search(x1, y1)
         
         # obtain KDtree of the refrenced obj
@@ -310,7 +312,7 @@ class RegisterTwoObjects:
         # grad = self.find_grad()
 
         # find t if not specifies
-        if p == None:
+        if p is None:
             x_dif = self.tar_obj.origin_x - self.ref_obj.origin_x
             y_dif = self.tar_obj.origin_y - self.ref_obj.origin_y
             if params:
@@ -322,15 +324,16 @@ class RegisterTwoObjects:
         def _track(xk):
             print(xk)
 
-        self.target_nn = Nearest_search(self.tar_obj.get_x(), self.tar_obj.get_y())
+        #self.target_nn = Nearest_search(self.tar_obj.get_x(), self.tar_obj.get_y())
+        self.target_nn = None
 
         # calculate min/max coordinates for the referenced object
         self.mn_x, self.mx_x = min(self.ref_obj.get_x()), max(self.ref_obj.get_x())
         self.mn_y, self.mx_y = min(self.ref_obj.get_x()), max(self.ref_obj.get_y())
 
         # minimize
-        minimizer_kwargs = {"method": "BFGS"}
-        res = basinhopping(self.total_dissimalirity, p, params, minimizer_kwargs=minimizer_kwargs, disp=True, niter=1)
+        minimizer_kwargs = {"method": "BFGS", "args" : (params)}
+        res = basinhopping(self.total_dissimalirity, p, minimizer_kwargs=minimizer_kwargs, disp=True, niter=1)
         d, p = res.fun, res.x
 
         return d, p

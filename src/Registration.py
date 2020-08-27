@@ -129,8 +129,8 @@ class Registration:
     def _optimize(self, reg):
         x_dif = reg.tar_obj.origin_x - reg.ref_obj.origin_x
         y_dif = reg.tar_obj.origin_y - reg.ref_obj.origin_y
-        t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
-        return reg.optimize(t)
+        p = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
+        return reg.optimize(p = p, params=True)
 
 
     # obtain total transformation **parameters** cost
@@ -142,3 +142,5 @@ class Registration:
         tot += self.tr_cost(p[5], p[6], ln)
         return tot
 
+if __name__ == "__main__":
+    pass

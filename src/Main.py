@@ -1,15 +1,13 @@
 from Morph import Morph
-from Registration import Registration
+from Registration import Registration, RegisterTwoObjects
 from matplotlib import pyplot as plt
 import numpy as np
-from RegistrationUtils import RegistrationUtils, RegisterTwoObjects
+from RegistrationUtils import RegistrationUtils
 import copy
+array = np.array
 from UnlabeledObject import UnlabeledObject
 from Stroke import Stroke
 
-array = np.array
-# TODO
-# currently, whenever we need to transform an object
 def main():
     reg = Registration('./test_samples/a7.xml', './test_samples/b7.xml', mn_stroke_len=6, re_sampling=1.0, flip=True, shift_target_y = 1000)
     a, b = map(int, input().split())
@@ -18,7 +16,6 @@ def main():
     else:
         # add missing objects (temporarily as training is running on ssh server)
         add_objects(reg, [])
-
         p = reg.register()
         print([np.array(p)])
         t = []
@@ -59,17 +56,17 @@ def test_single_obj(reg, i, j):
     obj1, obj2 = reg.original_obj[i], reg.target_obj[j]
     x_dif = reg.target_obj[j].origin_x - reg.original_obj[i].origin_x
     y_dif = reg.target_obj[j].origin_y - reg.original_obj[i].origin_y
-    t = [ 1.14772552e+00,  9.33270160e-01, -1.48902180e-01,
-         6.30043243e-02, -7.14737512e-09,  7.34028622e+02,
-         1.13881862e+03]
-    # t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-    d, p = RegisterTwoObjects(reg.original_obj[i], reg.target_obj[j], reg.total_cost).optimize(t)
+    # t = [ 1.14772552e+00,  9.33270160e-01, -1.48902180e-01,
+    #      6.30043243e-02, -7.14737512e-09,  7.34028622e+02,
+    #      1.13881862e+03]
+    # t = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x, 0.0])
+    d, p = RegisterTwoObjects(reg.original_obj[i], reg.target_obj[j], reg.total_cost).optimize()
 
-    print([np.array(t)])
+    print([np.array(p)])
     morph = Morph([reg.original_obj[i]], [reg.target_obj[j]])
     print("original len", len(reg.original_obj[i]))
     print("target len", len(reg.target_obj[j]))
-    morph.seq_animate_all([t], save=False, file="./test_videos/example5-seq-obj3.mp4")
+    morph.seq_animate_all([p], save=False, file="./test_videos/example5-seq-obj3.mp4")
     plt.show()
 
 def trans(obj1, reg, org_ind, t):
