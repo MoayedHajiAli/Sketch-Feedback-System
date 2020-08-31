@@ -6,6 +6,7 @@ from math import ceil
 import numpy as np
 from scipy.interpolate import interp1d
 from UnlabeledObject import UnlabeledObject
+import copy
 
 class ObjectUtil:
 
@@ -16,6 +17,8 @@ class ObjectUtil:
         data = minidom.parse(file)
         points = data.getElementsByTagName('point')
         strokes = data.getElementsByTagName('stroke')
+        objects = data.getElementsByTagName('Object')
+        print(len(objects))
 
         # create dictionary for id -> point
         point_dic = {}
@@ -32,31 +35,41 @@ class ObjectUtil:
 
             point_dic[el.attributes['id'].value] = (x, y, time)
 
-        objects = []
+        all_strokes, strokes_id, strokes_collections, labels = [], [], [], []
         # extract strokes
         for st in strokes:
             pts = st.getElementsByTagName('arg')
+            strokes_id.append(st.attributes['id'].value)
             stroke = []
             for pt in pts:
                 id = pt.firstChild.nodeValue
                 x, y, t = point_dic[id]
                 stroke.append(Point(x, y, t))
             if len(stroke) >= mn_len:
-                objects.append(Stroke(stroke))
-        return np.array(objects)
+                all_strokes.append(Stroke(stroke))
+        for o in objects:
+            labels.append(o.attributes['Label'].value)
+            sts = o.getElementsByTagName('arg')
+            tmp = []
+            for s in sts:
+                id = s.firstChild.nodeValue
+                tmp.append(strokes_id.index(id))
+            strokes_collections.append(tmp)
+
+        return np.array(all_strokes), strokes_collections, labels
 
     # for a given file, read the file and transform it to an array of objects
     @ staticmethod
-    def xml_to_UnlabeledObjects(file, strokes_labels, mn_len=0, re_sampling=1.0, flip=False, shift_x=0.0, shift_y = 0.0):
-        strokes = ObjectUtil.xml_to_Strokes(file, mn_len=mn_len, flip=flip, shift_x=shift_x, shift_y=shift_y)
+    def xml_to_UnlabeledObjects(file, mn_len=0, re_sampling=1.0, flip=False, shift_x=0.0, shift_y = 0.0):
+        strokes, strokes_collections, labels = ObjectUtil.xml_to_Strokes(file, mn_len=mn_len, flip=flip, shift_x=shift_x, shift_y=shift_y)
         print(len(strokes))
-        objs = ObjectUtil.collect_strokes(strokes, strokes_labels)
+        objs = ObjectUtil.collect_strokes(strokes, strokes_collections)
 
         # re-sample the objects
         if re_sampling != 0.0:
             for i in range(len(objs)):
                 objs[i] = ObjectUtil.object_restructure(objs[i], re_sampling)
-        return objs
+        return objs, labels
 
     # for given two objects, match their size by adding dummy points
     @staticmethod
@@ -157,7 +170,7 @@ class ObjectUtil:
             return Point(p1.x + d * r, f(p1.x + d * r), p1.t + td * r)
 
         # list to hold the new points
-        lst = [stroke.get_points()[0]]
+        lst = [copy.deepcopy(stroke.get_points()[0])]
 
         # j: remaining distance to be traversed from the last iteration
         j = p

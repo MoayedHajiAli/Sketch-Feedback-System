@@ -4,14 +4,19 @@ import warnings
 from Point import Point
 
 class Nearest_search():
-
-    def __init__(self, x, y):
-        self.x_dia = max(x) - min(x)
-        self.y_dia = max(y) - min(y)
+    def __init__(self, x, y, step=4, mn_dis=2, mx_dis=100, fac=1000, dynamic=True, ration_mn=0.0, ration_mx=0.80):
+        x_dia = max(x) - min(x)
+        y_dia = max(y) - min(y)
         x = np.reshape(x, (len(x), 1))
         y = np.reshape(y, (len(y), 1))
         self.P = np.concatenate((x, y), axis=1)
         self.tree = cKDTree(self.P, leafsize=2)
+
+        if dynamic:
+            mn_dis = max(x_dia, y_dia) * ration_mn
+            mx_dis = max(x_dia, y_dia) * ration_mx
+            # print(max(x_dia, y_dia), mn_dis, mx_dis)
+        self.f = f = self._func(step, mn_dis, mx_dis)
 
     def _func(self, n, a, b):
         # 0.02 , 0.98 is the criteria where the y become meaningful in the function 2e^x / (1 + e^x) - 1
@@ -27,17 +32,15 @@ class Nearest_search():
                 print(x, x2)
         return f
 
-    def query(self, X, Y, step=10, mn_dis=2, mx_dis=100, fac=1000, dynamic=True, ration_mn=0.05, ration_mx=0.60):
-        if dynamic:
-            mn_dis = max(self.x_dia, self.y_dia) * ration_mn
-            mx_dis = max(self.x_dia, self.y_dia) * ration_mx
-
-        f = self._func(step, mn_dis, mx_dis)
+    def query(self, X, Y, fac = 1000):
         tot = 0.0
         for x, y in zip(X, Y):
             dd, ind = self.tree.query([[x, y]], k=1)
-            res = f(dd[0])
+            # print("p", dd[0])
+            res = self.f(dd[0])
             tot += fac * res
+            # print("tot", tot)
+        # print("--------------------------")
         return tot
 
     def query_ind(self, x, y):

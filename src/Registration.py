@@ -34,8 +34,8 @@ class Registration:
     # target_strokes_collection = [[0], [1], [2], [3, 4], [5, 6], [7], [8], [9, 10], [11], [12, 13, 14, 15], [16], [17, 18]]
     
     # example7
-    original_strokes_collection = [[0, 1, 2, 6], [3, 4, 5], [7, 8, 9], [10], [11], [12], [13], [14]] 
-    target_strokes_collection = [[0], [1], [2], [3], [4], [5]]
+    # original_strokes_collection = [[0, 1, 2, 6], [3, 4, 5], [7, 8, 9], [10], [11], [12], [13], [14]] 
+    # target_strokes_collection = [[0], [1], [2], [3], [4], [5]]
 
     def __init__(self, org_file, tar_file, re_sampling=1.0, mn_stroke_len=0, flip=False, shift_target_x = 0.0, shift_target_y = 0.0,
                  shearing_cost=RegistrationUtils._shearing_cost, translation_cost=RegistrationUtils._translation_cost,
@@ -43,11 +43,14 @@ class Registration:
 
         self.sh_cost, self.tr_cost, self.ro_cost, self.sc_cost = shearing_cost, translation_cost, rotation_cost, scaling_cost
 
-        self.original_obj = ObjectUtil.xml_to_UnlabeledObjects(org_file, self.original_strokes_collection,
+        self.original_obj, self.origninal_labels = ObjectUtil.xml_to_UnlabeledObjects(org_file,
                                                                re_sampling=re_sampling, mn_len=mn_stroke_len, flip=flip)
-        self.target_obj = ObjectUtil.xml_to_UnlabeledObjects(tar_file, self.target_strokes_collection,
+        self.target_obj, self.target_labels = ObjectUtil.xml_to_UnlabeledObjects(tar_file,
                                                              re_sampling=re_sampling, mn_len=mn_stroke_len, flip=flip, shift_y=shift_target_y, shift_x=shift_target_x)
         self.core_cnt = multiprocessing.cpu_count()
+        print("CPU count:", self.core_cnt)
+        print("Original sketch labels", self.origninal_labels)
+        print("Target sketch labels", self.target_labels)
     
     def register(self, mx_dissimilarity = 50):
         n, m = len(self.original_obj), len(self.target_obj)

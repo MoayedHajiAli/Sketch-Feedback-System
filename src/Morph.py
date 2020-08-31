@@ -171,7 +171,7 @@ class Morph():
         # animate
         anim = animation.FuncAnimation(self.fig, func=self._seq_anim,
                                        init_func=self._init_animation, frames=5 * steps, interval=1, blit=True,
-                                       repeat_delay=2000, fargs=[steps, t], repeat=True)
+                                       repeat_delay=2000, fargs=[steps, t], repeat=False)
         if save:
             self._save_anim(anim, file)
         plt.show()
