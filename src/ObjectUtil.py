@@ -7,6 +7,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 from UnlabeledObject import UnlabeledObject
 import copy
+import warnings
 
 class ObjectUtil:
 
@@ -142,7 +143,7 @@ class ObjectUtil:
 
     # for a given object, calculate its perimeter
     @staticmethod
-    def calc_perimeter(obj:Stroke) -> float:
+    def calc_perimeter(obj) -> float:
         tot, i = 0, 1
         while i < len(obj):
             tot += Point.euclidean_distance(obj.get_points()[i], obj.get_points()[i-1])
@@ -153,8 +154,7 @@ class ObjectUtil:
     # for a given stroke, and target number of points, restructure the objects by placing
     # the points at equal distances
     @staticmethod
-    def stroke_restructure(stroke:Stroke, ratio=0.0, mn_len=10) -> Stroke:
-        n = max(mn_len, int(len(stroke) * ratio))
+    def stroke_restructure(stroke:Stroke, n) -> Stroke:
         perimeter = ObjectUtil.calc_perimeter(stroke)
         p = perimeter / (n)
         # print("Before", len(stroke), perimeter, p)
@@ -164,7 +164,12 @@ class ObjectUtil:
             f = interp1d([p1.x, p2.x], [p1.y, p2.y])
             d = p2.x - p1.x
             td = p2.t - p1.t
-            r = x / Point.euclidean_distance(p1, p2)
+            with warnings.catch_warnings():
+                warnings.filterwarnings('error')
+                try:
+                    r = x / Point.euclidean_distance(p1, p2)
+                except Warning:
+                    print(x, Point.euclidean_distance(p1, p2))
             return Point(p1.x + d * r, f(p1.x + d * r), p1.t + td * r)
 
         # list to hold the new points
@@ -176,6 +181,8 @@ class ObjectUtil:
         for i in range(len(stroke) - 1):
             p1, p2 = stroke.get_points()[i], stroke.get_points()[i + 1]
             d = Point.euclidean_distance(p1, p2)
+            if d == 0:
+                continue
             # c: how much distance from the first point has been traversed toward the second point
             c = 0
             while c + j <= d:
@@ -192,12 +199,14 @@ class ObjectUtil:
         return new_stroke
 
     @staticmethod
-    def object_restructure(obj:UnlabeledObject, ratio=1.0, n = 0, mn_len=10) -> UnlabeledObject:
-        if n != 0:
-            ratio, mn_len = n / len(obj), 1
+    def object_restructure(obj:UnlabeledObject, ratio=1.0, n=0, mn_len=10) -> UnlabeledObject:
+        if n == 0:
+            n = len(obj) * ratio
+        peri = ObjectUtil.calc_perimeter(obj)
         tmp_lst = []
         for stroke in obj.get_strokes():
-            tmp_lst.append(ObjectUtil.stroke_restructure(stroke, ratio, mn_len=mn_len))
+            m = max(ObjectUtil.calc_perimeter(stroke) / peri * n, mn_len)
+            tmp_lst.append(ObjectUtil.stroke_restructure(stroke, m))
         return UnlabeledObject(tmp_lst)
 
 

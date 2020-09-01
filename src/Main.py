@@ -9,18 +9,19 @@ array = np.array
 from UnlabeledObject import UnlabeledObject
 from Stroke import Stroke
 from Evaluation import Evaluation
+import time
 
 def main():
     q = int(input())
     if q == 0:
         evalute()
     elif q == 1:
+        reg = Registration('./test_samples/a8.xml', './test_samples/b8.xml', mn_stroke_len=6, re_sampling=0.5, flip=True, shift_target_y = 1000)
         a, b = map(int, input().split())
-        reg = Registration('./test_samples/a8.xml', './test_samples/b8.xml', mn_stroke_len=6, re_sampling=1.0, flip=True, shift_target_y = 1000)
         test_single_obj(reg, a, b)
     else:
+        reg = Registration('./test_samples/a8.xml', './test_samples/b8.xml', mn_stroke_len=6, re_sampling=0.5, flip=True, shift_target_y = 1000)
         a, b = map(int, input().split())
-        reg = Registration('./test_samples/a8.xml', './test_samples/b8.xml', mn_stroke_len=6, re_sampling=1.0, flip=True, shift_target_y = 1000)
         # add missing objects (temporarily as training is running on ssh server)
         add_objects(reg, [])
         p = reg.register()
@@ -59,16 +60,17 @@ def add_obj(reg, obj):
   reg.original_obj.append(new_obj)
 
 def test_single_obj(reg, i, j):
+    st = time.time()
     obj1, obj2 = reg.original_obj[i], reg.target_obj[j]
+    obj1 = ObjectUtil.object_restructure(obj1, n = 30)
     x_dif = obj2.origin_x - obj1.origin_x
     y_dif = obj2.origin_y - obj1.origin_y
-    obj1 = ObjectUtil.object_restructure(obj1, n = 60)
-    obj2 = ObjectUtil.object_restructure(obj2, n = 60)
     p = array([ 3.05030249e+00,  3.45396355e+00,  7.05516539e-02, -2.43930107e-05,
        -2.67216045e-10,  1.16495973e+03,  3.21120536e+02])
     d, p = RegisterTwoObjects(obj1, obj2, reg.total_cost).optimize()
-    print([np.array(p)])
+    print(d, [np.array(p)])
     print(RegistrationUtils.identify_similarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p)))
+    print("Running time: ", time.time()-st)
     morph = Morph([obj1], [obj2])
     print("original len", len(reg.original_obj[i]))
     print("target len", len(reg.target_obj[j]))
@@ -76,11 +78,12 @@ def test_single_obj(reg, i, j):
     plt.show()
 
 def evalute():
-    eval = Evaluation([], [])
+    eval = Evaluation([], [], re_sampling=0.3)
     eval.add_file('prototypes/p1.xml')
-    eval.add_file('prototypes/p2.xml')
+    eval.add_file('prototypes/p4.xml')
     print("Labels: ", eval.labels)
-    acc, conf_matrix = eval.start('./tst', 100)
+    # ../ASIST_Dataset/Data/Data_A
+    acc, conf_matrix = eval.start('../ASIST_Dataset/Data/Data_A', 100)
     print("Prediction Accuracy is: ", acc)
     print("Confusion matrix:")
     print(eval.labels)

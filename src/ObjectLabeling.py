@@ -90,7 +90,7 @@ class ObjectLabeling:
                     except:
                         print("could not convert file" + file)
 
-data_dir = './test_samples'
-ObjectLabeling().explore(data_dir)
+data_dir = '../ASIST_Dataset/Data/Data_A'
+# ObjectLabeling().explore(data_dir)
 
 
