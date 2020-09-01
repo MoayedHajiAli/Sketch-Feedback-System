@@ -8,13 +8,19 @@ import copy
 array = np.array
 from UnlabeledObject import UnlabeledObject
 from Stroke import Stroke
+from Evaluation import Evaluation
 
 def main():
-    reg = Registration('./test_samples/a8.xml', './test_samples/b8.xml', mn_stroke_len=6, re_sampling=1.0, flip=True, shift_target_y = 1000)
-    a, b = map(int, input().split())
-    if a != -1 and b != -1:
+    q = int(input())
+    if q == 0:
+        evalute()
+    elif q == 1:
+        a, b = map(int, input().split())
+        reg = Registration('./test_samples/a8.xml', './test_samples/b8.xml', mn_stroke_len=6, re_sampling=1.0, flip=True, shift_target_y = 1000)
         test_single_obj(reg, a, b)
     else:
+        a, b = map(int, input().split())
+        reg = Registration('./test_samples/a8.xml', './test_samples/b8.xml', mn_stroke_len=6, re_sampling=1.0, flip=True, shift_target_y = 1000)
         # add missing objects (temporarily as training is running on ssh server)
         add_objects(reg, [])
         p = reg.register()
@@ -53,7 +59,6 @@ def add_obj(reg, obj):
   reg.original_obj.append(new_obj)
 
 def test_single_obj(reg, i, j):
-
     obj1, obj2 = reg.original_obj[i], reg.target_obj[j]
     x_dif = obj2.origin_x - obj1.origin_x
     y_dif = obj2.origin_y - obj1.origin_y
@@ -70,8 +75,16 @@ def test_single_obj(reg, i, j):
     morph.seq_animate_all([p], save=False, file="./test_videos/example7-obj3-4.mp4")
     plt.show()
 
-def trans(obj1, reg, org_ind, t):
-    reg.original_obj[org_ind].transform(t)
+def evalute():
+    eval = Evaluation([], [])
+    eval.add_file('prototypes/p1.xml')
+    eval.add_file('prototypes/p2.xml')
+    print("Labels: ", eval.labels)
+    acc, conf_matrix = eval.start('./tst', 100)
+    print("Prediction Accuracy is: ", acc)
+    print("Confusion matrix:")
+    print(eval.labels)
+    print(conf_matrix)
 
 if __name__ == '__main__':
     main()

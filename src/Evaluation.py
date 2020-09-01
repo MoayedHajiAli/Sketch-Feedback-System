@@ -1,0 +1,87 @@
+from RegistrationUtils import RegistrationUtils
+from ObjectUtil import ObjectUtil
+import numpy as np 
+from progress.bar import Bar
+import os
+import pathlib
+from multiprocessing import Pool
+import multiprocessing
+
+class Evaluation:
+    inf = 1e9
+    def __init__(self, prototypes, labels):
+        self.prototypes = prototypes
+        self.labels = labels
+        self.core_cnt = multiprocessing.cpu_count()
+
+    def add_file(self, file):
+        objs, lbs = ObjectUtil.xml_to_UnlabeledObjects(file)
+        for obj, label in zip(objs, lbs):
+            if label in self.labels:
+                ind = self.labels.index(label)
+                self.prototypes[ind].append(obj)
+            else:
+                self.labels.append(label)
+                self.prototypes.append([obj])
+
+    def explore(self, directory, scale, pro_queue, labels_ind):
+        # prepare queue of regiteration objects for multiprocessing
+        for path in pathlib.Path(directory).iterdir():
+            if path.is_dir():
+                self.explore(path, scale)
+            elif path.is_file():
+                file = os.path.basename(path)
+                if file.endswith(".xml"): 
+                    try:
+                        objs, lbs = ObjectUtil.xml_to_UnlabeledObjects(str(path))
+                        for obj, label in zip(objs, lbs):
+                            try:
+                                ind = self.labels.index(label)
+                            except:
+                                print("Coultd not find any prototypes for the label ", label)
+                                continue
+                            pro_queue.append(obj)
+                            labels_ind.append(ind)
+                    except Exception as e: 
+                        print("could not read file succefully " + file)
+                        print(str(e))
+
+
+    def start(self, path, scale):
+        self.scale = scale
+        pro_queue, labels_ind = [], []
+        self.explore(path, scale, pro_queue, labels_ind)
+        print("The number of objects to be evaluated are", len(labels_ind))
+        self.bar = Bar('Evaluating', max=len(labels_ind))
+        self.bar.finish()
+
+        # register all the objects using pooling
+        res = []
+        with Pool(self.core_cnt) as p:
+            res = list(p.map(self.evaluate_obj, pro_queue))
+
+        conf_matrix=np.zeros((len(self.labels), len(self.labels) + 1))
+        for prediction, ind in zip(res, labels_ind):
+            conf_matrix[ind][prediction] += 1
+        accuracy = 0
+        for i in range(len(self.labels)):
+            accuracy += conf_matrix[i][i]
+        print(accuracy, sum(conf_matrix))
+        accuracy /= sum(conf_matrix)
+
+        return accuracy, conf_matrix
+
+    def evaluate_obj(self, obj):
+        tmp = []
+        for ps in self.prototypes:
+            tmp.append(self.inf)
+            for o in ps:
+                d = RegistrationUtils.identify_similarity(obj, o)
+                tmp[-1] = min(tmp[-1], d)
+        mn_ind = np.argmin(tmp)
+        self.bar.next()
+        if tmp[mn_ind] > self.scale:
+            return len(tmp)
+        else:
+            return mn_ind
+

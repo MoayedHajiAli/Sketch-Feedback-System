@@ -18,7 +18,6 @@ class ObjectUtil:
         points = data.getElementsByTagName('point')
         strokes = data.getElementsByTagName('stroke')
         objects = data.getElementsByTagName('Object')
-        print(len(objects))
 
         # create dictionary for id -> point
         point_dic = {}
@@ -62,7 +61,6 @@ class ObjectUtil:
     @ staticmethod
     def xml_to_UnlabeledObjects(file, mn_len=0, re_sampling=1.0, flip=False, shift_x=0.0, shift_y = 0.0):
         strokes, strokes_collections, labels = ObjectUtil.xml_to_Strokes(file, mn_len=mn_len, flip=flip, shift_x=shift_x, shift_y=shift_y)
-        print(len(strokes))
         objs = ObjectUtil.collect_strokes(strokes, strokes_collections)
 
         # re-sample the objects
