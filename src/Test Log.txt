@@ -1,0 +1,10 @@
+100%|██████████| 9811/9811 [9:36:07<00:00,  3.52s/it]  
+Prediction Accuracy is:  0.880134542860055
+Confusion matrix:
+['Triangle', 'Circle', 'Star', 'Square', 'Unknown']
+                     Triangle  Circle   Star  Square  Unknown
+Triangle               2679.0     9.0  120.0    19.0      0.0
+Circle                   71.0  2905.0  144.0   226.0      0.0
+Star                     49.0     0.0  255.0     1.0      0.0
+Square-like             124.0   185.0  228.0  2796.0      0.0
+Square-like includes (square, Diamon, Parallelogram Left, Parallelogram Right)

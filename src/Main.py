@@ -80,14 +80,14 @@ def test_single_obj(reg, i, j):
 def evalute():
     eval = Evaluation([], [], re_sampling=0.3)
     eval.add_file('prototypes/p1.xml')
+    eval.add_file('prototypes/p2.xml')
+    eval.add_file('prototypes/p3.xml')
     eval.add_file('prototypes/p4.xml')
     print("Labels: ", eval.labels)
     # ../ASIST_Dataset/Data/Data_A
-    acc, conf_matrix = eval.start('../ASIST_Dataset/Data/Data_A', 100)
-    print("Prediction Accuracy is: ", acc)
-    print("Confusion matrix:")
-    print(eval.labels)
-    print(conf_matrix)
+    eval.start('tst', 100)
+    # print("Prediction Accuracy is: ", acc)
+    # print("Confusion matrix:")
 
 if __name__ == '__main__':
     main()

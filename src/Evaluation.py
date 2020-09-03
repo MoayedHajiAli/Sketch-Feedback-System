@@ -12,8 +12,17 @@ import pandas as pd
 
 class Evaluation:
     inf = 1e9
-    acceptable_labels = ['Triangle', 'Circle', 'Star', 'Diamond', 'Square', 'Star Bullet', 'Parallelogram Left', 'Parallelogram Right']
-    target_labels = {'Circle':'Circle', 'Triangle':'Triangle', 'Star':'Star', 'Square':'Square', 'Diamond':'Square', 'Parallelogram Left':'Square', 'Parallelogram Right':'Square'}
+    available_labels = ['Triangle', 'Circle', 'Star', 'Diamond', 'Square', 'Star Bullet', 'Parallelogram Left', 'Parallelogram Right', 
+    'Equals', 'Arrow Right', 'Arrow Up', 'Two Boxes', 'Two Boxes Null', 'Trapezoid Down', 'Trapezoid Up', 'Resistor Horizontal', 
+    'Resistor Horizontal', 'Resistor Vertical', 'Battery Right', 'Battery Down', 'Plus', 'Minus', 'Cross', 'Arrow Right']
+    # acceptable_labels = ['Triangle', 'Circle', 'Star', 'Diamond', 'Square', 'Parallelogram Left', 'Parallelogram Right']
+    acceptable_labels = available_labels
+    target_labels = {'Circle':'Circle', 'Triangle':'Triangle', 'Star':'Star', 'Square':'Square', 'Diamond':'Square', 
+    'Star Bullet':'Star Bullet', 'Parallelogram Left':'Square', 'Parallelogram Right':'Square', 'Equals':'UNK', 
+    'Arrow Right':'Arrow Right', 'Arrow Up':'Arrow Right', 'Two Boxes':'Two Boxes', 'Two Boxes Null':'Two Boxes Null',
+    'Trapezoid Down':'Trapezoid Down', 'Trapezoid Up':'Trapezoid Down', 'Resistor Horizontal':'UNK', 
+    'Resistor Vertical':'UNK', 'Battery Right':'UNK', 'Battery Down':'UNK', 'Plus':'UNK', 'Minus':'UNK',
+    'Cross':'UNK'}
     def __init__(self, prototypes, labels, re_sampling = 1.0):
         self.prototypes = prototypes
         self.labels = labels
@@ -36,18 +45,15 @@ class Evaluation:
             if path.is_dir():
                 self.explore(path, scale, pro_queue, labels_ind)
             elif path.is_file():
-                file = os.path.basename(path)
-                if file.endswith(".xml"): 
+                if str(path).endswith(".xml"): 
                     try:
                         objs, lbs = ObjectUtil.xml_to_UnlabeledObjects(str(path), re_sampling=self.re_sampling)
                         for obj, label in zip(objs, lbs):
                             if label in self.acceptable_labels:
                                 pro_queue.append(obj)
-                                t_label = self.target_labels[label]
-                                ind = self.labels.index(t_label)
-                                labels_ind.append(ind)
+                                labels_ind.append(self.acceptable_labels.index(label))
                     except Exception as e: 
-                        print("could not read file succefully " + file)
+                        print("could not read file succefully " + path)
                         print(str(e))
 
 
@@ -58,8 +64,9 @@ class Evaluation:
         self.explore(path, scale, pro_queue, labels_ind)
 
         print("The number of objects to be evaluated are", len(labels_ind))
-        self.labels.append('Unknown')
-        conf_matrix=pd.DataFrame(np.zeros((len(self.acceptable_labels), len(self.labels))), columns=self.labels, index=self.acceptable_labels)
+        self.labels.append('UNK')
+        k_cnt, k_start, k_step = 14, 30, 5
+        conf_matrix= [pd.DataFrame(np.zeros((len(self.acceptable_labels), len(self.labels))), columns=self.labels, index=self.acceptable_labels) for _ in range(k_cnt)]
         # register all the objects using pooling
         res = []
         pool = Pool(self.core_cnt)
@@ -67,17 +74,29 @@ class Evaluation:
             res.append(r)
         # with Pool(self.core_cnt) as p:
         #     res = list(p.map(self.evaluate_obj, pro_queue))
-
-        for prediction, ind in zip(res, labels_ind):
-            conf_matrix.iloc[ind,prediction] += 1
         
-        pl = 0
-        for i in range(len(self.labels) - 1):
-            pl += conf_matrix.iloc[i,i]
+        pl = np.zeros((k_cnt))
+        for p, ind in zip(res, labels_ind):
+            p_ind, p_val = p[0], p[1]
+            for i in range(k_cnt):
+                if p_val >= k_start + i * k_step:
+                    prd = self.labels.index('UNK')
+                else:
+                    prd = p_ind
+                conf_matrix[i].iloc[ind,prd] += 1
+                label = self.acceptable_labels[ind]
+                t_label = self.target_labels[label]
+                t_ind = self.labels.index(t_label)
+                if t_ind == prd:
+                    pl[i] += 1
         nl = len(labels_ind)
+        print("Running time in hours: ", (time.time()-st) / 60 / 60)
 
-        print("Running time: ", time.time()-st)
-        return pl / nl, conf_matrix
+        for i in range(k_cnt):
+            print("Test with scale ", k_start + k_step * i)
+            print("Prediction Accuracy is: ", pl[i] / nl)
+            print("Confusion matrix:")
+            print(conf_matrix[i])
 
     def evaluate_obj(self, obj):
         tmp = []
@@ -87,8 +106,4 @@ class Evaluation:
                 d = RegistrationUtils.identify_similarity(obj, o)
                 tmp[-1] = min(tmp[-1], d)
         mn_ind = np.argmin(tmp)
-        if tmp[mn_ind] > self.scale:
-            return len(tmp)
-        else:
-            return mn_ind
-
+        return [mn_ind, tmp[mn_ind]]
