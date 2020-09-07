@@ -10,6 +10,8 @@ import multiprocessing
 import time
 import pandas as pd
 
+pd.set_option('max_columns', None)
+
 class Evaluation:
     inf = 1e9
     available_labels = ['Triangle', 'Circle', 'Star', 'Diamond', 'Square', 'Star Bullet', 'Parallelogram Left', 'Parallelogram Right', 
@@ -23,11 +25,13 @@ class Evaluation:
     'Trapezoid Down':'Trapezoid Down', 'Trapezoid Up':'Trapezoid Down', 'Resistor Horizontal':'UNK', 
     'Resistor Vertical':'UNK', 'Battery Right':'UNK', 'Battery Down':'UNK', 'Plus':'UNK', 'Minus':'UNK',
     'Cross':'UNK'}
+
     def __init__(self, prototypes, labels, re_sampling = 1.0):
         self.prototypes = prototypes
         self.labels = labels
         self.core_cnt = multiprocessing.cpu_count()
         self.re_sampling = re_sampling
+        self.labels_cnt = {}
 
     def add_file(self, file):
         objs, lbs = ObjectUtil.xml_to_UnlabeledObjects(file, re_sampling=self.re_sampling)
@@ -50,6 +54,10 @@ class Evaluation:
                         objs, lbs = ObjectUtil.xml_to_UnlabeledObjects(str(path), re_sampling=self.re_sampling)
                         for obj, label in zip(objs, lbs):
                             if label in self.acceptable_labels:
+                                if label not in self.labels_cnt:
+                                    self.labels_cnt[label] = 1
+                                else:
+                                    self.labels_cnt[label] += 1
                                 pro_queue.append(obj)
                                 labels_ind.append(self.acceptable_labels.index(label))
                     except Exception as e: 
@@ -64,8 +72,10 @@ class Evaluation:
         self.explore(path, scale, pro_queue, labels_ind)
 
         print("The number of objects to be evaluated are", len(labels_ind))
+        for label in self.labels_cnt:
+            print(label, self.labels_cnt[label])
         self.labels.append('UNK')
-        k_cnt, k_start, k_step = 14, 30, 5
+        k_cnt, k_start, k_step = 31, 20, 1
         conf_matrix= [pd.DataFrame(np.zeros((len(self.acceptable_labels), len(self.labels))), columns=self.labels, index=self.acceptable_labels) for _ in range(k_cnt)]
         # register all the objects using pooling
         res = []
@@ -90,7 +100,7 @@ class Evaluation:
                 if t_ind == prd:
                     pl[i] += 1
         nl = len(labels_ind)
-        print("Running time in hours: ", (time.time()-st) / 60 / 60)
+        print("Running time in hours: ", (time.time() - st) / 60 / 60)
 
         for i in range(k_cnt):
             print("Test with scale ", k_start + k_step * i)

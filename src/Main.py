@@ -12,7 +12,8 @@ from Evaluation import Evaluation
 import time
 
 def main():
-    q = int(input())
+    # q = int(input())
+    q = 0
     if q == 0:
         evalute()
     elif q == 1:
@@ -78,14 +79,14 @@ def test_single_obj(reg, i, j):
     plt.show()
 
 def evalute():
-    eval = Evaluation([], [], re_sampling=0.3)
+    eval = Evaluation([], [], re_sampling=0.5)
     eval.add_file('prototypes/p1.xml')
     eval.add_file('prototypes/p2.xml')
     eval.add_file('prototypes/p3.xml')
     eval.add_file('prototypes/p4.xml')
     print("Labels: ", eval.labels)
     # ../ASIST_Dataset/Data/Data_A
-    eval.start('tst', 100)
+    eval.start('../ASIST_Dataset/Data/Data_A', 100)
     # print("Prediction Accuracy is: ", acc)
     # print("Confusion matrix:")
 
