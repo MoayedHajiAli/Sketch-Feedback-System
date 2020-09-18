@@ -55,8 +55,8 @@ class Registration:
     def register(self, mx_dissimilarity = 50):
         n, m = len(self.original_obj), len(self.target_obj)
         dim = max(n,m)
-        res_matrix = np.zeros((dim, dim))
-        tra_matrix = np.zeros((dim, dim, 7))            
+        self.res_matrix = np.zeros((dim, dim))
+        self.tra_matrix = np.zeros((dim, dim, 7))            
 
         # prepare queue of regiteration objects for multiprocessing
         pro_queue = []
@@ -80,31 +80,31 @@ class Registration:
                 else:
                     d, p = res[t]
                     t += 1
-                res_matrix[i, j] = d
-                tra_matrix[i, j] = p
+                self.res_matrix[i, j] = d
+                self.tra_matrix[i, j] = p
         
-        print("res_matrix", res_matrix)
+        print("res_matrix", self.res_matrix)
 
         # calculate the minimum assignment
-        row_ind, col_ind, total_cost = lapjv(res_matrix)
-        print("selection", row_ind)
+        org_asg, tar_asg, total_cost = lapjv(self.res_matrix)
+        print("selection", org_asg)
         final_transformation = np.zeros((n, 7))
         added_objects = []
 
-        for i, ind in enumerate(row_ind):
-            dissimilarity = res_matrix[i, ind]
+        for i, ind in enumerate(org_asg):
+            dissimilarity = self.res_matrix[i, ind]
             if i < n and ind < m:
                 ln = max(len(self.original_obj[i]), len(self.target_obj[ind]))
                 ref_obj = ObjectUtil.object_restructure(self.original_obj[i], n=ln)
                 tar_obj = ObjectUtil.object_restructure(self.target_obj[ind], n=ln)
-                dissimilarity = RegistrationUtils.calc_dissimilarity(ref_obj, tar_obj, tra_matrix[i, ind], cum_ang=True, turning_ang=False)
-            print(dissimilarity, res_matrix[i, ind])
+                dissimilarity = RegistrationUtils.calc_dissimilarity(ref_obj, tar_obj, self.tra_matrix[i, ind], cum_ang=True, turning_ang=False)
+            print(dissimilarity, self.res_matrix[i, ind])
             # check if one of the objects is dummy or their dissimilarity is above the maximum threshold
             if dissimilarity > mx_dissimilarity:
                 diff = dissimilarity != RegistrationUtils.inf
                 # handle the case when n > m by making the object vanish into its origin:
                 if n > m or diff:
-                    tra_matrix[i, ind] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, self.original_obj[i].origin_x, self.original_obj[i].origin_y])        
+                    self.tra_matrix[i, ind] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, self.original_obj[i].origin_x, self.original_obj[i].origin_y])        
                 # handle the case when m > n by creating a new object in the orginal sketch, identical to the target sketch but scalled by a very small scale
                 if m > n or diff:
                     tmp = copy.deepcopy(self.target_obj[ind].get_strokes())
@@ -124,9 +124,40 @@ class Registration:
                     added_objects.append(ind)
 
             if i < n:
-                final_transformation[i] = tra_matrix[i, ind]
+                final_transformation[i] = self.tra_matrix[i, ind]
         print("added_objects:", added_objects)
         return final_transformation
+
+        """redistribute the assignment of the identical object by considering their spatial relation 
+        
+        Parameters:
+            target_groups: the indecies of orginal object grouped
+            org_asg: the initial assignment of the orginal objects
+            tar_asg: the initial assignment of the target objects
+
+        Returns:
+            None. mutate org_asg and tar_asg
+        """     
+    def spatial_redistribution(self, target_groups, org_asg, tar_asg):
+        for group in target_groups:
+            n = len(group)
+            if n == 1:
+                continue
+            org = []
+            for obj_ind in group:
+                org.append(tar_asg[obj_ind])
+            weight_matrix = np.zeros((n, n))
+            for i in org:
+                for j in group:
+                    weight_matrix[i][j] = self.tra_matrix[i][j][5] ** 2 + self.tra_matrix[i][j][6] ** 2
+            row_ind, col_ind, _ = lapjv(weight_matrix)
+            for i, ind in enumerate(row_ind):
+                org_asg[org[i]] = group[ind]
+            for i, ind in enumerate(col_ind):
+                tar_asg[group[i]] = org[ind]
+
+            
+
 
     # wrapper function for calling optimize on a RegisterTwoObjects
     def _optimize(self, reg):

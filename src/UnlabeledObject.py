@@ -57,6 +57,12 @@ class UnlabeledObject:
         for stroke in self.strokes_lst:
             tmp.extend(stroke.get_y())
         return tmp
+    
+    def get_t(self):
+        tmp = []
+        for stroke in self.strokes_lst:
+            tmp.extend(stroke.get_t())
+        return tmp
 
     # get Y coordinates of the points separated by strokes
     def get_strokes_y(self):

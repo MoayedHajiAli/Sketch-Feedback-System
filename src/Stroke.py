@@ -33,13 +33,17 @@ class Stroke:
     def len(self):
         return len(self.points_lst)
 
-# get X coordinates of the points
+    # get X coordinates of the points
     def get_x(self):
         return [p.x for p in self.points_lst]
 
     # get Y coordinates of the points
     def get_y(self):
         return [p.y for p in self.points_lst]
+    
+    # get T of the points
+    def get_t(self):
+        return [p.t for p in self.points_lst]
 
     def get_points(self):
         return self.points_lst

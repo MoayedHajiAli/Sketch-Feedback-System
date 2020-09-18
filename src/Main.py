@@ -12,8 +12,7 @@ from Evaluation import Evaluation
 import time
 
 def main():
-    # q = int(input())
-    q = 0
+    q = int(input())
     if q == 0:
         evalute()
     elif q == 1:
