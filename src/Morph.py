@@ -11,6 +11,7 @@ class Morph():
 
     original_labels = []
     target_labels = []
+    dim = [[0, 1500], [-700, 1000]]
     
     fig, ax = plt.gcf(), plt.gca()
     
@@ -62,8 +63,8 @@ class Morph():
 
     # initial function for animation
     def _init_animation(self):
-        self.ax.set_xlim(0, 2500)
-        self.ax.set_ylim(-700, 1000)
+        self.ax.set_xlim(self.dim[0][0], self.dim[0][1])
+        self.ax.set_ylim(self.dim[1][0], self.dim[1][1])
 
         for pt_lst, obj in zip(self.original_patches, self.original_obj):
             obj.reset()
