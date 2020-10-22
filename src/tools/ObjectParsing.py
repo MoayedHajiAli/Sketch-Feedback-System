@@ -1,7 +1,7 @@
-from RegistrationUtils import RegisterTwoObjects, RegistrationUtils
-from Morph import Morph
-from UnlabeledObject import UnlabeledObject
-from ObjectUtil import ObjectUtil
+from utils.RegistrationUtils import RegisterTwoObjects, RegistrationUtils
+from animator.SketchAnimation import SketchAnimation
+from sketch_object.UnlabeledObject import UnlabeledObject
+from utils.ObjectUtil import ObjectUtil
 import numpy as np
 import time
 from matplotlib import pyplot as plt
@@ -34,7 +34,7 @@ class ObjectParsing:
         # transform the org_obj
         x, y = RegistrationUtils.transform(x, y, p)
 
-        target_nn = Nearest_search(x1, y1)
+        target_nn = NearestSearch(x1, y1)
 
         strokes = set([])
         for i in range(len(x)):
@@ -66,8 +66,8 @@ class ObjectParsing:
             print(d, [np.array(p)])
             print("Running time: ", time.time()-st)
             # print(RegistrationUtils.identify_similarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p)))
-            morph = Morph([obj1], [obj2])
-            morph.seq_animate_all([p], save=False, file="./test_videos/example7-obj3-4.mp4")
+            SketchAnimation = SketchAnimation([obj1], [obj2])
+            SketchAnimation.seq_animate_all([p], save=False, file="./test_videos/example7-obj3-4.mp4")
             plt.show()
             continue
             print("Here1")

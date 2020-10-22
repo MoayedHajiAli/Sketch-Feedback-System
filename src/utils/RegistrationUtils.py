@@ -1,10 +1,10 @@
-from Stroke import Stroke
-from Nearest_search import Nearest_search
+from sketch_object.Stroke import Stroke
+from utils.NearestSearch import NearestSearch
 import numpy as np
-from UnlabeledObject import UnlabeledObject
+from sketch_object.UnlabeledObject import UnlabeledObject
 import copy
-from Nearest_search import Nearest_search
-from ObjectUtil import ObjectUtil
+from utils.NearestSearch import NearestSearch
+from utils.ObjectUtil import ObjectUtil
 from scipy.optimize import minimize, basinhopping
 import sys
 import time
@@ -42,7 +42,7 @@ class RegistrationUtils:
         transform the coordinates x, and y according the transformation params t
     
     calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, p:array-type of shape(7),
-                      target_nn:Nearest_search = None, turning_ang=False, cum_and=False, distance=False)
+                      target_nn:NearestSearch = None, turning_ang=False, cum_and=False, distance=False)
         calculate the dissimilarity of two objects after transforming ref_obj according to 
         parameters p which are of the order (scaling-x, scaling-y, roation, shearing-x, 
         shearing-y, translation-x, translation-y).
@@ -210,13 +210,13 @@ class RegistrationUtils:
     Params:
         original_dis: if True, for each point in the ref_obj the distanct to nearest point in the tar_obj will be added to the cost
         target_dis: if True, for each point in the tar_obj the distanct to nearest point in the ref_obj will be added to the cost 
-        target_nn: a Nearest_search object for the target object
+        target_nn: a NearestSearch object for the target object
 
     Returns:
         double: the visiual dissimilarity
     """
     @staticmethod
-    def calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, t, original_dis = True, target_dis = True, target_nn:Nearest_search = None, turning_ang=False,
+    def calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, t, original_dis = True, target_dis = True, target_nn:NearestSearch = None, turning_ang=False,
      cum_ang=False, length=False, turning_fac = 0.05, cum_fac = 0.3, len_fac = 0.01):
 
         # transform both object to the origin of the referenced object
@@ -234,10 +234,10 @@ class RegistrationUtils:
 
         # obtain KDtree of the target obj
         if target_nn is None:
-            target_nn = Nearest_search(x1, y1)
+            target_nn = NearestSearch(x1, y1)
         
         # obtain KDtree of the refrenced obj
-        reference_nn = Nearest_search(x, y)
+        reference_nn = NearestSearch(x, y)
         
         tot = 0.0
 
@@ -318,7 +318,7 @@ class RegistrationUtils:
         # obj1.transform(t)
 
         # last_stroke = None
-        # obj1_kd = Nearest_search(np.array(obj1.get_x()), np.array(obj1.get_y()))
+        # obj1_kd = NearestSearch(np.array(obj1.get_x()), np.array(obj1.get_y()))
         # for i in range(len(obj2.get_strokes())):
         #     s = obj2.get_strokes()[i]
         #     tmp = []
@@ -388,7 +388,7 @@ class RegisterTwoObjects:
         def _track(xk):
             print(xk)
 
-        #self.target_nn = Nearest_search(self.tar_obj.get_x(), self.tar_obj.get_y())
+        #self.target_nn = NearestSearch(self.tar_obj.get_x(), self.tar_obj.get_y())
         self.target_nn = None
 
         # calculate min/max coordinates for the referenced object

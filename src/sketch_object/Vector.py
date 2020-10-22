@@ -1,4 +1,4 @@
-from Point import Point
+from sketch_object.Point import Point
 import numpy as np
 
 

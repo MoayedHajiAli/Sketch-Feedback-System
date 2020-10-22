@@ -1,11 +1,11 @@
 from xml.dom import minidom
-from Point import Point
-from Stroke import Stroke
+from sketch_object.Point import Point
+from sketch_object.Stroke import Stroke
 from math import sqrt
 from math import ceil
 import numpy as np
 from scipy.interpolate import interp1d
-from UnlabeledObject import UnlabeledObject
+from sketch_object.UnlabeledObject import UnlabeledObject
 import copy
 import warnings
 from sketchformer.basic_usage.sketchformer import continuous_embeddings
@@ -22,18 +22,18 @@ class ObjectUtil:
         shift_y : inital vertical shift
 
     Returns:
-        Dictionary: id -> points dictionary
+        Dictionary: id -> Points dictionary
     """
 
     sketchformer = None
 
 
     @staticmethod
-    def xml_to_PointsDict(file, flip = False, shift_x=0.0, shift_y=0.0):
+    def xml_to_pointsDict(file, flip = False, shift_x=0.0, shift_y=0.0):
         data = minidom.parse(file)
         points = data.getElementsByTagName('point')
 
-        # create dictionary for id -> point
+        # create dictionary for id -> Point
         point_dic = {}
         for el in points:
             x = float(el.attributes['x'].value)
@@ -52,7 +52,7 @@ class ObjectUtil:
     
     @staticmethod
     def xml_to_points(file, flip = False, shift_x=0.0, shift_y=0.0):
-        return list(ObjectUtil.xml_to_PointsDict(file=file, flip=flip, shift_x=shift_x, shift_y=shift_y).values())
+        return list(ObjectUtil.xml_to_pointsDict(file=file, flip=flip, shift_x=shift_x, shift_y=shift_y).values())
 
     """for a given file, read the file and transform it to a dictionary of strokes
     Params:
@@ -69,8 +69,8 @@ class ObjectUtil:
         data = minidom.parse(file)
         strokes = data.getElementsByTagName('stroke')
 
-        # create dictionary for id -> point
-        point_dic = ObjectUtil.xml_to_PointsDict(file, flip=flip, shift_x=shift_x, shift_y=shift_y)
+        # create dictionary for id -> Point
+        point_dic = ObjectUtil.xml_to_pointsDict(file, flip=flip, shift_x=shift_x, shift_y=shift_y)
 
         # create dictionary for id -> stroke
         stroke_dict = {}
@@ -276,7 +276,7 @@ class ObjectUtil:
         return UnlabeledObject(tmp_lst)
 
 
-    # obtain object from strokes according to collections matrix
+    # obtain object from sketch_object.Strokes according to collections matrix
     # collection matrix should have a shape of (n objects, k strokes for each object)
     # the number of strokes can differ from one object to another
     @staticmethod

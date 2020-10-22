@@ -65,7 +65,7 @@ class Stroke:
                 self.step_vector.append((x - p.x, y - p.y))
             p.x, p.y = x, y
 
-    # update step vector to prepare for the morphing
+    # update step vector to prepare for the SketchAnimationing
     def upd_step_vector(self, t, xo, yo):
         self.step_vector = []
         for p in self.points_lst:

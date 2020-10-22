@@ -1,14 +1,14 @@
-from Morph import Morph
-from Registration import Registration, RegisterTwoObjects
+from animator.SketchAnimation import SketchAnimation
+from register.Registration import Registration, RegisterTwoObjects
 from matplotlib import pyplot as plt
 import numpy as np
-from RegistrationUtils import RegistrationUtils
-from ObjectUtil import ObjectUtil
+from utils.RegistrationUtils import RegistrationUtils
+from utils.ObjectUtil import ObjectUtil
 import copy
-from UnlabeledObject import UnlabeledObject
-from Stroke import Stroke
-from Evaluation import Evaluation
-from ObjectParsing import ObjectParsing
+from sketch_object.UnlabeledObject import UnlabeledObject
+from sketch_object.Stroke import Stroke
+from tools.ClassEvaluation import ClassEvaluation
+from tools.ObjectParsing import ObjectParsing
 import time
 
 array = np.array
@@ -18,18 +18,18 @@ def main():
     if q == 0:
         evalute()
     elif q == 1:
-        reg = Registration('./test_samples/b' + str(s) + '.xml', './test_samples/a' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=False, shift_target_y = 0)
+        reg = Registration('./input_directory/samples/test_samples/b' + str(s) + '.xml', './input_directory/samples/test_samples/a' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=False, shift_target_y = 0)
         a, b = map(int, input().split())
 
         # initial transformation test
-        # reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([0.4, 0.4, 1.5, 0.0, 0.0, 0.0, 20.0])))
-        # reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([2, 5, 0, 0, 0, 0.0, 20.0])))
-        # reg.original_obj[a] = reg.original_obj[a].get_copy()
-        # reg.original_obj[a].reset()
+        reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([0.4, 0.4, 1.5, 0.0, 0.0, 0.0, 20.0])))
+        reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([2, 5, 0, 0, 0, 0.0, 20.0])))
+        reg.original_obj[a] = reg.original_obj[a].get_copy()
+        reg.original_obj[a].reset()
         test_single_obj(reg, a, b)
 
     elif q == 2:
-        reg = Registration('./test_samples/a' + str(s) + '.xml', './test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=False, shift_target_y = 0)
+        reg = Registration('./input_directory/samples/test_samples/a' + str(s) + '.xml', './input_directory/samples/test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=False, shift_target_y = 0)
         # add missing objects (temporarily as pre-calculation is running on ssh server)
         add_objects(reg, [])
         st = time.time()
@@ -94,18 +94,18 @@ def main():
             t.append(RegistrationUtils.obtain_transformation_matrix(lst))
         print(t)
         print("Running time:", time.time()-st)
-        morph = Morph(reg.original_obj, reg.target_obj)
-        morph.seq_animate_all(p, save=False
+        SketchAnimation = SketchAnimation(reg.original_obj, reg.target_obj)
+        SketchAnimation.seq_animate_all(p, save=False
                               , file="./test_videos/example6-seq.mp4")
     elif q == 3:
         # find correspondences of an object
-        reg = Registration('./test_samples/b' + str(s) + '.xml', './test_samples/a' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=True, shift_target_y = 0)
+        reg = Registration('./input_directory/samples/test_samples/b' + str(s) + '.xml', './input_directory/samples/test_samples/a' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=True, shift_target_y = 0)
         a = int(input())
-        find_correspondences('./test_samples/a' + str(s) + '.xml', reg.original_obj[a], reg)
+        find_correspondences('./input_directory/samples/test_samples/a' + str(s) + '.xml', reg.original_obj[a], reg)
 
     elif q == 4:
         # find the embeddings
-        reg = Registration('./test_samples/b' + str(s) + '.xml', './test_samples/a' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=False, shift_target_y = 0)
+        reg = Registration('./input_directory/samples/test_samples/b' + str(s) + '.xml', './input_directory/samples/test_samples/a' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=False, shift_target_y = 0)
         a, b = map(int, input().split())
         embd1, embd2 = ObjectUtil.get_embedding([reg.original_obj[a], reg.target_obj[b]])
         print("The norm of the difference vertor between the embeddings", np.linalg.norm(embd1 - embd2))
@@ -148,9 +148,9 @@ def test_single_obj(reg, i, j):
     print(d, [np.array(p)])
     print("Running time: ", time.time()-st)
     # print(RegistrationUtils.identify_similarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p)))
-    morph = Morph([obj1], [obj2])
+    animation = SketchAnimation([obj1], [obj2])
     # print(RegistrationUtils.calc_dissimilarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p), target_dis=False))
-    morph.seq_animate_all([p], save=False, file="./test_videos/example7-obj3-4.mp4")
+    animation.seq_animate_all([p], save=False, file="./test_videos/example7-obj3-4.mp4")
     plt.show()
 
     obj1.reset()
@@ -173,7 +173,7 @@ def find_correspondences(file, obj, reg):
   print(ObjectParsing.find_matched_strokes(strokes_lst, obj, 20, reg.total_cost))
 
 def evalute():
-    eval = Evaluation([], [], re_sampling=0.5)
+    eval = ClassEvaluation([], [], re_sampling=0.5)
     eval.add_file('prototypes/p1.xml')
     eval.add_file('prototypes/p2.xml')
     eval.add_file('prototypes/p3.xml')

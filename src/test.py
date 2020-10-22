@@ -2,8 +2,8 @@
 # matplotlib.use('TkAgg')
 import time
 import numpy as np
-from ObjectUtil import ObjectUtil
-from UnlabeledObject import UnlabeledObject
+from utils.ObjectUtil import ObjectUtil
+from sketch_object.UnlabeledObject import UnlabeledObject
 
 def draw_frequency(t):
     diff = []

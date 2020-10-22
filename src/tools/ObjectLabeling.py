@@ -29,7 +29,7 @@ class ObjectLabeling:
         points = data.getElementsByTagName('point')
         strokes = data.getElementsByTagName('stroke')
         
-        # creat dictionary for id -> point
+        # creat dictionary for id -> Point
         pt_id, id_point, id_stroke = {}, {}, {}
         for el in points:
             x = int(el.attributes['x'].value)
