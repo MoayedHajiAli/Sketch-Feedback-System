@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
+from Stroke import Stroke
 
 
 class UnlabeledObject:
@@ -57,6 +58,12 @@ class UnlabeledObject:
         for stroke in self.strokes_lst:
             tmp.extend(stroke.get_y())
         return tmp
+    
+    def get_t(self):
+        tmp = []
+        for stroke in self.strokes_lst:
+            tmp.extend(stroke.get_t())
+        return tmp
 
     # get Y coordinates of the points separated by strokes
     def get_strokes_y(self):
@@ -90,3 +97,25 @@ class UnlabeledObject:
             xo, yo = self.origin_x, self.origin_y
         for stroke in self.strokes_lst:
             stroke.upd_step_vector(t, xo, yo)
+    
+    def corresponding_stroke(self, ind):
+        """for a given index, return the index of the stroke that contains this point
+
+        Args:
+            ind (int): the index of the point
+        """
+        for i in len(self.strokes_lst):
+            if ind < len(self.strokes_lst[i]):
+                return i
+            ind -= len(self.strokes_lst[i])
+        
+        return -1
+    
+    def get_copy(self): 
+        """get copy of the current object.
+        """
+        st_lst = []
+        for st in self.strokes_lst:
+            st_lst.append(Stroke(st.get_points()))
+        
+        return UnlabeledObject(st_lst)

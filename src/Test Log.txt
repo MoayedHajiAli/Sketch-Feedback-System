@@ -1,0 +1,71 @@
+100%|██████████| 9811/9811 [9:36:07<00:00,  3.52s/it]  
+Prediction Accuracy is:  0.880134542860055
+Confusion matrix:
+['Triangle', 'Circle', 'Star', 'Square', 'Unknown']
+                     Triangle  Circle   Star  Square  Unknown
+Triangle               2679.0     9.0  120.0    19.0      0.0
+Circle                   71.0  2905.0  144.0   226.0      0.0
+Star                     49.0     0.0  255.0     1.0      0.0
+Square-like             124.0   185.0  228.0  2796.0      0.0
+Square-like includes (square, Diamon, Parallelogram Left, Parallelogram Right)
+
+
+100%|██████████| 13663/13663 [21:15:14<00:00,  5.60s/it]    Running time in hours:  21.345931046406427
+Test with scale  30
+Prediction Accuracy is:  0.8052404303593647
+Confusion matrix:
+                      Star  Square  ...  Trapezoid Down    UNK
+Triangle              34.0     6.0  ...            58.0  195.0
+Circle                19.0    43.0  ...            16.0  181.0
+Star                  97.0     1.0  ...             0.0  194.0
+Diamond               61.0  1075.0  ...            12.0   70.0
+Square                47.0   988.0  ...            11.0   75.0
+Star Bullet          123.0     2.0  ...             0.0  280.0
+Parallelogram Left     6.0   214.0  ...             3.0    4.0
+Parallelogram Right    1.0   320.0  ...             3.0    7.0
+Equals                 1.0     2.0  ...             0.0   92.0
+Arrow Right            0.0     0.0  ...             0.0  104.0
+Arrow Up               0.0     0.0  ...             0.0    0.0
+Two Boxes              0.0     0.0  ...             0.0   47.0
+Two Boxes Null         1.0     0.0  ...             0.0   19.0
+Trapezoid Down         0.0   111.0  ...           370.0    7.0
+Trapezoid Up           0.0     7.0  ...             2.0    2.0
+Resistor Horizontal   28.0    58.0  ...             9.0  473.0
+Resistor Horizontal    0.0     0.0  ...             0.0    0.0
+Resistor Vertical      0.0     7.0  ...             0.0   11.0
+Battery Right          4.0    11.0  ...             2.0  158.0
+Battery Down           0.0     2.0  ...             0.0   13.0
+Plus                   1.0     1.0  ...             0.0  208.0
+Minus                  1.0     0.0  ...             0.0  186.0
+Cross                  0.0     3.0  ...             0.0  509.0
+Arrow Right            0.0     0.0  ...             0.0    0.0
+
+[24 rows x 10 columns]
+Test with scale  35
+Prediction Accuracy is:  0.7563492644368001
+Confusion matrix:
+                      Star  Square  ...  Trapezoid Down    UNK
+Triangle              59.0    10.0  ...            60.0   14.0
+Circle                49.0    50.0  ...            16.0   12.0
+Star                 180.0     1.0  ...             0.0    3.0
+Diamond               76.0  1084.0  ...            13.0    3.0
+Square                68.0   994.0  ...            11.0    5.0
+Star Bullet          253.0     2.0  ...             0.0    8.0
+Parallelogram Left     6.0   214.0  ...             3.0    1.0
+Parallelogram Right    3.0   320.0  ...             3.0    2.0
+Equals                 1.0     4.0  ...             0.0   85.0
+Arrow Right            0.0     0.0  ...             1.0   50.0
+Arrow Up               0.0     0.0  ...             0.0    0.0
+Two Boxes              3.0     4.0  ...             0.0    1.0
+Two Boxes Null         2.0     1.0  ...             0.0    0.0
+Trapezoid Down         0.0   111.0  ...           370.0    1.0
+Trapezoid Up           0.0     7.0  ...             2.0    0.0
+Resistor Horizontal  119.0    75.0  ...            35.0   61.0
+Resistor Horizontal    0.0     0.0  ...             0.0    0.0
+Resistor Vertical      3.0     7.0  ...             0.0    0.0
+Battery Right          9.0    14.0  ...             5.0  103.0
+Battery Down           0.0     3.0  ...             0.0    9.0
+Plus                  11.0     1.0  ...             0.0   77.0
+Minus                  5.0     0.0  ...             0.0  132.0
+Cross                 21.0     4.0  ...             0.0  146.0
+Arrow Right            0.0     0.0  ...             0.0    0.0

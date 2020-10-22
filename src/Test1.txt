@@ -1,0 +1,2296 @@
+Labels:  ['Star', 'Square', 'Circle', 'Star Bullet', 'Triangle', 'Arrow Right', 'Two Boxes', 'Two Boxes Null', 'Trapezoid Down']
+The number of objects to be evaluated are 13663
+Battery Right 180
+Resistor Horizontal 621
+Triangle 2827
+Circle 3346
+Star Bullet 844
+Minus 188
+Resistor Vertical 22
+Cross 524
+Trapezoid Down 555
+Equals 95
+Parallelogram Left 238
+Two Boxes Null 76
+Plus 213
+Trapezoid Up 66
+Two Boxes 270
+Arrow Right 185
+Star 305
+Parallelogram Right 359
+Square 1377
+Diamond 1357
+Battery Down 15
+100%|██████████| 13663/13663 [29:06:35<00:00,  7.67s/it]    Running time in hours:  29.231065005726286
+Test with scale  20
+Prediction Accuracy is:  0.13598770401815122
+Confusion matrix:
+                     Star  Square  Circle  Star Bullet  Triangle  Arrow Right  \
+Triangle              0.0     0.0     0.0          0.0       0.0          0.0   
+Circle                0.0     0.0     0.0          0.0       0.0          0.0   
+Star                  0.0     0.0     0.0          0.0       0.0          0.0   
+Diamond               0.0     0.0     0.0          0.0       0.0          0.0   
+Square                0.0     0.0     0.0          0.0       0.0          0.0   
+Star Bullet           0.0     0.0     0.0          0.0       0.0          0.0   
+Parallelogram Left    0.0     0.0     0.0          0.0       0.0          0.0   
+Parallelogram Right   0.0     0.0     0.0          0.0       0.0          0.0   
+Equals                0.0     0.0     0.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          0.0   
+Arrow Up              0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes             0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes Null        0.0     0.0     0.0          0.0       0.0          0.0   
+Trapezoid Down        0.0     0.0     0.0          0.0       0.0          0.0   
+Trapezoid Up          0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Horizontal   0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Horizontal   0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Vertical     0.0     0.0     0.0          0.0       0.0          0.0   
+Battery Right         0.0     0.0     0.0          0.0       0.0          0.0   
+Battery Down          0.0     0.0     0.0          0.0       0.0          0.0   
+Plus                  0.0     0.0     0.0          0.0       0.0          0.0   
+Minus                 0.0     0.0     0.0          0.0       0.0          0.0   
+Cross                 0.0     0.0     0.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          0.0   
+
+                     Two Boxes  Two Boxes Null  Trapezoid Down     UNK  
+Triangle                   0.0             0.0             0.0  2827.0  
+Circle                     0.0             0.0             0.0  3346.0  
+Star                       0.0             0.0             0.0   305.0  
+Diamond                    0.0             0.0             0.0  1357.0  
+Square                     0.0             0.0             0.0  1377.0  
+Star Bullet                0.0             0.0             0.0   844.0  
+Parallelogram Left         0.0             0.0             0.0   238.0  
+Parallelogram Right        0.0             0.0             0.0   359.0  
+Equals                     0.0             0.0             0.0    95.0  
+Arrow Right                0.0             0.0             0.0   185.0  
+Arrow Up                   0.0             0.0             0.0     0.0  
+Two Boxes                  0.0             0.0             0.0   270.0  
+Two Boxes Null             0.0             0.0             0.0    76.0  
+Trapezoid Down             0.0             0.0             0.0   555.0  
+Trapezoid Up               0.0             0.0             0.0    66.0  
+Resistor Horizontal        0.0             0.0             0.0   621.0  
+Resistor Horizontal        0.0             0.0             0.0     0.0  
+Resistor Vertical          0.0             0.0             0.0    22.0  
+Battery Right              0.0             0.0             0.0   180.0  
+Battery Down               0.0             0.0             0.0    15.0  
+Plus                       0.0             0.0             0.0   213.0  
+Minus                      0.0             0.0             0.0   188.0  
+Cross                      0.0             0.0             0.0   524.0  
+Arrow Right                0.0             0.0             0.0     0.0  
+Test with scale  21
+Prediction Accuracy is:  0.13650003659518406
+Confusion matrix:
+                     Star  Square  Circle  Star Bullet  Triangle  Arrow Right  \
+Triangle              0.0     0.0     0.0          0.0       1.0          0.0   
+Circle                0.0     0.0     1.0          0.0       0.0          0.0   
+Star                  0.0     0.0     0.0          0.0       0.0          0.0   
+Diamond               0.0     0.0     0.0          0.0       0.0          0.0   
+Square                0.0     2.0     0.0          0.0       0.0          0.0   
+Star Bullet           0.0     0.0     0.0          1.0       0.0          0.0   
+Parallelogram Left    0.0     0.0     0.0          0.0       0.0          0.0   
+Parallelogram Right   0.0     0.0     0.0          0.0       0.0          0.0   
+Equals                0.0     0.0     0.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          0.0   
+Arrow Up              0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes             0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes Null        0.0     0.0     0.0          0.0       0.0          0.0   
+Trapezoid Down        0.0     0.0     0.0          0.0       0.0          0.0   
+Trapezoid Up          0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Horizontal   0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Horizontal   0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Vertical     0.0     0.0     0.0          0.0       0.0          0.0   
+Battery Right         0.0     0.0     0.0          0.0       0.0          0.0   
+Battery Down          0.0     0.0     0.0          0.0       0.0          0.0   
+Plus                  0.0     0.0     0.0          0.0       0.0          0.0   
+Minus                 0.0     0.0     0.0          0.0       0.0          0.0   
+Cross                 0.0     0.0     0.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          0.0   
+
+                     Two Boxes  Two Boxes Null  Trapezoid Down     UNK  
+Triangle                   0.0             0.0             0.0  2826.0  
+Circle                     0.0             0.0             0.0  3345.0  
+Star                       0.0             0.0             0.0   305.0  
+Diamond                    0.0             0.0             0.0  1357.0  
+Square                     0.0             0.0             0.0  1375.0  
+Star Bullet                0.0             0.0             0.0   843.0  
+Parallelogram Left         0.0             0.0             0.0   238.0  
+Parallelogram Right        0.0             0.0             0.0   359.0  
+Equals                     0.0             0.0             0.0    95.0  
+Arrow Right                0.0             0.0             0.0   185.0  
+Arrow Up                   0.0             0.0             0.0     0.0  
+Two Boxes                  1.0             0.0             0.0   269.0  
+Two Boxes Null             0.0             1.0             0.0    75.0  
+Trapezoid Down             0.0             0.0             0.0   555.0  
+Trapezoid Up               0.0             0.0             0.0    66.0  
+Resistor Horizontal        0.0             0.0             0.0   621.0  
+Resistor Horizontal        0.0             0.0             0.0     0.0  
+Resistor Vertical          0.0             0.0             0.0    22.0  
+Battery Right              0.0             0.0             0.0   180.0  
+Battery Down               0.0             0.0             0.0    15.0  
+Plus                       0.0             0.0             0.0   213.0  
+Minus                      0.0             0.0             0.0   188.0  
+Cross                      0.0             0.0             0.0   524.0  
+Arrow Right                0.0             0.0             0.0     0.0  
+Test with scale  22
+Prediction Accuracy is:  0.15545634194539998
+Confusion matrix:
+                     Star  Square  Circle  Star Bullet  Triangle  Arrow Right  \
+Triangle              0.0     0.0     1.0          0.0      36.0          0.0   
+Circle                0.0     0.0   222.0          0.0       0.0          0.0   
+Star                  0.0     0.0     0.0          0.0       0.0          0.0   
+Diamond               0.0     2.0     0.0          0.0       0.0          0.0   
+Square                0.0     3.0     0.0          0.0       0.0          0.0   
+Star Bullet           0.0     0.0     0.0          1.0       0.0          0.0   
+Parallelogram Left    0.0     0.0     0.0          0.0       0.0          0.0   
+Parallelogram Right   0.0     0.0     0.0          0.0       0.0          0.0   
+Equals                0.0     0.0     0.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          1.0   
+Arrow Up              0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes             0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes Null        0.0     0.0     0.0          0.0       0.0          0.0   
+Trapezoid Down        0.0     0.0     0.0          0.0       0.0          0.0   
+Trapezoid Up          0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Horizontal   0.0     1.0     0.0          0.0       0.0          0.0   
+Resistor Horizontal   0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Vertical     0.0     0.0     0.0          0.0       0.0          0.0   
+Battery Right         0.0     0.0     0.0          0.0       0.0          0.0   
+Battery Down          0.0     0.0     0.0          0.0       0.0          0.0   
+Plus                  0.0     0.0     0.0          0.0       0.0          0.0   
+Minus                 0.0     0.0     0.0          0.0       0.0          0.0   
+Cross                 0.0     0.0     0.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          0.0   
+
+                     Two Boxes  Two Boxes Null  Trapezoid Down     UNK  
+Triangle                   0.0             0.0             0.0  2790.0  
+Circle                     0.0             0.0             0.0  3124.0  
+Star                       0.0             0.0             0.0   305.0  
+Diamond                    0.0             0.0             0.0  1355.0  
+Square                     0.0             0.0             0.0  1374.0  
+Star Bullet                0.0             0.0             0.0   843.0  
+Parallelogram Left         0.0             0.0             0.0   238.0  
+Parallelogram Right        0.0             0.0             0.0   359.0  
+Equals                     0.0             0.0             0.0    95.0  
+Arrow Right                0.0             0.0             0.0   184.0  
+Arrow Up                   0.0             0.0             0.0     0.0  
+Two Boxes                  1.0             0.0             0.0   269.0  
+Two Boxes Null             0.0             1.0             0.0    75.0  
+Trapezoid Down             0.0             0.0             0.0   555.0  
+Trapezoid Up               0.0             0.0             0.0    66.0  
+Resistor Horizontal        0.0             0.0             0.0   620.0  
+Resistor Horizontal        0.0             0.0             0.0     0.0  
+Resistor Vertical          0.0             0.0             0.0    22.0  
+Battery Right              0.0             0.0             0.0   180.0  
+Battery Down               0.0             0.0             0.0    15.0  
+Plus                       0.0             0.0             0.0   213.0  
+Minus                      0.0             0.0             0.0   188.0  
+Cross                      0.0             0.0             0.0   524.0  
+Arrow Right                0.0             0.0             0.0     0.0  
+Test with scale  23
+Prediction Accuracy is:  0.31135182609968526
+Confusion matrix:
+                     Star  Square  Circle  Star Bullet  Triangle  Arrow Right  \
+Triangle              0.0     0.0     8.0          0.0     551.0          0.0   
+Circle                0.0     0.0  1612.0          0.0       0.0          0.0   
+Star                  1.0     0.0     0.0          0.0       0.0          0.0   
+Diamond               0.0    57.0     0.0          0.0       0.0          0.0   
+Square                0.0    81.0     0.0          0.0       0.0          0.0   
+Star Bullet           0.0     0.0     1.0          1.0       0.0          0.0   
+Parallelogram Left    0.0    22.0     0.0          0.0       0.0          0.0   
+Parallelogram Right   0.0    25.0     0.0          0.0       0.0          0.0   
+Equals                0.0     0.0     0.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          3.0   
+Arrow Up              0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes             0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes Null        0.0     0.0     0.0          0.0       0.0          0.0   
+Trapezoid Down        0.0     6.0     0.0          0.0       0.0          0.0   
+Trapezoid Up          0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Horizontal   0.0     6.0     0.0          0.0       0.0          0.0   
+Resistor Horizontal   0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Vertical     0.0     0.0     0.0          0.0       0.0          0.0   
+Battery Right         0.0     1.0     0.0          0.0       0.0          0.0   
+Battery Down          0.0     1.0     0.0          0.0       0.0          0.0   
+Plus                  0.0     0.0     0.0          0.0       0.0          0.0   
+Minus                 0.0     0.0     0.0          0.0       0.0          0.0   
+Cross                 0.0     0.0     1.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          0.0   
+
+                     Two Boxes  Two Boxes Null  Trapezoid Down     UNK  
+Triangle                   0.0             0.0             0.0  2268.0  
+Circle                     0.0             0.0             0.0  1734.0  
+Star                       0.0             0.0             0.0   304.0  
+Diamond                    0.0             0.0             0.0  1300.0  
+Square                     0.0             0.0             0.0  1296.0  
+Star Bullet                0.0             0.0             0.0   842.0  
+Parallelogram Left         0.0             0.0             0.0   216.0  
+Parallelogram Right        0.0             0.0             0.0   334.0  
+Equals                     0.0             0.0             0.0    95.0  
+Arrow Right                0.0             0.0             0.0   182.0  
+Arrow Up                   0.0             0.0             0.0     0.0  
+Two Boxes                  1.0             0.0             0.0   269.0  
+Two Boxes Null             0.0             1.0             0.0    75.0  
+Trapezoid Down             0.0             0.0            50.0   499.0  
+Trapezoid Up               0.0             0.0             0.0    66.0  
+Resistor Horizontal        0.0             0.0             0.0   615.0  
+Resistor Horizontal        0.0             0.0             0.0     0.0  
+Resistor Vertical          0.0             0.0             0.0    22.0  
+Battery Right              0.0             0.0             0.0   179.0  
+Battery Down               0.0             0.0             0.0    14.0  
+Plus                       0.0             0.0             0.0   213.0  
+Minus                      0.0             0.0             0.0   188.0  
+Cross                      0.0             0.0             0.0   523.0  
+Arrow Right                0.0             0.0             0.0     0.0  
+Test with scale  24
+Prediction Accuracy is:  0.5308497401741931
+Confusion matrix:
+                     Star  Square  Circle  Star Bullet  Triangle  Arrow Right  \
+Triangle              0.0     2.0     8.0          0.0    1563.0          0.0   
+Circle                0.0     3.0  2421.0          0.0       0.0          0.0   
+Star                  3.0     0.0     0.0          0.0       0.0          0.0   
+Diamond               0.0   397.0     0.0          0.0       1.0          0.0   
+Square                0.0   481.0     5.0          0.0       0.0          0.0   
+Star Bullet           0.0     0.0     1.0          1.0       1.0          0.0   
+Parallelogram Left    0.0   112.0     0.0          0.0       0.0          0.0   
+Parallelogram Right   0.0   191.0     0.0          0.0       0.0          0.0   
+Equals                0.0     2.0     0.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          7.0   
+Arrow Up              0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes             0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes Null        0.0     0.0     0.0          0.0       0.0          0.0   
+Trapezoid Down        0.0    37.0     0.0          0.0       5.0          0.0   
+Trapezoid Up          0.0     0.0     0.0          0.0       5.0          0.0   
+Resistor Horizontal   0.0    23.0     0.0          0.0       0.0          0.0   
+Resistor Horizontal   0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Vertical     0.0     1.0     0.0          0.0       0.0          0.0   
+Battery Right         0.0     1.0     0.0          0.0       0.0          0.0   
+Battery Down          0.0     1.0     0.0          0.0       0.0          0.0   
+Plus                  0.0     1.0     0.0          0.0       0.0          0.0   
+Minus                 0.0     0.0     0.0          0.0       0.0          0.0   
+Cross                 0.0     2.0     1.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          0.0   
+
+                     Two Boxes  Two Boxes Null  Trapezoid Down     UNK  
+Triangle                   0.0             0.0             6.0  1248.0  
+Circle                     0.0             0.0             2.0   920.0  
+Star                       0.0             0.0             0.0   302.0  
+Diamond                    0.0             0.0             3.0   956.0  
+Square                     0.0             0.0             0.0   891.0  
+Star Bullet                0.0             0.0             0.0   841.0  
+Parallelogram Left         0.0             0.0             2.0   124.0  
+Parallelogram Right        0.0             0.0             0.0   168.0  
+Equals                     0.0             0.0             0.0    93.0  
+Arrow Right                0.0             0.0             0.0   178.0  
+Arrow Up                   0.0             0.0             0.0     0.0  
+Two Boxes                 15.0             0.0             0.0   255.0  
+Two Boxes Null             0.0             4.0             0.0    72.0  
+Trapezoid Down             0.0             0.0           232.0   281.0  
+Trapezoid Up               0.0             0.0             0.0    61.0  
+Resistor Horizontal        0.0             0.0             0.0   598.0  
+Resistor Horizontal        0.0             0.0             0.0     0.0  
+Resistor Vertical          0.0             0.0             0.0    21.0  
+Battery Right              0.0             0.0             0.0   179.0  
+Battery Down               0.0             0.0             0.0    14.0  
+Plus                       0.0             0.0             0.0   212.0  
+Minus                      0.0             0.0             0.0   188.0  
+Cross                      0.0             0.0             0.0   521.0  
+Arrow Right                0.0             0.0             0.0     0.0  
+Test with scale  25
+Prediction Accuracy is:  0.6799385200907561
+Confusion matrix:
+                     Star  Square  Circle  Star Bullet  Triangle  Arrow Right  \
+Triangle              0.0     3.0     8.0          0.0    2128.0          0.0   
+Circle                0.0     7.0  2789.0          0.0       1.0          0.0   
+Star                 12.0     0.0     0.0          0.0       0.0          0.0   
+Diamond               0.0   764.0     3.0          0.0       4.0          0.0   
+Square                0.0   860.0    32.0          0.0       0.0          0.0   
+Star Bullet           0.0     2.0     1.0          5.0       4.0          0.0   
+Parallelogram Left    0.0   175.0     0.0          0.0       0.0          0.0   
+Parallelogram Right   0.0   281.0     2.0          0.0       0.0          0.0   
+Equals                0.0     2.0     0.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0         25.0   
+Arrow Up              0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes             0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes Null        0.0     0.0     0.0          0.0       0.0          0.0   
+Trapezoid Down        0.0    87.0     0.0          0.0      30.0          0.0   
+Trapezoid Up          0.0     0.0     0.0          0.0       8.0          0.0   
+Resistor Horizontal   0.0    37.0     0.0          0.0       2.0          0.0   
+Resistor Horizontal   0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Vertical     0.0     2.0     0.0          0.0       0.0          0.0   
+Battery Right         0.0     3.0     0.0          0.0       0.0          0.0   
+Battery Down          0.0     1.0     0.0          0.0       0.0          0.0   
+Plus                  0.0     1.0     0.0          0.0       0.0          0.0   
+Minus                 0.0     0.0     0.0          0.0       0.0          0.0   
+Cross                 0.0     2.0     2.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          0.0   
+
+                     Two Boxes  Two Boxes Null  Trapezoid Down    UNK  
+Triangle                   0.0             0.0            16.0  672.0  
+Circle                     0.0             0.0             5.0  544.0  
+Star                       0.0             0.0             0.0  293.0  
+Diamond                    0.0             0.0             9.0  577.0  
+Square                     0.0             0.0             3.0  482.0  
+Star Bullet                0.0             0.0             0.0  832.0  
+Parallelogram Left         0.0             0.0             2.0   61.0  
+Parallelogram Right        0.0             0.0             1.0   75.0  
+Equals                     0.0             0.0             0.0   93.0  
+Arrow Right                0.0             0.0             0.0  160.0  
+Arrow Up                   0.0             0.0             0.0    0.0  
+Two Boxes                 72.0             0.0             0.0  198.0  
+Two Boxes Null             0.0            20.0             0.0   56.0  
+Trapezoid Down             0.0             0.0           353.0   85.0  
+Trapezoid Up               0.0             0.0             0.0   58.0  
+Resistor Horizontal        0.0             0.0             0.0  582.0  
+Resistor Horizontal        0.0             0.0             0.0    0.0  
+Resistor Vertical          0.0             0.0             0.0   20.0  
+Battery Right              0.0             0.0             0.0  177.0  
+Battery Down               0.0             0.0             0.0   14.0  
+Plus                       0.0             0.0             0.0  212.0  
+Minus                      0.0             0.0             0.0  188.0  
+Cross                      0.0             0.0             0.0  520.0  
+Arrow Right                0.0             0.0             0.0    0.0  
+Test with scale  26
+Prediction Accuracy is:  0.7516650808753568
+Confusion matrix:
+                     Star  Square  Circle  Star Bullet  Triangle  Arrow Right  \
+Triangle              1.0     3.0     8.0          0.0    2352.0          0.0   
+Circle                1.0     8.0  2936.0          0.0       1.0          0.0   
+Star                 43.0     0.0     0.0          0.0       0.0          0.0   
+Diamond               3.0   968.0    16.0          0.0      16.0          0.0   
+Square                1.0  1033.0    67.0          0.0       1.0          0.0   
+Star Bullet           0.0     2.0     1.0         37.0       5.0          0.0   
+Parallelogram Left    0.0   202.0     1.0          0.0       0.0          0.0   
+Parallelogram Right   0.0   319.0     2.0          0.0       1.0          0.0   
+Equals                0.0     2.0     0.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0         53.0   
+Arrow Up              0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes             0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes Null        0.0     0.0     0.0          0.0       0.0          0.0   
+Trapezoid Down        0.0   103.0     3.0          0.0      50.0          0.0   
+Trapezoid Up          0.0     7.0     2.0          0.0      26.0          0.0   
+Resistor Horizontal   0.0    49.0     0.0          0.0       2.0          3.0   
+Resistor Horizontal   0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Vertical     0.0     2.0     0.0          0.0       0.0          0.0   
+Battery Right         0.0     6.0     0.0          0.0       0.0          1.0   
+Battery Down          0.0     1.0     0.0          0.0       0.0          0.0   
+Plus                  0.0     1.0     0.0          0.0       0.0          3.0   
+Minus                 0.0     0.0     0.0          0.0       0.0          0.0   
+Cross                 0.0     3.0     2.0          0.0       0.0          3.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          0.0   
+
+                     Two Boxes  Two Boxes Null  Trapezoid Down    UNK  
+Triangle                   0.0             0.0            21.0  442.0  
+Circle                     0.0             0.0            15.0  385.0  
+Star                       0.0             0.0             0.0  262.0  
+Diamond                    0.0             0.0            13.0  341.0  
+Square                     0.0             0.0             6.0  269.0  
+Star Bullet                0.0             0.0             0.0  799.0  
+Parallelogram Left         0.0             0.0             2.0   33.0  
+Parallelogram Right        0.0             0.0             1.0   36.0  
+Equals                     0.0             0.0             0.0   93.0  
+Arrow Right                0.0             0.0             0.0  132.0  
+Arrow Up                   0.0             0.0             0.0    0.0  
+Two Boxes                140.0             3.0             0.0  127.0  
+Two Boxes Null             0.0            33.0             0.0   43.0  
+Trapezoid Down             0.0             0.0           373.0   26.0  
+Trapezoid Up               0.0             0.0             1.0   30.0  
+Resistor Horizontal        0.0             0.0             0.0  567.0  
+Resistor Horizontal        0.0             0.0             0.0    0.0  
+Resistor Vertical          0.0             0.0             0.0   20.0  
+Battery Right              0.0             0.0             0.0  173.0  
+Battery Down               0.0             0.0             0.0   14.0  
+Plus                       0.0             0.0             0.0  209.0  
+Minus                      0.0             0.0             0.0  188.0  
+Cross                      0.0             0.0             0.0  516.0  
+Arrow Right                0.0             0.0             0.0    0.0  
+Test with scale  27
+Prediction Accuracy is:  0.7906755470980019
+Confusion matrix:
+                     Star  Square  Circle  Star Bullet  Triangle  Arrow Right  \
+Triangle              7.0     3.0     8.0          1.0    2463.0          0.0   
+Circle                6.0    11.0  3032.0          0.0       5.0          0.0   
+Star                 90.0     0.0     0.0          1.0       1.0          0.0   
+Diamond              18.0  1061.0    41.0          1.0      30.0          0.0   
+Square                9.0  1084.0   109.0          1.0       5.0          0.0   
+Star Bullet           1.0     2.0     1.0        114.0       5.0          0.0   
+Parallelogram Left    0.0   214.0     3.0          0.0       1.0          0.0   
+Parallelogram Right   0.0   330.0     9.0          0.0       4.0          0.0   
+Equals                0.0     2.0     0.0          0.0       0.0          0.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0         78.0   
+Arrow Up              0.0     0.0     0.0          0.0       0.0          0.0   
+Two Boxes             0.0     1.0     0.0          0.0       0.0          0.0   
+Two Boxes Null        0.0     0.0     0.0          0.0       0.0          0.0   
+Trapezoid Down        0.0   104.0     5.0          0.0      55.0          0.0   
+Trapezoid Up          0.0     7.0     9.0          0.0      40.0          0.0   
+Resistor Horizontal   3.0    55.0     4.0          0.0       2.0          6.0   
+Resistor Horizontal   0.0     0.0     0.0          0.0       0.0          0.0   
+Resistor Vertical     0.0     3.0     2.0          0.0       0.0          0.0   
+Battery Right         0.0     9.0     0.0          0.0       0.0          1.0   
+Battery Down          0.0     1.0     0.0          0.0       0.0          0.0   
+Plus                  0.0     1.0     0.0          0.0       0.0          4.0   
+Minus                 0.0     0.0     0.0          0.0       0.0          0.0   
+Cross                 0.0     3.0     2.0          1.0       0.0          3.0   
+Arrow Right           0.0     0.0     0.0          0.0       0.0          0.0   
+
+                     Two Boxes  Two Boxes Null  Trapezoid Down    UNK  
+Triangle                   0.0             0.0            24.0  321.0  
+Circle                     0.0             0.0            17.0  275.0  
+Star                       0.0             0.0             0.0  213.0  
+Diamond                    0.0             0.0            14.0  192.0  
+Square                     0.0             0.0             9.0  160.0  
+Star Bullet                0.0             0.0             0.0  721.0  
+Parallelogram Left         0.0             0.0             2.0   18.0  
+Parallelogram Right        0.0             0.0             1.0   15.0  
+Equals                     0.0             0.0             0.0   93.0  
+Arrow Right                0.0             0.0             0.0  107.0  
+Arrow Up                   0.0             0.0             0.0    0.0  
+Two Boxes                170.0             9.0             0.0   90.0  
+Two Boxes Null             0.0            39.0             0.0   37.0  
+Trapezoid Down             0.0             0.0           375.0   16.0  
+Trapezoid Up               0.0             0.0             1.0    9.0  
+Resistor Horizontal        0.0             3.0             0.0  548.0  
+Resistor Horizontal        0.0             0.0             0.0    0.0  
+Resistor Vertical          0.0             0.0             0.0   17.0  
+Battery Right              1.0             0.0             0.0  169.0  
+Battery Down               0.0             0.0             0.0   14.0  
+Plus                       0.0             0.0             0.0  208.0  
+Minus                      0.0             0.0             0.0  188.0  
+Cross                      0.0             0.0             0.0  515.0  
+Arrow Right                0.0             0.0             0.0    0.0  
+Test with scale  28
+Prediction Accuracy is:  0.8099246139208081
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              10.0     6.0     8.0          9.0    2507.0   
+Circle                13.0    19.0  3049.0          1.0      11.0   
+Star                 145.0     1.0     0.0          3.0       1.0   
+Diamond               47.0  1095.0    49.0          7.0      46.0   
+Square                31.0  1100.0   116.0          3.0      11.0   
+Star Bullet           20.0     2.0     1.0        207.0       5.0   
+Parallelogram Left     1.0   217.0     3.0          0.0       2.0   
+Parallelogram Right    0.0   332.0    10.0          0.0       6.0   
+Equals                 0.0     2.0     0.0          0.0       0.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              0.0     2.0     0.0          0.0       0.0   
+Two Boxes Null         0.0     0.0     0.0          0.0       0.0   
+Trapezoid Down         0.0   104.0     5.0          0.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal   13.0    59.0     5.0          4.0       3.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      0.0     3.0     3.0          0.0       0.0   
+Battery Right          1.0    13.0     0.0          0.0       0.0   
+Battery Down           0.0     1.0     0.0          0.0       0.0   
+Plus                   1.0     1.0     0.0          0.0       0.0   
+Minus                  0.0     0.0     0.0          0.0       1.0   
+Cross                  1.0     3.0     3.0          4.0       0.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     0.0        0.0             0.0            27.0   
+Circle                       0.0        0.0             2.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        0.0             0.0            15.0   
+Square                       0.0        0.0             0.0            11.0   
+Star Bullet                  0.0        0.0             0.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        0.0             0.0             1.0   
+Equals                       0.0        0.0             0.0             0.0   
+Arrow Right                100.0        0.0             0.0             0.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      184.0            19.0             0.0   
+Two Boxes Null               0.0        2.0            43.0             0.0   
+Trapezoid Down               0.0        1.0             0.0           376.0   
+Trapezoid Up                 0.0        0.0             0.0             1.0   
+Resistor Horizontal          6.0        2.0             3.0             0.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                2.0        1.0             0.0             0.0   
+Battery Down                 0.0        0.0             0.0             0.0   
+Plus                         6.0        0.0             0.0             0.0   
+Minus                        0.0        0.0             0.0             0.0   
+Cross                        5.0        0.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                       UNK  
+Triangle             260.0  
+Circle               233.0  
+Star                 155.0  
+Diamond               98.0  
+Square               105.0  
+Star Bullet          609.0  
+Parallelogram Left    13.0  
+Parallelogram Right   10.0  
+Equals                93.0  
+Arrow Right           85.0  
+Arrow Up               0.0  
+Two Boxes             65.0  
+Two Boxes Null        31.0  
+Trapezoid Down        11.0  
+Trapezoid Up           2.0  
+Resistor Horizontal  526.0  
+Resistor Horizontal    0.0  
+Resistor Vertical     14.0  
+Battery Right        163.0  
+Battery Down          14.0  
+Plus                 205.0  
+Minus                187.0  
+Cross                508.0  
+Arrow Right            0.0  
+Test with scale  29
+Prediction Accuracy is:  0.8216350728244163
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              34.0     6.0     8.0         23.0    2535.0   
+Circle                23.0    34.0  3060.0          6.0      16.0   
+Star                 202.0     1.0     0.0          8.0       2.0   
+Diamond               65.0  1102.0    52.0         12.0      51.0   
+Square                50.0  1103.0   117.0          5.0      15.0   
+Star Bullet           69.0     2.0     1.0        308.0       5.0   
+Parallelogram Left     3.0   217.0     3.0          0.0       2.0   
+Parallelogram Right    0.0   333.0    10.0          0.0       6.0   
+Equals                 1.0     2.0     0.0          0.0       0.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              0.0     4.0     0.0          0.0       0.0   
+Two Boxes Null         0.0     0.0     0.0          0.0       0.0   
+Trapezoid Down         0.0   105.0     5.0          0.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal   44.0    62.0     5.0         15.0      10.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      0.0     3.0     3.0          0.0       1.0   
+Battery Right          4.0    14.0     0.0          0.0       0.0   
+Battery Down           0.0     1.0     0.0          0.0       1.0   
+Plus                   1.0     1.0     0.0          0.0       0.0   
+Minus                  0.0     0.0     0.0          0.0       1.0   
+Cross                  1.0     4.0     3.0          4.0       0.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     0.0        0.0             0.0            28.0   
+Circle                       0.0        1.0             2.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        0.0             2.0            15.0   
+Square                       0.0        1.0             1.0            11.0   
+Star Bullet                  0.0        0.0             0.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        0.0             0.0             1.0   
+Equals                       0.0        0.0             0.0             0.0   
+Arrow Right                110.0        0.0             0.0             0.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      192.0            32.0             0.0   
+Two Boxes Null               0.0        8.0            44.0             0.0   
+Trapezoid Down               0.0        1.0             0.0           376.0   
+Trapezoid Up                 0.0        0.0             0.0             1.0   
+Resistor Horizontal          6.0        2.0             3.0             5.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                3.0        1.0             0.0             1.0   
+Battery Down                 0.0        0.0             0.0             0.0   
+Plus                         6.0        0.0             0.0             0.0   
+Minus                        0.0        0.0             0.0             0.0   
+Cross                        5.0        0.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                       UNK  
+Triangle             193.0  
+Circle               186.0  
+Star                  92.0  
+Diamond               58.0  
+Square                74.0  
+Star Bullet          459.0  
+Parallelogram Left    11.0  
+Parallelogram Right    9.0  
+Equals                92.0  
+Arrow Right           75.0  
+Arrow Up               0.0  
+Two Boxes             42.0  
+Two Boxes Null        24.0  
+Trapezoid Down        10.0  
+Trapezoid Up           2.0  
+Resistor Horizontal  469.0  
+Resistor Horizontal    0.0  
+Resistor Vertical     13.0  
+Battery Right        157.0  
+Battery Down          13.0  
+Plus                 205.0  
+Minus                187.0  
+Cross                507.0  
+Arrow Right            0.0  
+Test with scale  30
+Prediction Accuracy is:  0.8272707311717777
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              49.0     7.0     8.0         42.0    2560.0   
+Circle                40.0    37.0  3066.0         18.0      21.0   
+Star                 229.0     1.0     0.0         16.0       3.0   
+Diamond               75.0  1103.0    53.0         14.0      54.0   
+Square                63.0  1103.0   118.0          8.0      17.0   
+Star Bullet          150.0     2.0     1.0        412.0       6.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       6.0   
+Parallelogram Right    0.0   334.0    10.0          1.0       6.0   
+Equals                 1.0     2.0     0.0          0.0       0.0   
+Arrow Right            0.0     0.0     0.0          0.0       1.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              0.0     8.0     0.0          0.0       0.0   
+Two Boxes Null         0.0     0.0     0.0          0.0       0.0   
+Trapezoid Down         3.0   105.0     5.0          3.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal   84.0    72.0     6.0         35.0      17.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      0.0     3.0     3.0          0.0       1.0   
+Battery Right          5.0    18.0     0.0          0.0       3.0   
+Battery Down           0.0     1.0     0.0          0.0       1.0   
+Plus                   2.0     1.0     0.0          0.0       0.0   
+Minus                  1.0     0.0     0.0          2.0       1.0   
+Cross                  1.0     5.0     3.0          4.0       1.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     0.0        0.0             0.0            30.0   
+Circle                       0.0        1.0             2.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        1.0             4.0            15.0   
+Square                       0.0        1.0             1.0            11.0   
+Star Bullet                  0.0        0.0             0.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        0.0             0.0             0.0   
+Arrow Right                119.0        0.0             0.0             0.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      196.0            38.0             0.0   
+Two Boxes Null               0.0       13.0            44.0             0.0   
+Trapezoid Down               0.0        1.0             0.0           376.0   
+Trapezoid Up                 0.0        0.0             0.0             1.0   
+Resistor Horizontal          7.0        2.0             4.0             9.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                3.0        1.0             0.0             1.0   
+Battery Down                 0.0        0.0             0.0             0.0   
+Plus                         7.0        0.0             0.0             0.0   
+Minus                        0.0        0.0             0.0             0.0   
+Cross                        6.0        0.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                       UNK  
+Triangle             131.0  
+Circle               143.0  
+Star                  56.0  
+Diamond               38.0  
+Square                55.0  
+Star Bullet          273.0  
+Parallelogram Left     3.0  
+Parallelogram Right    6.0  
+Equals                92.0  
+Arrow Right           65.0  
+Arrow Up               0.0  
+Two Boxes             28.0  
+Two Boxes Null        19.0  
+Trapezoid Down         4.0  
+Trapezoid Up           2.0  
+Resistor Horizontal  385.0  
+Resistor Horizontal    0.0  
+Resistor Vertical     13.0  
+Battery Right        149.0  
+Battery Down          13.0  
+Plus                 203.0  
+Minus                184.0  
+Cross                504.0  
+Arrow Right            0.0  
+Test with scale  31
+Prediction Accuracy is:  0.8290273000073191
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              56.0     7.0     8.0         65.0    2585.0   
+Circle                51.0    38.0  3071.0         40.0      25.0   
+Star                 248.0     1.0     0.0         22.0       6.0   
+Diamond               83.0  1106.0    53.0         18.0      55.0   
+Square                74.0  1104.0   118.0         10.0      19.0   
+Star Bullet          211.0     2.0     1.0        488.0       6.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       8.0   
+Parallelogram Right    1.0   334.0    10.0          1.0       6.0   
+Equals                 1.0     2.0     0.0          0.0       0.0   
+Arrow Right            0.0     0.0     0.0          0.0       2.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              0.0    10.0     0.0          0.0       2.0   
+Two Boxes Null         1.0     0.0     0.0          0.0       0.0   
+Trapezoid Down         3.0   105.0     5.0          3.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  131.0    75.0     6.0         60.0      33.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      0.0     3.0     3.0          1.0       2.0   
+Battery Right          7.0    18.0     0.0          1.0       7.0   
+Battery Down           1.0     1.0     0.0          0.0       1.0   
+Plus                   2.0     1.0     1.0          1.0       0.0   
+Minus                  2.0     0.0     0.0          2.0       1.0   
+Cross                  2.0     5.0     3.0          4.0       1.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     0.0        0.0             0.0            30.0   
+Circle                       0.0        6.0             5.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        1.0             4.0            16.0   
+Square                       0.0        1.0             2.0            12.0   
+Star Bullet                  0.0        0.0             0.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        0.0             0.0             0.0   
+Arrow Right                127.0        0.0             0.0             0.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      196.0            43.0             0.0   
+Two Boxes Null               0.0       18.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             0.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          7.0        2.0             5.0            13.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                3.0        1.0             0.0             1.0   
+Battery Down                 0.0        0.0             0.0             0.0   
+Plus                         9.0        0.0             0.0             0.0   
+Minus                        0.0        0.0             0.0             0.0   
+Cross                        9.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                       UNK  
+Triangle              76.0  
+Circle                92.0  
+Star                  28.0  
+Diamond               21.0  
+Square                37.0  
+Star Bullet          136.0  
+Parallelogram Left     1.0  
+Parallelogram Right    5.0  
+Equals                92.0  
+Arrow Right           56.0  
+Arrow Up               0.0  
+Two Boxes             19.0  
+Two Boxes Null        10.0  
+Trapezoid Down         4.0  
+Trapezoid Up           0.0  
+Resistor Horizontal  289.0  
+Resistor Horizontal    0.0  
+Resistor Vertical     11.0  
+Battery Right        142.0  
+Battery Down          12.0  
+Plus                 199.0  
+Minus                183.0  
+Cross                499.0  
+Arrow Right            0.0  
+Test with scale  32
+Prediction Accuracy is:  0.8229524994510722
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              62.0     8.0     8.0         84.0    2603.0   
+Circle                66.0    38.0  3071.0         53.0      30.0   
+Star                 253.0     1.0     0.0         27.0       7.0   
+Diamond               88.0  1107.0    54.0         20.0      57.0   
+Square                77.0  1105.0   118.0         18.0      21.0   
+Star Bullet          255.0     2.0     1.0        531.0       6.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       8.0   
+Parallelogram Right    2.0   334.0    10.0          1.0       6.0   
+Equals                 1.0     2.0     0.0          0.0       0.0   
+Arrow Right            1.0     0.0     0.0          1.0       3.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              2.0    16.0     0.0          2.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          1.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          3.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  170.0    82.0     6.0         88.0      55.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      3.0     3.0     4.0          2.0       2.0   
+Battery Right          9.0    18.0     0.0          5.0      11.0   
+Battery Down           1.0     2.0     0.0          0.0       1.0   
+Plus                   2.0     1.0     1.0          8.0       0.0   
+Minus                  7.0     0.0     0.0          4.0       7.0   
+Cross                  3.0     5.0     3.0         14.0       1.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     0.0        2.0             0.0            30.0   
+Circle                       0.0        7.0             8.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        1.0             3.0            12.0   
+Star Bullet                  0.0        0.0             0.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        0.0             0.0             0.0   
+Arrow Right                131.0        0.0             0.0             0.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             0.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          7.0        2.0             8.0            15.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                3.0        1.0             0.0             1.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        11.0        0.0             0.0             0.0   
+Minus                        0.0        0.0             0.0             0.0   
+Cross                       14.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                       UNK  
+Triangle              30.0  
+Circle                55.0  
+Star                  17.0  
+Diamond                7.0  
+Square                22.0  
+Star Bullet           49.0  
+Parallelogram Left     1.0  
+Parallelogram Right    4.0  
+Equals                92.0  
+Arrow Right           49.0  
+Arrow Up               0.0  
+Two Boxes              7.0  
+Two Boxes Null         2.0  
+Trapezoid Down         4.0  
+Trapezoid Up           0.0  
+Resistor Horizontal  188.0  
+Resistor Horizontal    0.0  
+Resistor Vertical      6.0  
+Battery Right        132.0  
+Battery Down          10.0  
+Plus                 190.0  
+Minus                170.0  
+Cross                483.0  
+Arrow Right            0.0  
+Test with scale  33
+Prediction Accuracy is:  0.8081680450852667
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              65.0     8.0     9.0         87.0    2605.0   
+Circle                72.0    38.0  3072.0         65.0      43.0   
+Star                 255.0     1.0     0.0         31.0       8.0   
+Diamond               90.0  1107.0    54.0         20.0      59.0   
+Square                80.0  1106.0   119.0         20.0      23.0   
+Star Bullet          267.0     2.0     1.0        549.0       6.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       8.0   
+Parallelogram Right    2.0   334.0    12.0          1.0       6.0   
+Equals                 1.0     3.0     0.0          0.0       0.0   
+Arrow Right            1.0     0.0     0.0          1.0       4.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          2.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          3.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  188.0    89.0    12.0        108.0      80.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       2.0   
+Battery Right         11.0    18.0     0.0          6.0      15.0   
+Battery Down           1.0     2.0     0.0          0.0       1.0   
+Plus                   4.0     1.0     1.0         31.0       0.0   
+Minus                  8.0     0.0     2.0          6.0      16.0   
+Cross                  8.0     5.0     3.0         97.0       2.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             0.0            30.0   
+Circle                       0.0        8.0             8.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        1.0             4.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        0.0             0.0             0.0   
+Arrow Right                133.0        0.0             0.0             0.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             0.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          7.0        2.0             9.0            20.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                3.0        1.0             2.0             2.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        13.0        0.0             0.0             0.0   
+Minus                        0.0        0.0             1.0             0.0   
+Cross                       14.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                       UNK  
+Triangle              19.0  
+Circle                22.0  
+Star                  10.0  
+Diamond                3.0  
+Square                12.0  
+Star Bullet           18.0  
+Parallelogram Left     1.0  
+Parallelogram Right    2.0  
+Equals                91.0  
+Arrow Right           46.0  
+Arrow Up               0.0  
+Two Boxes              0.0  
+Two Boxes Null         1.0  
+Trapezoid Down         4.0  
+Trapezoid Up           0.0  
+Resistor Horizontal  106.0  
+Resistor Horizontal    0.0  
+Resistor Vertical      2.0  
+Battery Right        122.0  
+Battery Down          10.0  
+Plus                 163.0  
+Minus                155.0  
+Cross                394.0  
+Arrow Right            0.0  
+Test with scale  34
+Prediction Accuracy is:  0.7882602649491327
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              66.0     8.0     9.0         90.0    2607.0   
+Circle                75.0    38.0  3072.0         74.0      43.0   
+Star                 256.0     1.0     0.0         36.0       9.0   
+Diamond               90.0  1107.0    54.0         20.0      59.0   
+Square                81.0  1106.0   119.0         22.0      24.0   
+Star Bullet          273.0     2.0     1.0        551.0       6.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       8.0   
+Parallelogram Right    3.0   334.0    12.0          1.0       6.0   
+Equals                 1.0     3.0     2.0          0.0       0.0   
+Arrow Right            4.0     0.0     0.0          1.0       9.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  192.0    91.0    17.0        128.0     106.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         12.0    20.0     0.0         14.0      19.0   
+Battery Down           1.0     2.0     0.0          0.0       2.0   
+Plus                  17.0     2.0     1.0         56.0       2.0   
+Minus                 18.0     0.0     2.0         12.0      32.0   
+Cross                 23.0     5.0     3.0        203.0       2.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             1.0            30.0   
+Circle                       0.0        9.0            10.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        1.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        0.0             0.0             0.0   
+Arrow Right                134.0        0.0             0.0             0.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             1.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          7.0        3.0            10.0            20.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                3.0        1.0             2.0             2.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        17.0        0.0             0.0             0.0   
+Minus                        0.0        0.0             1.0             0.0   
+Cross                       15.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                       UNK  
+Triangle              12.0  
+Circle                 7.0  
+Star                   3.0  
+Diamond                3.0  
+Square                 7.0  
+Star Bullet           10.0  
+Parallelogram Left     1.0  
+Parallelogram Right    1.0  
+Equals                89.0  
+Arrow Right           37.0  
+Arrow Up               0.0  
+Two Boxes              0.0  
+Two Boxes Null         0.0  
+Trapezoid Down         1.0  
+Trapezoid Up           0.0  
+Resistor Horizontal   47.0  
+Resistor Horizontal    0.0  
+Resistor Vertical      0.0  
+Battery Right        107.0  
+Battery Down           9.0  
+Plus                 118.0  
+Minus                123.0  
+Cross                272.0  
+Arrow Right            0.0  
+Test with scale  35
+Prediction Accuracy is:  0.7729634780062944
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              67.0     8.0     9.0         91.0    2613.0   
+Circle                75.0    38.0  3072.0         77.0      43.0   
+Star                 256.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         20.0      59.0   
+Square                81.0  1106.0   120.0         22.0      24.0   
+Star Bullet          274.0     2.0     1.0        555.0       7.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       8.0   
+Parallelogram Right    3.0   334.0    12.0          1.0       6.0   
+Equals                 1.0     3.0     6.0          0.0       0.0   
+Arrow Right            5.0     0.0     0.0          3.0      11.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  194.0    96.0    21.0        136.0     113.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         15.0    20.0     0.0         17.0      24.0   
+Battery Down           2.0     2.0     0.0          0.0       2.0   
+Plus                  33.0     2.0     2.0         81.0       3.0   
+Minus                 19.0     1.0     2.0         16.0      51.0   
+Cross                 64.0     5.0     3.0        269.0       2.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             1.0            30.0   
+Circle                       0.0        9.0            10.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        1.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        0.0             0.0             0.0   
+Arrow Right                139.0        0.0             0.0             0.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          7.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                3.0        1.0             2.0             2.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        0.0        0.0             2.0             0.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                       UNK  
+Triangle               4.0  
+Circle                 4.0  
+Star                   1.0  
+Diamond                3.0  
+Square                 6.0  
+Star Bullet            4.0  
+Parallelogram Left     1.0  
+Parallelogram Right    1.0  
+Equals                85.0  
+Arrow Right           27.0  
+Arrow Up               0.0  
+Two Boxes              0.0  
+Two Boxes Null         0.0  
+Trapezoid Down         0.0  
+Trapezoid Up           0.0  
+Resistor Horizontal   19.0  
+Resistor Horizontal    0.0  
+Resistor Vertical      0.0  
+Battery Right         96.0  
+Battery Down           8.0  
+Plus                  73.0  
+Minus                 97.0  
+Cross                163.0  
+Arrow Right            0.0  
+Test with scale  36
+Prediction Accuracy is:  0.7619117324160141
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              67.0     8.0     9.0         91.0    2614.0   
+Circle                75.0    38.0  3072.0         77.0      43.0   
+Star                 256.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         20.0      60.0   
+Square                81.0  1106.0   120.0         22.0      25.0   
+Star Bullet          274.0     2.0     1.0        555.0       7.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    12.0          1.0       6.0   
+Equals                 6.0     4.0     6.0          0.0       0.0   
+Arrow Right            9.0     0.0     0.0          7.0      15.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  194.0    99.0    22.0        141.0     118.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         16.0    20.0     0.0         17.0      24.0   
+Battery Down           4.0     2.0     0.0          0.0       2.0   
+Plus                  49.0     2.0     2.0         93.0       3.0   
+Minus                 21.0     2.0     2.0         20.0      65.0   
+Cross                 99.0     5.0     3.0        310.0       4.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            10.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        1.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        0.0             0.0             0.0   
+Arrow Right                139.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             2.0             2.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        0.0        0.0             2.0             0.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              2.0  
+Circle                4.0  
+Star                  1.0  
+Diamond               2.0  
+Square                5.0  
+Star Bullet           4.0  
+Parallelogram Left    0.0  
+Parallelogram Right   1.0  
+Equals               79.0  
+Arrow Right          14.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   4.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right        94.0  
+Battery Down          6.0  
+Plus                 45.0  
+Minus                76.0  
+Cross                85.0  
+Arrow Right           0.0  
+Test with scale  37
+Prediction Accuracy is:  0.7545195052331113
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              67.0     8.0     9.0         92.0    2614.0   
+Circle                75.0    39.0  3072.0         77.0      44.0   
+Star                 256.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         21.0      60.0   
+Square                81.0  1106.0   120.0         22.0      26.0   
+Star Bullet          275.0     2.0     1.0        555.0       7.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    12.0          1.0       6.0   
+Equals                 9.0     6.0    12.0          0.0       2.0   
+Arrow Right           10.0     0.0     0.0         10.0      18.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        141.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         18.0    21.0     1.0         26.0      27.0   
+Battery Down           4.0     2.0     0.0          0.0       3.0   
+Plus                  58.0     2.0     2.0        100.0       6.0   
+Minus                 25.0     3.0     2.0         25.0      73.0   
+Cross                114.0     5.0     3.0        327.0       4.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            10.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        0.0             0.0             0.0   
+Arrow Right                140.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             2.0             2.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        0.0        0.0             2.0             0.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              1.0  
+Circle                2.0  
+Star                  1.0  
+Diamond               1.0  
+Square                3.0  
+Star Bullet           3.0  
+Parallelogram Left    0.0  
+Parallelogram Right   1.0  
+Equals               66.0  
+Arrow Right           6.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   1.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right        78.0  
+Battery Down          5.0  
+Plus                 26.0  
+Minus                58.0  
+Cross                53.0  
+Arrow Right           0.0  
+Test with scale  38
+Prediction Accuracy is:  0.7482983239405694
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                75.0    39.0  3072.0         77.0      44.0   
+Star                 256.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         21.0      60.0   
+Square                81.0  1106.0   120.0         22.0      27.0   
+Star Bullet          276.0     2.0     1.0        555.0       7.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    12.0          1.0       6.0   
+Equals                18.0     9.0    18.0          0.0       8.0   
+Arrow Right           10.0     0.0     0.0         12.0      18.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        141.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         20.0    21.0     2.0         31.0      29.0   
+Battery Down           5.0     2.0     0.0          0.0       5.0   
+Plus                  62.0     2.0     2.0        106.0       6.0   
+Minus                 28.0     3.0     2.0         28.0      78.0   
+Cross                128.0     5.0     3.0        338.0       5.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        0.0             1.0             0.0   
+Arrow Right                140.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             2.0             2.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        0.0        0.0             2.0             0.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                1.0  
+Star                  1.0  
+Diamond               1.0  
+Square                2.0  
+Star Bullet           2.0  
+Parallelogram Left    0.0  
+Parallelogram Right   1.0  
+Equals               41.0  
+Arrow Right           4.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   1.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right        68.0  
+Battery Down          2.0  
+Plus                 16.0  
+Minus                47.0  
+Cross                27.0  
+Arrow Right           0.0  
+Test with scale  39
+Prediction Accuracy is:  0.7428822366976506
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                75.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         22.0      28.0   
+Star Bullet          276.0     2.0     1.0        555.0       7.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                24.0    11.0    22.0          0.0      11.0   
+Arrow Right           11.0     0.0     0.0         12.0      18.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         24.0    21.0     5.0         45.0      35.0   
+Battery Down           5.0     2.0     0.0          0.0       5.0   
+Plus                  66.0     2.0     2.0        109.0       7.0   
+Minus                 30.0     4.0     2.0         29.0      79.0   
+Cross                132.0     5.0     3.0        346.0       5.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        3.0             1.0             0.0   
+Arrow Right                140.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             2.0             2.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        2.0        0.0             3.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                1.0  
+Star                  0.0  
+Diamond               0.0  
+Square                1.0  
+Star Bullet           2.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals               23.0  
+Arrow Right           3.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right        41.0  
+Battery Down          2.0  
+Plus                  8.0  
+Minus                38.0  
+Cross                15.0  
+Arrow Right           0.0  
+Test with scale  40
+Prediction Accuracy is:  0.7392959086584205
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                76.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         22.0      28.0   
+Star Bullet          276.0     2.0     1.0        555.0       7.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                25.0    13.0    27.0          0.0      14.0   
+Arrow Right           11.0     0.0     0.0         12.0      18.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         28.0    22.0     6.0         52.0      37.0   
+Battery Down           6.0     2.0     0.0          0.0       5.0   
+Plus                  70.0     3.0     2.0        109.0       8.0   
+Minus                 30.0     4.0     5.0         29.0      82.0   
+Cross                135.0     5.0     3.0        349.0       6.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        5.0             2.0             0.0   
+Arrow Right                141.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             2.0             3.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        2.0        0.0             3.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                0.0  
+Star                  0.0  
+Diamond               0.0  
+Square                1.0  
+Star Bullet           2.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals                9.0  
+Arrow Right           2.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right        25.0  
+Battery Down          1.0  
+Plus                  2.0  
+Minus                32.0  
+Cross                 8.0  
+Arrow Right           0.0  
+Test with scale  41
+Prediction Accuracy is:  0.7373929590865842
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                76.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         22.0      28.0   
+Star Bullet          276.0     2.0     1.0        555.0       8.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                25.0    14.0    28.0          0.0      16.0   
+Arrow Right           11.0     0.0     0.0         13.0      19.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         28.0    23.0     6.0         56.0      44.0   
+Battery Down           6.0     2.0     0.0          0.0       5.0   
+Plus                  70.0     3.0     2.0        110.0       9.0   
+Minus                 31.0     6.0     5.0         30.0      82.0   
+Cross                135.0     5.0     3.0        352.0       7.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        5.0             2.0             0.0   
+Arrow Right                141.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             2.0             3.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        2.0        0.0             3.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                0.0  
+Star                  0.0  
+Diamond               0.0  
+Square                1.0  
+Star Bullet           1.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals                5.0  
+Arrow Right           0.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right        13.0  
+Battery Down          1.0  
+Plus                  0.0  
+Minus                28.0  
+Cross                 4.0  
+Arrow Right           0.0  
+Test with scale  42
+Prediction Accuracy is:  0.7367342457732562
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                76.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         23.0      28.0   
+Star Bullet          276.0     2.0     1.0        555.0       8.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                25.0    14.0    28.0          0.0      16.0   
+Arrow Right           11.0     0.0     0.0         13.0      19.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         28.0    24.0     6.0         56.0      45.0   
+Battery Down           6.0     2.0     0.0          0.0       5.0   
+Plus                  70.0     3.0     2.0        110.0       9.0   
+Minus                 31.0     7.0     5.0         31.0      82.0   
+Cross                135.0     5.0     3.0        354.0       7.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        5.0             2.0             0.0   
+Arrow Right                141.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             3.0             3.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        3.0        0.0             4.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                0.0  
+Star                  0.0  
+Diamond               0.0  
+Square                0.0  
+Star Bullet           1.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals                5.0  
+Arrow Right           0.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right        10.0  
+Battery Down          1.0  
+Plus                  0.0  
+Minus                24.0  
+Cross                 2.0  
+Arrow Right           0.0  
+Test with scale  43
+Prediction Accuracy is:  0.7362219131962234
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                76.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         23.0      28.0   
+Star Bullet          276.0     2.0     1.0        555.0       8.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                25.0    15.0    28.0          0.0      16.0   
+Arrow Right           11.0     0.0     0.0         13.0      19.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         28.0    24.0     7.0         57.0      45.0   
+Battery Down           6.0     2.0     0.0          0.0       5.0   
+Plus                  70.0     3.0     2.0        110.0       9.0   
+Minus                 31.0     8.0     5.0         31.0      82.0   
+Cross                135.0     5.0     3.0        354.0       7.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        5.0             4.0             0.0   
+Arrow Right                141.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             3.0             4.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        3.0        0.0             4.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                0.0  
+Star                  0.0  
+Diamond               0.0  
+Square                0.0  
+Star Bullet           1.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals                2.0  
+Arrow Right           0.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right         7.0  
+Battery Down          1.0  
+Plus                  0.0  
+Minus                23.0  
+Cross                 2.0  
+Arrow Right           0.0  
+Test with scale  44
+Prediction Accuracy is:  0.7353436287784527
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                76.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         23.0      28.0   
+Star Bullet          276.0     2.0     1.0        555.0       8.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                25.0    15.0    29.0          0.0      16.0   
+Arrow Right           11.0     0.0     0.0         13.0      19.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         29.0    24.0     8.0         58.0      46.0   
+Battery Down           6.0     2.0     0.0          0.0       5.0   
+Plus                  70.0     3.0     2.0        110.0       9.0   
+Minus                 31.0    11.0     6.0         32.0      82.0   
+Cross                135.0     5.0     3.0        354.0       7.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        5.0             4.0             0.0   
+Arrow Right                141.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             5.0             4.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        3.0        0.0             4.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                0.0  
+Star                  0.0  
+Diamond               0.0  
+Square                0.0  
+Star Bullet           1.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals                1.0  
+Arrow Right           0.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right         1.0  
+Battery Down          1.0  
+Plus                  0.0  
+Minus                18.0  
+Cross                 2.0  
+Arrow Right           0.0  
+Test with scale  45
+Prediction Accuracy is:  0.7351240576740101
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                76.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         23.0      28.0   
+Star Bullet          276.0     2.0     1.0        555.0       8.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                25.0    15.0    29.0          0.0      17.0   
+Arrow Right           11.0     0.0     0.0         13.0      19.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         29.0    24.0     8.0         58.0      46.0   
+Battery Down           6.0     2.0     0.0          0.0       5.0   
+Plus                  70.0     3.0     2.0        110.0       9.0   
+Minus                 31.0    11.0     7.0         32.0      82.0   
+Cross                135.0     5.0     3.0        354.0       8.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        5.0             4.0             0.0   
+Arrow Right                141.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             5.0             4.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        3.0        0.0             4.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                0.0  
+Star                  0.0  
+Diamond               0.0  
+Square                0.0  
+Star Bullet           1.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals                0.0  
+Arrow Right           0.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right         1.0  
+Battery Down          1.0  
+Plus                  0.0  
+Minus                17.0  
+Cross                 1.0  
+Arrow Right           0.0  
+Test with scale  46
+Prediction Accuracy is:  0.734977676937715
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                76.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         23.0      28.0   
+Star Bullet          276.0     2.0     1.0        555.0       8.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                25.0    15.0    29.0          0.0      17.0   
+Arrow Right           11.0     0.0     0.0         13.0      19.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         29.0    24.0     8.0         58.0      46.0   
+Battery Down           7.0     2.0     0.0          0.0       5.0   
+Plus                  70.0     3.0     2.0        110.0       9.0   
+Minus                 31.0    11.0     7.0         32.0      82.0   
+Cross                135.0     5.0     3.0        355.0       8.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        5.0             4.0             0.0   
+Arrow Right                141.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             5.0             4.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        3.0        0.0             4.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                0.0  
+Star                  0.0  
+Diamond               0.0  
+Square                0.0  
+Star Bullet           1.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals                0.0  
+Arrow Right           0.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right         1.0  
+Battery Down          0.0  
+Plus                  0.0  
+Minus                17.0  
+Cross                 0.0  
+Arrow Right           0.0  
+Test with scale  47
+Prediction Accuracy is:  0.7347581058332724
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                76.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         23.0      28.0   
+Star Bullet          276.0     2.0     1.0        555.0       8.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                25.0    15.0    29.0          0.0      17.0   
+Arrow Right           11.0     0.0     0.0         13.0      19.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         29.0    24.0     8.0         59.0      46.0   
+Battery Down           7.0     2.0     0.0          0.0       5.0   
+Plus                  70.0     3.0     2.0        110.0       9.0   
+Minus                 31.0    12.0     7.0         33.0      82.0   
+Cross                135.0     5.0     3.0        355.0       8.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        5.0             4.0             0.0   
+Arrow Right                141.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             5.0             4.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        3.0        0.0             4.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                0.0  
+Star                  0.0  
+Diamond               0.0  
+Square                0.0  
+Star Bullet           1.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals                0.0  
+Arrow Right           0.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right         0.0  
+Battery Down          0.0  
+Plus                  0.0  
+Minus                15.0  
+Cross                 0.0  
+Arrow Right           0.0  
+Test with scale  48
+Prediction Accuracy is:  0.7346849154651248
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                76.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         23.0      28.0   
+Star Bullet          276.0     2.0     1.0        555.0       8.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                25.0    15.0    29.0          0.0      17.0   
+Arrow Right           11.0     0.0     0.0         13.0      19.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         29.0    24.0     8.0         59.0      46.0   
+Battery Down           7.0     2.0     0.0          0.0       5.0   
+Plus                  70.0     3.0     2.0        110.0       9.0   
+Minus                 31.0    12.0     7.0         34.0      82.0   
+Cross                135.0     5.0     3.0        355.0       8.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        5.0             4.0             0.0   
+Arrow Right                141.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             5.0             4.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        3.0        0.0             4.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                0.0  
+Star                  0.0  
+Diamond               0.0  
+Square                0.0  
+Star Bullet           1.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals                0.0  
+Arrow Right           0.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right         0.0  
+Battery Down          0.0  
+Plus                  0.0  
+Minus                14.0  
+Cross                 0.0  
+Arrow Right           0.0  
+Test with scale  49
+Prediction Accuracy is:  0.7346117250969773
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                76.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         23.0      28.0   
+Star Bullet          276.0     2.0     2.0        555.0       8.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                25.0    15.0    29.0          0.0      17.0   
+Arrow Right           11.0     0.0     0.0         13.0      19.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         29.0    24.0     8.0         59.0      46.0   
+Battery Down           7.0     2.0     0.0          0.0       5.0   
+Plus                  70.0     3.0     2.0        110.0       9.0   
+Minus                 31.0    12.0     7.0         34.0      83.0   
+Cross                135.0     5.0     3.0        355.0       8.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        5.0             4.0             0.0   
+Arrow Right                141.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             5.0             4.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        3.0        0.0             4.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                0.0  
+Star                  0.0  
+Diamond               0.0  
+Square                0.0  
+Star Bullet           0.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals                0.0  
+Arrow Right           0.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right         0.0  
+Battery Down          0.0  
+Plus                  0.0  
+Minus                13.0  
+Cross                 0.0  
+Arrow Right           0.0  
+Test with scale  50
+Prediction Accuracy is:  0.7345385347288297
+Confusion matrix:
+                      Star  Square  Circle  Star Bullet  Triangle  \
+Triangle              68.0     8.0     9.0         92.0    2614.0   
+Circle                76.0    39.0  3072.0         77.0      44.0   
+Star                 257.0     1.0     0.0         37.0      10.0   
+Diamond               90.0  1107.0    54.0         22.0      60.0   
+Square                81.0  1106.0   120.0         23.0      28.0   
+Star Bullet          276.0     2.0     2.0        555.0       8.0   
+Parallelogram Left     7.0   217.0     3.0          0.0       9.0   
+Parallelogram Right    3.0   334.0    13.0          1.0       6.0   
+Equals                25.0    15.0    29.0          0.0      17.0   
+Arrow Right           11.0     0.0     0.0         13.0      19.0   
+Arrow Up               0.0     0.0     0.0          0.0       0.0   
+Two Boxes              5.0    18.0     0.0          4.0       3.0   
+Two Boxes Null         2.0     2.0     0.0          3.0       1.0   
+Trapezoid Down         3.0   105.0     5.0          5.0      58.0   
+Trapezoid Up           0.0     8.0     9.0          0.0      46.0   
+Resistor Horizontal  195.0   100.0    22.0        142.0     119.0   
+Resistor Horizontal    0.0     0.0     0.0          0.0       0.0   
+Resistor Vertical      5.0     3.0     4.0          4.0       4.0   
+Battery Right         29.0    24.0     8.0         59.0      46.0   
+Battery Down           7.0     2.0     0.0          0.0       5.0   
+Plus                  70.0     3.0     2.0        110.0       9.0   
+Minus                 32.0    12.0     7.0         34.0      83.0   
+Cross                135.0     5.0     3.0        355.0       8.0   
+Arrow Right            0.0     0.0     0.0          0.0       0.0   
+
+                     Arrow Right  Two Boxes  Two Boxes Null  Trapezoid Down  \
+Triangle                     1.0        3.0             2.0            30.0   
+Circle                       0.0        9.0            11.0            18.0   
+Star                         0.0        0.0             0.0             0.0   
+Diamond                      0.0        2.0             6.0            16.0   
+Square                       0.0        2.0             5.0            12.0   
+Star Bullet                  0.0        0.0             1.0             0.0   
+Parallelogram Left           0.0        0.0             0.0             2.0   
+Parallelogram Right          0.0        1.0             0.0             1.0   
+Equals                       0.0        5.0             4.0             0.0   
+Arrow Right                141.0        0.0             0.0             1.0   
+Arrow Up                     0.0        0.0             0.0             0.0   
+Two Boxes                    0.0      197.0            43.0             0.0   
+Two Boxes Null               0.0       21.0            47.0             0.0   
+Trapezoid Down               0.0        1.0             2.0           376.0   
+Trapezoid Up                 0.0        0.0             2.0             1.0   
+Resistor Horizontal          8.0        3.0            10.0            22.0   
+Resistor Horizontal          0.0        0.0             0.0             0.0   
+Resistor Vertical            0.0        2.0             0.0             0.0   
+Battery Right                4.0        1.0             5.0             4.0   
+Battery Down                 0.0        0.0             1.0             0.0   
+Plus                        19.0        0.0             0.0             0.0   
+Minus                        3.0        0.0             4.0             1.0   
+Cross                       17.0        1.0             0.0             0.0   
+Arrow Right                  0.0        0.0             0.0             0.0   
+
+                      UNK  
+Triangle              0.0  
+Circle                0.0  
+Star                  0.0  
+Diamond               0.0  
+Square                0.0  
+Star Bullet           0.0  
+Parallelogram Left    0.0  
+Parallelogram Right   0.0  
+Equals                0.0  
+Arrow Right           0.0  
+Arrow Up              0.0  
+Two Boxes             0.0  
+Two Boxes Null        0.0  
+Trapezoid Down        0.0  
+Trapezoid Up          0.0  
+Resistor Horizontal   0.0  
+Resistor Horizontal   0.0  
+Resistor Vertical     0.0  
+Battery Right         0.0  
+Battery Down          0.0  
+Plus                  0.0  
+Minus                12.0  
+Cross                 0.0  
+Arrow Right           0.0  

@@ -15,6 +15,12 @@ class Point():
         else:
             return Point(self.x * o.x, self.y * o.y, self.t)
 
+    def get_x(self):
+        return self.x
+    
+    def get_y(self):
+        return self.y
+    
     # for a given two points, find their euclidean distance
     @staticmethod
     def euclidean_distance(p1, p2):
