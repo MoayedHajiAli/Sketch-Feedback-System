@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Point():
+class Point:
     x = y = t = 0
 
     def __init__(self, x, y, t=-1.0):

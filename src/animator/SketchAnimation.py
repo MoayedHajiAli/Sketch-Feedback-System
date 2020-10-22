@@ -1,13 +1,13 @@
 import time
 
-from ObjectUtil import ObjectUtil
+from utils.ObjectUtil import ObjectUtil
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
-from RegistrationUtils import RegistrationUtils
+from utils.RegistrationUtils import RegistrationUtils
 
 
-class Morph():
+class SketchAnimation():
 
     original_labels = []
     target_labels = []
@@ -107,7 +107,7 @@ class Morph():
         # update labels
         self.original_labels, self.target_labels = leb_org, leb_tar
 
-        # translate objects to obtain morphing step vectors then reset
+        # translate objects to obtain SketchAnimationing step vectors then reset
         for obj, x, y, in zip(self.original_obj, x_tra, y_tra):
             obj.transform([1, 0, x, 0, 1, y])
             obj.reset()
@@ -125,7 +125,7 @@ class Morph():
         return anim
 
     def animate_all(self, trans_matrix, steps=300, save=False, file="example3.mp4"):
-        # transform all objects to obtain morphing step vectors then reset them to their original coordinates
+        # transform all objects to obtain SketchAnimationing step vectors then reset them to their original coordinates
         for obj, t in zip(self.original_obj, trans_matrix):
             obj.reset()
             obj.upd_step_vector(t)

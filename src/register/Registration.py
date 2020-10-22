@@ -1,14 +1,14 @@
-from ObjectUtil import ObjectUtil
+from utils.ObjectUtil import ObjectUtil
 import numpy as np
 from scipy.optimize import minimize, basinhopping
-from Nearest_search import Nearest_search
+from utils.NearestSearch import NearestSearch
 from lapjv import lapjv
-from RegistrationUtils import RegistrationUtils, RegisterTwoObjects
-from UnlabeledObject import UnlabeledObject
+from utils.RegistrationUtils import RegistrationUtils, RegisterTwoObjects
+from sketch_object.UnlabeledObject import UnlabeledObject
 import copy
 from multiprocessing import Pool
 import multiprocessing
-from Stroke import Stroke
+from sketch_object.Stroke import Stroke
 import sys
 
 class Registration:

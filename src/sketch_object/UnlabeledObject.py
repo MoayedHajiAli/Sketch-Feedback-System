@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
-from Stroke import Stroke
+from sketch_object.Stroke import Stroke
 
 
 class UnlabeledObject:
@@ -90,7 +90,7 @@ class UnlabeledObject:
         for stroke in self.strokes_lst:
             stroke.transform(t, xo, yo, upd_step=upd_step)
 
-    # update step vector to prepare for the morphing
+    # update step vector to prepare for the SketchAnimationing
     def upd_step_vector(self, t, restore_origin=True):
         xo = yo = 0
         if restore_origin:

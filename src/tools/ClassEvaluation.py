@@ -1,5 +1,5 @@
-from RegistrationUtils import RegistrationUtils
-from ObjectUtil import ObjectUtil
+from utils.RegistrationUtils import RegistrationUtils
+from utils.ObjectUtil import ObjectUtil
 import numpy as np 
 from progress.bar import Bar
 from tqdm import tqdm
@@ -12,7 +12,7 @@ import pandas as pd
 
 pd.set_option('max_columns', None)
 
-class Evaluation:
+class ClassEvaluation:
     inf = 1e9
     available_labels = ['Triangle', 'Circle', 'Star', 'Diamond', 'Square', 'Star Bullet', 'Parallelogram Left', 'Parallelogram Right', 
     'Equals', 'Arrow Right', 'Arrow Up', 'Two Boxes', 'Two Boxes Null', 'Trapezoid Down', 'Trapezoid Up', 'Resistor Horizontal', 

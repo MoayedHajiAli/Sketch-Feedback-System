@@ -1,9 +1,9 @@
 from scipy.spatial import cKDTree
 import numpy as np
 import warnings
-from Point import Point
+from sketch_object.Point import Point
 
-class Nearest_search():
+class NearestSearch():
     def __init__(self, x, y, step=10, mn_dis=10, mx_dis=1000, fac=1000, dynamic=True, ration_mn=0.0, ration_mx=0.6):
         x_dia = max(x) - min(x)
         y_dia = max(y) - min(y)
@@ -49,7 +49,7 @@ class Nearest_search():
         dd, ind = self.tree.query([[x, y]], k=1)
         return ind[0]
 
-    def query_point(self, p:Point) -> Point:
+    def query_point(self, pPoint) -> Point:
         x, y = p.get_x(), p.get_y()
         dd, ind = self.tree.query([x, y], k = 1)
         return Point(self.P[ind[0]][0], self.P[ind[0]][1])
