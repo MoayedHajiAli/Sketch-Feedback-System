@@ -7,6 +7,7 @@ from Nearest_search import Nearest_search
 from ObjectUtil import ObjectUtil
 from scipy.optimize import minimize, basinhopping
 import sys
+import time
 
 class RegistrationUtils:
     """this static class provides basic functuionality for registering
@@ -37,7 +38,7 @@ class RegistrationUtils:
         parameters into 5 transformation metrices of  shearing, rotation, scaling, and
         translation
 
-    transfer(x:array-type of shape(n), y:array-type of shape(n), t:array-type of shape(6))
+    transform(x:array-type of shape(n), y:array-type of shape(n), t:array-type of shape(6))
         transform the coordinates x, and y according the transformation params t
     
     calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, p:array-type of shape(7),
@@ -54,12 +55,13 @@ class RegistrationUtils:
         # a is the shearing parallel to the x axis
         # b is the shearing parallel to the y axis
     @staticmethod
-    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=15, fac_y=15):
+    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=5, fac_y=5):
         a = abs(a)
         b = abs(b)
 
         cost = ln * (fac_x * a + fac_y * b)
         #cost = ln * (fac_x * ((a * (1 + (mx_y - mn_y)/(mx_x - mn_x))) + fac_y * ((b * (1 + (mx_x - mn_x)/(mx_y - mn_y))))))
+        # return cost
         return cost
 
     # default translation cost function where
@@ -77,9 +79,9 @@ class RegistrationUtils:
     @staticmethod
     def _scaling_cost(a, b, ln, fac_x=5, fac_y=5, flip_x=-1, flip_y=-1):
         if flip_x == -1:
-            flip_x = fac_x * 5
+            flip_x = fac_x * 1
         if flip_y == -1:
-            flip_y = fac_y * 5
+            flip_y = fac_y * 1
         if a < 0:
             fac_x = flip_x
         if b < 0:
@@ -95,13 +97,22 @@ class RegistrationUtils:
         return ln * (fac_x * a + fac_y * b)
 
 
-
     # default rotation cost functionreg.total_cost(reg.original_obj[], t)
     @staticmethod
-    def _rotation_cost(r, ln, fac_r=12):
+    def _rotation_cost(r, ln, fac_r=1):
         r = abs(r)
         cost = ln * (fac_r * r)
         return cost
+    
+    @staticmethod
+    # obtain total transformation **parameters** cost
+    def total_transformation_cost(p, mn_x, mx_x, mn_y, mx_y, ln):
+        tot = 0.0
+        tot += RegistrationUtils._scaling_cost(p[0], p[1], ln) 
+        tot += RegistrationUtils._rotation_cost(p[2], ln)
+        tot += RegistrationUtils._shearing_cost(p[3], p[4], mn_x, mn_y, mx_x, mx_y, ln)
+        tot += RegistrationUtils._translation_cost(p[5], p[6], ln)
+        return tot
 
     # for given parameters obtain the transformation matrix, according to the following order
     #   p[0]: the scaling the x direction
@@ -138,14 +149,23 @@ class RegistrationUtils:
         obj1.transform([1, 0, xo, 0, 1, yo])
         obj2.transform([1, 0, xo, 0, 1, yo])
 
-    # change the coordinates of both objects according the origin_x, origin_y, of ref_obj
-    # t represent the direction of the change
+
+    """change the coordinates of both objects according the origin_x and origin_y of ref_obj
+    if t equal -1, the transformation will be reverted.
+    Returns:
+        [type]: [description]
+    """
     @staticmethod
-    def normalize_coords(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, t):
+    def normalize_coords(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, t = 1):
         xo, yo = ref_obj.origin_x, ref_obj.origin_y
         RegistrationUtils.change_cords(ref_obj, tar_obj, t * xo, t * yo)
 
-    # obtain sequential translation matrix according to translation parameters of shearing, rotation, scaling, and translation
+    
+    """obtain sequential transformation matrix according to transofrmation parameters of shearing, rotation, scaling, and translation
+
+    Returns:
+        array-like(5, 6): a transformation matrix for each transformation type
+    """
     @staticmethod
     def get_seq_translation_matrices(p):
         tmp = []
@@ -162,26 +182,41 @@ class RegistrationUtils:
 
         return tmp
 
-    # transfer list of x, y according to t
+    """transform list of x, y according to t
+
+    Returns:
+        array-like(N): the transformed x coords
+        array-like(N): the transformed y coords
+    """
     @staticmethod
-    def transfer(x, y, t):
+    def transform(x, y, t):
         for i in range(len(x)):
             xx, yy = x[i], y[i]
             x[i] = t[0] * xx + t[1] * yy + t[2]
             y[i] = t[3] * xx + t[4] * yy + t[5]
         return x, y
 
-    # calculate the dissimilarity for the obj1, obj2 after transforming the obj1 accrding the parameter p (transformation cost not included)
-    # p has 7 parameters:
-        # p[0]: the scaling the x direction
-        # p[1]: the scaling the y direction
-        # p[2]: rotation for theta degrees (counter clock-wise in radian)
-        # p[3]: shearing in the x axis
-        # p[4]: shearing in the y axis
-        # p[5]: translation in the x direction
-        # p[6]: translation in the y direction
+
+    """ calculate the dissimilarity for the obj1, obj2 after transforming the obj1 accrding the parameter p
+    p has 7 parameters:
+    # p[0]: the scaling the x direction
+    # p[1]: the scaling the y direction
+    # p[2]: rotation for theta degrees (counter clock-wise in radian)
+    # p[3]: shearing in the x axis
+    # p[4]: shearing in the y axis
+    # p[5]: translation in the x direction
+    # p[6]: translation in the y direction
+
+    Params:
+        original_dis: if True, for each point in the ref_obj the distanct to nearest point in the tar_obj will be added to the cost
+        target_dis: if True, for each point in the tar_obj the distanct to nearest point in the ref_obj will be added to the cost 
+        target_nn: a Nearest_search object for the target object
+
+    Returns:
+        double: the visiual dissimilarity
+    """
     @staticmethod
-    def calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, t, target_nn:Nearest_search = None, turning_ang=False,
+    def calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, t, original_dis = True, target_dis = True, target_nn:Nearest_search = None, turning_ang=False,
      cum_ang=False, length=False, turning_fac = 0.05, cum_fac = 0.3, len_fac = 0.01):
 
         # transform both object to the origin of the referenced object
@@ -195,7 +230,7 @@ class RegistrationUtils:
         RegistrationUtils.normalize_coords(ref_obj, tar_obj, 1)
 
         # transform the org_obj
-        x, y = RegistrationUtils.transfer(x, y, t)
+        x, y = RegistrationUtils.transform(x, y, t)
 
         # obtain KDtree of the target obj
         if target_nn is None:
@@ -205,14 +240,23 @@ class RegistrationUtils:
         reference_nn = Nearest_search(x, y)
         
         tot = 0.0
-        # find nearest point from the target object to the points of the referenced object
-        tot += target_nn.query(x, y)
+
+        # find nearest point from the target object to the ith points of the referenced object
+        if original_dis:
+            tot += target_nn.query(x, y)
 
         # find nearest point from the referenced object to the ith point of the target object
-        tot += reference_nn.query(x1, y1)
+        if target_dis:
+            tot += reference_nn.query(x1, y1)
+
+        den = 0
+        if target_dis:
+            den += len(tar_obj)
+        if original_dis:
+            den += len(ref_obj)
 
         if not turning_ang and not cum_ang and not length:
-            return tot / (len(ref_obj) + len(tar_obj))
+            return tot / den
  
         # cum1 = RegistrationUtils.calc_turning(x[0] - 1, y[0], x[0], y[0], x[1], y[1])
         # cum2 = RegistrationUtils.calc_turning(x1[0] - 1, y1[0], x1[0], y1[0], x1[1], y1[1])
@@ -256,7 +300,7 @@ class RegistrationUtils:
         return tot / (len(ref_obj) + len(tar_obj))
         
     @staticmethod
-    def identify_similarity(obj1:UnlabeledObject, obj2:UnlabeledObject, t = None, turning_f = 1, perimeter_f = 10) -> float:
+    def identify_similarity(obj1:UnlabeledObject, obj2:UnlabeledObject, t = None, original_dis=True, target_dis=True, turning_f = 1, perimeter_f = 10) -> float:
         # find t if not specifies
         if t is None:
             x_dif = obj2.origin_x - obj1.origin_x
@@ -303,6 +347,9 @@ class RegistrationUtils:
 
         # return tot_cost #/ (len(obj1) + len(obj2))
 
+
+
+
 class RegisterTwoObjects:
     def __init__(self, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, cost_fun):
         self.tar_obj = tar_obj
@@ -310,17 +357,24 @@ class RegisterTwoObjects:
         self.total_cost = cost_fun
 
     # total dissimilarity including the cost of the transformation
-    def total_dissimalirity(self, p, params = True):
+    def total_dissimalirity(self, p, params = True, target_dis=True, original_dis=True):
         tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(self.ref_obj))
         if params:
             p = RegistrationUtils.obtain_transformation_matrix(p)
-        dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, p, target_nn = self.target_nn) 
+        dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, p, target_nn = self.target_nn, 
+                                                            target_dis=target_dis, original_dis=original_dis) 
         return dissimilarity + (tran_cost / (len(self.ref_obj) + len(self.tar_obj)))   
 
-    def optimize(self, p = None, params = True):
-        # TODO: current similarity function uses kd-tree, which is not suitable for symbolic automatic differentiation
-        # grad = self.find_grad()
-
+    def optimize(self, p = None, params = True, target_dis=True, original_dis=True):
+        """optimize the disimilarity function.
+    
+            Params: 
+                p: the transoformation parameters 
+                params: if True, the function expects and return an array of parameters of shape(7), which specify the tarnsformation
+                        paramerts for scaling_x, scaling_y, rotations, shearing_x, shearing_y, translation_x, translation_y.
+                        if False, the function expects and return an array of parameters of shape(6), which specify the tarnsformation
+                        array values
+            """ 
         # find t if not specifies
         if p is None:
             x_dif = self.tar_obj.origin_x - self.ref_obj.origin_x
@@ -342,9 +396,12 @@ class RegisterTwoObjects:
         self.mn_y, self.mx_y = min(self.ref_obj.get_x()), max(self.ref_obj.get_y())
 
         # minimize
-        minimizer_kwargs = {"method": "BFGS", "args" : (params)}
+        minimizer_kwargs = {"method": "BFGS", "args" : (params, target_dis, original_dis)}
         res = basinhopping(self.total_dissimalirity, p, minimizer_kwargs=minimizer_kwargs, disp=False, niter=1)
         d, p = res.fun, res.x
 
         return d, p
-        
+
+    
+
+            

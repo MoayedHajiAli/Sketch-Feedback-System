@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import copy
+import numpy as np
 
 
 class Stroke:
@@ -11,6 +12,8 @@ class Stroke:
     def __init__(self, lst):
         self.points_lst = sorted(lst, key=lambda p: p.t)
         self.init_lst = copy.deepcopy(self.points_lst)
+        ind = np.argmin(self.get_x())
+        self.origin_x, self.origin_y = self.get_x()[ind], self.get_y()[ind]
         self.step_vector = []
 
     def __len__(self):
@@ -69,3 +72,4 @@ class Stroke:
             x = (p.x - xo) * t[0] + (p.y - yo) * t[1] + t[2] + xo
             y = (p.x - xo) * t[3] + (p.y - yo) * t[4] + t[5] + yo
             self.step_vector.append((x - p.x, y - p.y))
+

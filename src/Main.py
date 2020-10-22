@@ -5,28 +5,36 @@ import numpy as np
 from RegistrationUtils import RegistrationUtils
 from ObjectUtil import ObjectUtil
 import copy
-array = np.array
 from UnlabeledObject import UnlabeledObject
 from Stroke import Stroke
 from Evaluation import Evaluation
+from ObjectParsing import ObjectParsing
 import time
 
+array = np.array
+
 def main():
-    q = int(input())
+    q, s = map(int, input().split())
     if q == 0:
         evalute()
     elif q == 1:
-        s, a, b = map(int, input().split())
-        reg = Registration('./test_samples/a' + str(s) + '.xml', './test_samples/b' + str(s) + '.xml', mn_stroke_len=6, re_sampling=0.01, flip=True, shift_target_y = 1000)
+        reg = Registration('./test_samples/b' + str(s) + '.xml', './test_samples/a' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=False, shift_target_y = 0)
+        a, b = map(int, input().split())
+
+        # initial transformation test
+        # reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([0.4, 0.4, 1.5, 0.0, 0.0, 0.0, 20.0])))
+        # reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([2, 5, 0, 0, 0, 0.0, 20.0])))
+        # reg.original_obj[a] = reg.original_obj[a].get_copy()
+        # reg.original_obj[a].reset()
         test_single_obj(reg, a, b)
+
     elif q == 2:
-        s = int(input())
-        reg = Registration('./test_samples/a' + str(s) + '.xml', './test_samples/b' + str(s) + '.xml', mn_stroke_len=6, re_sampling=0.01, flip=True, shift_target_y = 1000)
-        # add missing objects (temporarily as training is running on ssh server)
+        reg = Registration('./test_samples/a' + str(s) + '.xml', './test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=False, shift_target_y = 0)
+        # add missing objects (temporarily as pre-calculation is running on ssh server)
         add_objects(reg, [])
         st = time.time()
         # p = reg.register(mx_dissimilarity=100)
-        p = array([[ 1.45722464e+00,  7.78708354e-01, -9.44946492e-02,
+        p = array([[ 1.45722464e+00,  7.78708354e-01, -9.44946492e-02, 
          3.73263963e-05, -1.15940180e-01,  1.30174690e+02,
          1.08618391e+03],
        [ 2.99213538e+00,  2.13993443e+00, -3.12549236e-01,
@@ -89,9 +97,19 @@ def main():
         morph = Morph(reg.original_obj, reg.target_obj)
         morph.seq_animate_all(p, save=False
                               , file="./test_videos/example6-seq.mp4")
-    else:
-        test()
+    elif q == 3:
+        # find correspondences of an object
+        reg = Registration('./test_samples/b' + str(s) + '.xml', './test_samples/a' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=True, shift_target_y = 0)
+        a = int(input())
+        find_correspondences('./test_samples/a' + str(s) + '.xml', reg.original_obj[a], reg)
 
+    elif q == 4:
+        # find the embeddings
+        reg = Registration('./test_samples/b' + str(s) + '.xml', './test_samples/a' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=False, shift_target_y = 0)
+        a, b = map(int, input().split())
+        embd1, embd2 = ObjectUtil.get_embedding([reg.original_obj[a], reg.target_obj[b]])
+        print("The norm of the difference vertor between the embeddings", np.linalg.norm(embd1 - embd2))
+        
 
 def print_lst(lst):
     st = ','.join(map(str, lst))
@@ -118,22 +136,41 @@ def add_obj(reg, obj):
   reg.original_obj.append(new_obj)
 
 def test_single_obj(reg, i, j):
+
     st = time.time()
     obj1, obj2 = reg.original_obj[i], reg.target_obj[j]
-    obj1 = ObjectUtil.object_restructure(obj1, n = 30)
-    x_dif = obj2.origin_x - obj1.origin_x
-    y_dif = obj2.origin_y - obj1.origin_y
-    p = array([ 3.05030249e+00,  3.45396355e+00,  7.05516539e-02, -2.43930107e-05,
-       -2.67216045e-10,  1.16495973e+03,  3.21120536e+02])
-    d, p = RegisterTwoObjects(obj1, obj2, reg.total_cost).optimize()
+    print("objects length", len(obj1), len(obj2))
+
+    embd1, embd2 = ObjectUtil.get_embedding([obj1, obj2])
+    print("The norm of the difference vertor between the embeddings before registration", np.linalg.norm(embd1 - embd2))
+
+    d, p = RegisterTwoObjects(obj1, obj2, reg.total_cost).optimize(target_dis=True)
     print(d, [np.array(p)])
-    print(RegistrationUtils.identify_similarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p)))
     print("Running time: ", time.time()-st)
+    # print(RegistrationUtils.identify_similarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p)))
     morph = Morph([obj1], [obj2])
-    print("original len", len(reg.original_obj[i]))
-    print("target len", len(reg.target_obj[j]))
+    # print(RegistrationUtils.calc_dissimilarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p), target_dis=False))
     morph.seq_animate_all([p], save=False, file="./test_videos/example7-obj3-4.mp4")
     plt.show()
+
+    obj1.reset()
+    obj1.transform(RegistrationUtils.obtain_transformation_matrix(p))
+
+    cls1, cls2 = ObjectUtil.classify([obj1, obj2])
+    print("")
+    print("The classifications of the objects are", cls1, cls2)
+
+    embd1, embd2 = ObjectUtil.get_embedding([obj1, obj2])
+    print("The norm of the difference vertor between the embeddings after registration", np.linalg.norm(embd1 - embd2))
+
+
+def find_correspondences(file, obj, reg):
+  obj.transform(RegistrationUtils.obtain_transformation_matrix(np.array([0.4, 0.4, 1.5, 0.0, 0.0, 0.0, 20.0])))
+  obj.transform(RegistrationUtils.obtain_transformation_matrix(np.array([2, 5, 0, 0, 0, 0.0, 20.0])))
+  obj = obj.get_copy()
+  obj.reset()
+  strokes_lst = ObjectUtil.xml_to_strokes(file, re_sampling=0.3, flip=True)
+  print(ObjectParsing.find_matched_strokes(strokes_lst, obj, 20, reg.total_cost))
 
 def evalute():
     eval = Evaluation([], [], re_sampling=0.5)
@@ -147,8 +184,7 @@ def evalute():
     # print("Prediction Accuracy is: ", acc)
     # print("Confusion matrix:")
 
-def test():
-    reg = Registration('./test_samples/a' + str(s) + '.xml', './test_samples/b' + str(s) + '.xml', mn_stroke_len=6, re_sampling=0.1, flip=True, shift_target_y = 1000)
+
 
 if __name__ == '__main__':
     main()

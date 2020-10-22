@@ -8,17 +8,30 @@ from scipy.interpolate import interp1d
 from UnlabeledObject import UnlabeledObject
 import copy
 import warnings
+from sketchformer.basic_usage.sketchformer import continuous_embeddings
+from rdp import rdp
+
 
 class ObjectUtil:
 
-    # for a given file, read the file and transform it to an array of strokes
-    @staticmethod
-    def xml_to_Strokes(file, mn_len=0, flip=False, shift_x=0.0, shift_y=0.0):
+    """for a given file, read the file and transform it to an dictonary of points
+    Params:
+        flip : flip the image vertically
+        mn_len : ignore any strokes with length smaller than mn_len
+        shift_x : inital horizental shift
+        shift_y : inital vertical shift
 
+    Returns:
+        Dictionary: id -> points dictionary
+    """
+
+    sketchformer = None
+
+
+    @staticmethod
+    def xml_to_PointsDict(file, flip = False, shift_x=0.0, shift_y=0.0):
         data = minidom.parse(file)
         points = data.getElementsByTagName('point')
-        strokes = data.getElementsByTagName('stroke')
-        objects = data.getElementsByTagName('Object')
 
         # create dictionary for id -> point
         point_dic = {}
@@ -34,41 +47,94 @@ class ObjectUtil:
             y += shift_y
 
             point_dic[el.attributes['id'].value] = (x, y, time)
+        
+        return point_dic
+    
+    @staticmethod
+    def xml_to_points(file, flip = False, shift_x=0.0, shift_y=0.0):
+        return list(ObjectUtil.xml_to_PointsDict(file=file, flip=flip, shift_x=shift_x, shift_y=shift_y).values())
 
-        all_strokes, strokes_id, strokes_collections, labels = [], [], [], []
-        # extract strokes
+    """for a given file, read the file and transform it to a dictionary of strokes
+    Params:
+        flip : flip the image vertically
+        mn_len : ignore any strokes with length smaller than mn_len
+        shift_x : inital horizental shift
+        shift_y : inital vertical shift
+
+    Returns:
+        Dictionary: id -> strokes dictionary
+    """
+    @staticmethod
+    def xml_to_StrokesDict(file, re_sampling=1.0, mn_len=0, flip=False, shift_x=0.0, shift_y=0.0):
+        data = minidom.parse(file)
+        strokes = data.getElementsByTagName('stroke')
+
+        # create dictionary for id -> point
+        point_dic = ObjectUtil.xml_to_PointsDict(file, flip=flip, shift_x=shift_x, shift_y=shift_y)
+
+        # create dictionary for id -> stroke
+        stroke_dict = {}
         for st in strokes:
             pts = st.getElementsByTagName('arg')
-            strokes_id.append(st.attributes['id'].value)
-            stroke = []
+            strokes_id = st.attributes['id'].value
+            pt_lst = []
             for pt in pts:
                 id = pt.firstChild.nodeValue
                 x, y, t = point_dic[id]
-                stroke.append(Point(x, y, t))
-            if len(stroke) >= mn_len:
-                all_strokes.append(Stroke(stroke))
+                pt_lst.append(Point(x, y, t))
+            if len(pt_lst) >= mn_len:
+                stroke_dict[strokes_id] = Stroke(pt_lst)
+        
+        # re-sample the objecte
+        # TODO: re_sampling will contradict with the rdp. Choose one. Now we will assume that the resampling as always 0.0
+        if re_sampling != 0.0:
+            for id in stroke_dict:
+                stroke_dict[id] = ObjectUtil.stroke_restructure(stroke_dict[id], max(mn_len, int(re_sampling * len(stroke_dict[id]))))
+
+        return stroke_dict
+
+    @staticmethod
+    def xml_to_strokes(file, re_sampling = 1.0, mn_len=0, flip=False, shift_x=0.0, shift_y=0.0):
+        return list(ObjectUtil.xml_to_StrokesDict(file, re_sampling = re_sampling, mn_len=mn_len, flip=flip, shift_x=shift_x, shift_y=shift_y).values())
+    
+    """for a given file, find all objects and their labels
+
+    Params:
+    flip : flip the image vertically
+    mn_len : ignore any strokes with length smaller than mn_len
+    shift_x : inital horizental shift
+    shift_y : inital vertical shift
+    re_sampling: re-draw the object with fewer/more number of points with a uniform distribuion of points
+                along the perimeter. if re_sampling equals 0.0, then no re_drawing will happen.
+
+    Returns:
+        Array-like(N): array of objects
+        Array-line(N): labels to the returned objects 
+    """
+    @ staticmethod
+    def xml_to_UnlabeledObjects(file, mn_len=0, re_sampling=1.0, flip=False, shift_x=0.0, shift_y=0.0, rdp=True):
+        data = minidom.parse(file)
+        objects = data.getElementsByTagName('Object')
+
+        # obtian stroke dict
+        strokes_dict = ObjectUtil.xml_to_StrokesDict(file, re_sampling=re_sampling, mn_len=mn_len, flip=flip, shift_x=shift_x, shift_y=shift_y)
+
+        objs, labels = [], []
         for o in objects:
             labels.append(o.attributes['Label'].value)
             sts = o.getElementsByTagName('arg')
-            tmp = []
+            strokes_lst = []
             for s in sts:
                 id = s.firstChild.nodeValue
-                tmp.append(strokes_id.index(id))
-            strokes_collections.append(tmp)
+                strokes_lst.append(strokes_dict[id])
 
-        return np.array(all_strokes), strokes_collections, labels
+            objs.append(UnlabeledObject(strokes_lst))
+        
+        if rdp:
+            objs = ObjectUtil.reduce_rdp(objs)
 
-    # for a given file, read the file and transform it to an array of objects
-    @ staticmethod
-    def xml_to_UnlabeledObjects(file, mn_len=0, re_sampling=1.0, flip=False, shift_x=0.0, shift_y = 0.0):
-        strokes, strokes_collections, labels = ObjectUtil.xml_to_Strokes(file, mn_len=mn_len, flip=flip, shift_x=shift_x, shift_y=shift_y)
-        objs = ObjectUtil.collect_strokes(strokes, strokes_collections)
-
-        # re-sample the objects
-        if re_sampling != 0.0:
-            for i in range(len(objs)):
-                objs[i] = ObjectUtil.object_restructure(objs[i], re_sampling)
         return objs, labels
+
 
     # for given two objects, match their size by adding dummy points
     @staticmethod
@@ -220,3 +286,115 @@ class ObjectUtil:
         for col in collections:
             object_lst.append(UnlabeledObject(strokes[col]))
         return object_lst
+    
+    @staticmethod
+    def convert_to_stroke3(sketches):
+        """convert the given sketches to stroke-3 (x, y, p) format, where x, y are 
+         the point relative position to the previous point together with its binary pen state.
+         for any two consecutive strokes, a point in the middle will be added with a pen state 1 (pen lifted)
+        Args:
+            sketches (list): list of sketches to be converted
+        
+        Returns: the converted sketches to stroke-3 format and store them in arrays
+        """
+        converted_sketches = []
+        for sketch_con in sketches:
+            sketch = copy.deepcopy(sketch_con)
+            strokes_lst = sketch.get_strokes()
+
+            # gather all the points in one stroke
+            tmp_stroke_3 = []
+            for i in range(len(strokes_lst)):
+                if i != 0:
+                    # insert an imaginary point between the end point of stroke i-1 and the first point in
+                    # stroke i, with a pen lifted state
+                    p1 = strokes_lst[i - 1].get_points()[-1]
+                    p2 = strokes_lst[i].get_points()[0]
+                    tmp_stroke_3.append([(p1.x + p2.x) / 2, (p1.y + p2.y) / 2, 1])
+                
+                # add all stroke's points with state 0
+                for p in strokes_lst[i].get_points():
+                    tmp_stroke_3.append([p.x, p.y, 0])
+            
+            converted_sketches.append(tmp_stroke_3)
+
+        return converted_sketches
+
+
+    @staticmethod
+    def get_embedding(objs):
+        """extract the sketchformer embedding for the given sketch in (x, y, time) format 
+
+        Args:
+            sketches ([list]): list of sketches in the conitnuious format of (x, y, time)
+        """
+        # get the pre-trained model
+        if ObjectUtil.sketchformer is None:
+            ObjectUtil.sketchformer = continuous_embeddings.get_pretrained_model()
+
+        # obtain the stroke-3 format of the sketches
+        objs = ObjectUtil.convert_to_stroke3(objs)
+
+        # return the embeddings
+        return ObjectUtil.sketchformer.get_embeddings(objs)
+
+    @staticmethod
+    def classify(objs):
+        """classify the given sketches of the (x, y, time) format 
+
+        Args:
+            sketches ([list]): list of sketches in the conitnuious format of (x, y, time)
+        """
+        # get the pre-trained model
+        if ObjectUtil.sketchformer is None:
+            ObjectUtil.sketchformer = continuous_embeddings.get_pretrained_model()
+
+        # obtain the stroke-3 format of the sketches
+        objs = ObjectUtil.convert_to_stroke3(objs)
+
+        # return the embeddings
+        return ObjectUtil.sketchformer.classify(objs)
+
+    @staticmethod
+    def reduce_rdp(objs):
+        """reduce the given set of UnlabeledObjects using Ramer–Douglas–Peucker algorithm
+
+        Args:
+            objs ([list]): list of objects to be reduced
+
+        Returns:
+            [list]: list of the reduced objects 
+        """
+        reduced_objs = []
+
+        for obj in objs:
+            reduced_strokes = []
+            for stroke in obj.get_strokes():
+                tmp = [[pt.x, pt.y] for pt in stroke.get_points()]
+                
+                # reduce the strokes points
+                reduced_points = rdp(tmp)
+                
+                # obtain the matches points to the reduced points 
+                ind, res_points = 0, []
+                for pt in stroke.get_points():
+                    if ind >= len(reduced_points):
+                        break
+
+                    if pt.x == reduced_points[ind][0] and pt.y == reduced_points[ind][1]:
+                        res_points.append(pt)
+                        ind += 1
+            
+                reduced_strokes.append(Stroke(res_points))
+            
+            reduced_objs.append(UnlabeledObject(reduced_strokes))
+        
+        return reduced_objs
+         
+
+                
+
+
+
+    
+
