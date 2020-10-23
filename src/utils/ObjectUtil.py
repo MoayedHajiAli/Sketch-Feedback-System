@@ -288,7 +288,7 @@ class ObjectUtil:
         return object_lst
     
     @staticmethod
-    def convert_to_stroke3(sketches):
+    def poly_to_stroke3(sketches, scale=265.0):
         """convert the given sketches to stroke-3 (x, y, p) format, where x, y are 
          the point relative position to the previous point together with its binary pen state.
          for any two consecutive strokes, a point in the middle will be added with a pen state 1 (pen lifted)
@@ -297,9 +297,31 @@ class ObjectUtil:
         
         Returns: the converted sketches to stroke-3 format and store them in arrays
         """
+
+        sketches = copy.deepcopy(sketches)
+
+        # find the dimentions of the storkes and reduce
+        for sketch in sketches:
+            for stroke in sketch.get_strokes():
+
+                # get dimentions
+                mx_w = max([p.x for p in stroke.get_points()])
+                mn_w = min([p.x for p in stroke.get_points()])
+                mx_h = max([p.y for p in stroke.get_points()])
+                mn_h = min([p.y for p in stroke.get_points()])
+
+                w, h = mx_w - mn_w, mx_h - mn_h
+                mx_wh = max(w, h)
+
+                for p in stroke.get_points():
+                    p.x = ((p.x - mn_w) / mx_wh * 2.0 - 1.0) * scale
+                    p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
+
+        # reduce using rdp
+        sketches = ObjectUtil.reduce_rdp(sketches, epsilon=1.5)
+
         converted_sketches = []
-        for sketch_con in sketches:
-            sketch = copy.deepcopy(sketch_con)
+        for sketch in sketches:
             strokes_lst = sketch.get_strokes()
 
             # gather all the points in one stroke
@@ -316,47 +338,65 @@ class ObjectUtil:
                 for p in strokes_lst[i].get_points():
                     tmp_stroke_3.append([p.x, p.y, 0])
             
-            converted_sketches.append(tmp_stroke_3)
+            # get the relative position
+            tmp_stroke_3 = np.array(tmp_stroke_3)
+            tmp_stroke_3[1:, 0:2] -= tmp_stroke_3[:-1, 0:2]
+
+            # omit the first point
+            converted_sketches.append(tmp_stroke_3[1:])
 
         return converted_sketches
 
+    @staticmethod
+    def lines_to_strokes(lines, omit_first_point=True):
+        """ Convert polyline format to stroke-3 format.
+        lines: list of strokes, each stroke has format Nx3 """
+        strokes = []
+        for line in lines:
+            linelen = len(line)
+            for i in range(linelen):
+                eos = 0 if i < linelen - 1 else 1
+                strokes.append([line[i][0], line[i][1], eos])
+        strokes = np.array(strokes)
+        strokes[1:, 0:2] -= strokes[:-1, 0:2]
+        return strokes[1:, :] if omit_first_point else strokes
 
     @staticmethod
     def get_embedding(objs):
-        """extract the sketchformer embedding for the given sketch in (x, y, time) format 
+        """extract the sketchformer embedding for the given sketch in polyline format 
 
         Args:
-            sketches ([list]): list of sketches in the conitnuious format of (x, y, time)
+            sketches ([list]): list of sketches in the conitnuious format of polyline
         """
         # get the pre-trained model
         if ObjectUtil.sketchformer is None:
             ObjectUtil.sketchformer = continuous_embeddings.get_pretrained_model()
 
         # obtain the stroke-3 format of the sketches
-        objs = ObjectUtil.convert_to_stroke3(objs)
+        objs = ObjectUtil.poly_to_stroke3(objs)
 
         # return the embeddings
         return ObjectUtil.sketchformer.get_embeddings(objs)
 
     @staticmethod
     def classify(objs):
-        """classify the given sketches of the (x, y, time) format 
+        """classify the given sketches of the polyline format 
 
         Args:
-            sketches ([list]): list of sketches in the conitnuious format of (x, y, time)
+            sketches ([list]): list of sketches in the conitnuious format of polyline
         """
         # get the pre-trained model
         if ObjectUtil.sketchformer is None:
             ObjectUtil.sketchformer = continuous_embeddings.get_pretrained_model()
 
         # obtain the stroke-3 format of the sketches
-        objs = ObjectUtil.convert_to_stroke3(objs)
+        objs = ObjectUtil.poly_to_stroke3(objs)
 
         # return the embeddings
         return ObjectUtil.sketchformer.classify(objs)
 
     @staticmethod
-    def reduce_rdp(objs):
+    def reduce_rdp(objs, epsilon=None):
         """reduce the given set of UnlabeledObjects using Ramer–Douglas–Peucker algorithm
 
         Args:
@@ -373,7 +413,10 @@ class ObjectUtil:
                 tmp = [[pt.x, pt.y] for pt in stroke.get_points()]
                 
                 # reduce the strokes points
-                reduced_points = rdp(tmp)
+                if epsilon is None:
+                    reduced_points = rdp(tmp)
+                else:
+                    reduced_points = rdp(tmp, epsilon=epsilon)
                 
                 # obtain the matches points to the reduced points 
                 ind, res_points = 0, []

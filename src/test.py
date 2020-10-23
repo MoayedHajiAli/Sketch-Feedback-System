@@ -2,8 +2,6 @@
 # matplotlib.use('TkAgg')
 import time
 import numpy as np
-from utils.ObjectUtil import ObjectUtil
-from sketch_object.UnlabeledObject import UnlabeledObject
 
 def draw_frequency(t):
     diff = []
@@ -23,12 +21,17 @@ def draw_frequency(t):
 #     draw_frequency(t)
 #     plt.show()
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-fig= plt.figure()
-ax= fig.add_subplot(111)
-ax.plot([1, 2, 3, 4], [10, 20, 25, 30], color= "lightblue", linewidth= 3)
-ax.scatter([0.3, 3.8, 1.2, 2.5], [11, 25, 9, 26], color= "darkgreen", marker= "^")
-ax.set_xlim(0.5, 4.5)
-plt.show()
+with open("log/analysis.txt") as f:
+    arr = list(map(float, f.read().split('\n')[:-1]))
+
+# arr = np.array(arr, dtype=float)
+A, B = arr[:128], arr[128:]
+
+A = sorted(A)
+B = sorted(B)
+
+
+for i in range(len(A)):
+    print(A[i]*1000, B[i]*1000, A[i]-B[i])
+
+print(sum(A), sum(B))

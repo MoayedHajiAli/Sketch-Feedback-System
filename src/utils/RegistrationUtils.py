@@ -55,7 +55,7 @@ class RegistrationUtils:
         # a is the shearing parallel to the x axis
         # b is the shearing parallel to the y axis
     @staticmethod
-    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=5, fac_y=5):
+    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=0, fac_y=0):
         a = abs(a)
         b = abs(b)
 
@@ -77,7 +77,7 @@ class RegistrationUtils:
         # a is the translation along to the x axis
         # b is the translation along to the y axis
     @staticmethod
-    def _scaling_cost(a, b, ln, fac_x=5, fac_y=5, flip_x=-1, flip_y=-1):
+    def _scaling_cost(a, b, ln, fac_x=0, fac_y=0, flip_x=-1, flip_y=-1):
         if flip_x == -1:
             flip_x = fac_x * 1
         if flip_y == -1:
@@ -99,7 +99,7 @@ class RegistrationUtils:
 
     # default rotation cost functionreg.total_cost(reg.original_obj[], t)
     @staticmethod
-    def _rotation_cost(r, ln, fac_r=1):
+    def _rotation_cost(r, ln, fac_r=0):
         r = abs(r)
         cost = ln * (fac_r * r)
         return cost
@@ -347,6 +347,19 @@ class RegistrationUtils:
 
         # return tot_cost #/ (len(obj1) + len(obj2))
 
+    def embedding_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, t):
+
+        # transform the ref_obj
+        ref_obj = copy.deepcopy(ref_obj)
+        ref_obj.transform(t)
+
+        # obtain embeddings 
+        embd1, embd2 = ObjectUtil.get_embedding([ref_obj, tar_obj])
+        ret =  np.linalg.norm(embd1 - embd2)
+
+        print(ret)
+        return ret
+
 
 
 
@@ -361,8 +374,12 @@ class RegisterTwoObjects:
         tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(self.ref_obj))
         if params:
             p = RegistrationUtils.obtain_transformation_matrix(p)
+        
+        # TODO: change, try the embedding dissimilarity
         dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, p, target_nn = self.target_nn, 
                                                             target_dis=target_dis, original_dis=original_dis) 
+        # dissimilarity = RegistrationUtils.embedding_dissimilarity(self.ref_obj, self.tar_obj, p)
+        
         return dissimilarity + (tran_cost / (len(self.ref_obj) + len(self.tar_obj)))   
 
     def optimize(self, p = None, params = True, target_dis=True, original_dis=True):
@@ -398,7 +415,9 @@ class RegisterTwoObjects:
         # minimize
         minimizer_kwargs = {"method": "BFGS", "args" : (params, target_dis, original_dis)}
         res = basinhopping(self.total_dissimalirity, p, minimizer_kwargs=minimizer_kwargs, disp=False, niter=1)
-        d, p = res.fun, res.x
+
+        # res = minimize(self.total_dissimalirity, p, method = "Newton-CG")
+        d, p = res.fun, res.x 
 
         return d, p
 

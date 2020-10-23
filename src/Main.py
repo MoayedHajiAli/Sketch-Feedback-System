@@ -109,8 +109,22 @@ def main():
         a, b = map(int, input().split())
         embd1, embd2 = ObjectUtil.get_embedding([reg.original_obj[a], reg.target_obj[b]])
         print("The norm of the difference vertor between the embeddings", np.linalg.norm(embd1 - embd2))
-        
+        print("The predicted classes of the objects are",  ObjectUtil.classify(np.concatenate((reg.original_obj, reg.target_obj))))
 
+        # initial transformation test
+        reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([1.0, 1.0, -0.0001, 0.0, 0.0, 100.0, 100.0])))
+        # reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([2, 5, 0, 0, 0, 0.0, 20.0])))
+        reg.original_obj[a] = reg.original_obj[a].get_copy()
+        reg.original_obj[a].reset()
+
+        embd1, embd2 = ObjectUtil.get_embedding([reg.original_obj[a], reg.target_obj[b]])
+        print("The norm of the difference vertor between the embeddings", np.linalg.norm(embd1 - embd2))
+        print("The predicted classes of the objects are",  ObjectUtil.classify(np.concatenate((reg.original_obj, reg.target_obj))))
+
+
+# sketchformer is not variant to translation, or diagonal scaling
+# sketchformer is variant to rotation, or shearing 
+# 
 def print_lst(lst):
     st = ','.join(map(str, lst))
     print('[', st, ']')
@@ -160,7 +174,11 @@ def test_single_obj(reg, i, j):
     print("")
     print("The classifications of the objects are", cls1, cls2)
 
+
     embd1, embd2 = ObjectUtil.get_embedding([obj1, obj2])
+    # print(len(embd1), len(embd2))
+    # for i in range(len(embd1)):
+    #   print(abs(float(embd1[i]) - float(embd2[i])))
     print("The norm of the difference vertor between the embeddings after registration", np.linalg.norm(embd1 - embd2))
 
 

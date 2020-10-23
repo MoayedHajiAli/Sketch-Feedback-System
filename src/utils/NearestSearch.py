@@ -43,13 +43,14 @@ class NearestSearch():
             x1, y1 = self.P[ind[0]][0], self.P[ind[0]][1]
             res = self.f_x(abs(x1 - x)) + self.f_y(abs(y1 - y))
             tot += fac * res
+
         return tot
 
     def query_ind(self, x, y):
         dd, ind = self.tree.query([[x, y]], k=1)
         return ind[0]
 
-    def query_point(self, pPoint) -> Point:
+    def query_point(self, p) -> Point:
         x, y = p.get_x(), p.get_y()
         dd, ind = self.tree.query([x, y], k = 1)
         return Point(self.P[ind[0]][0], self.P[ind[0]][1])
