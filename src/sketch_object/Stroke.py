@@ -54,6 +54,13 @@ class Stroke:
     def reset(self):
         self.points_lst = copy.deepcopy(self.init_lst)
 
+    def get_copy(self):
+        pt_lst = []
+        for p in self.get_points():
+            pt_lst.append(p.get_copy())
+        
+        return Stroke(pt_lst)
+
     # for a given transformation parameters, transform all the points
     def transform(self, t, xo, yo, upd_step=True):
         if upd_step:

@@ -21,6 +21,9 @@ class Point:
     def get_y(self):
         return self.y
     
+    def get_copy(self):
+        return Point(self.x, self.y, self.t)
+        
     # for a given two points, find their euclidean distance
     @staticmethod
     def euclidean_distance(p1, p2):

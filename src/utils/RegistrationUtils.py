@@ -5,9 +5,12 @@ from sketch_object.UnlabeledObject import UnlabeledObject
 import copy
 from utils.NearestSearch import NearestSearch
 from utils.ObjectUtil import ObjectUtil
-from scipy.optimize import minimize, basinhopping
+from scipy.optimize import minimize, basinhopping, approx_fprime
 import sys
 import time
+import random
+import scipy
+import sklearn
 
 class RegistrationUtils:
     """this static class provides basic functuionality for registering
@@ -218,6 +221,11 @@ class RegistrationUtils:
     @staticmethod
     def calc_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, t, original_dis = True, target_dis = True, target_nn:NearestSearch = None, turning_ang=False,
      cum_ang=False, length=False, turning_fac = 0.05, cum_fac = 0.3, len_fac = 0.01):
+        # visualize the change
+        # obj = ref_obj.get_copy()
+        # obj.transform(t)
+        # obj.visualize()
+
 
         # transform both object to the origin of the referenced object
         RegistrationUtils.normalize_coords(ref_obj, tar_obj, -1)
@@ -347,27 +355,53 @@ class RegistrationUtils:
 
         # return tot_cost #/ (len(obj1) + len(obj2))
 
-    def embedding_dissimilarity(ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, t):
-
+    def embedding_dissimilarity(t, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject):
         # transform the ref_obj
-        ref_obj = copy.deepcopy(ref_obj)
-        ref_obj.transform(t)
+        tmp_obj = ref_obj.get_copy()
+        if len(t) == 7:
+            tmp_obj.transform(RegistrationUtils.obtain_transformation_matrix(t))
+        else:
+            tmp_obj.transform(t)
 
         # obtain embeddings 
-        embd1, embd2 = ObjectUtil.get_embedding([ref_obj, tar_obj])
-        ret =  np.linalg.norm(embd1 - embd2)
+        embd1, embd2 = ObjectUtil.get_embedding([tmp_obj, tar_obj])
+        ret = 1 - sklearn.metrics.pairwise.cosine_similarity([embd1], [embd2])[0][0]
 
-        print(ret)
         return ret
 
 
 
 
+
 class RegisterTwoObjects:
+    
     def __init__(self, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, cost_fun):
         self.tar_obj = tar_obj
         self.ref_obj = ref_obj
         self.total_cost = cost_fun
+
+
+    ##################
+    # TODO: delete this method
+    # test numerical optimization
+    def num_optimize(self, t):
+        eps = 0.001
+        lr = 0.1
+        t = np.array(t)
+        cur, prev = 100, 0
+        for _ in range(200): 
+            if _ % 50 == 0:
+                self.ref_obj.transform(RegistrationUtils.obtain_transformation_matrix(t))
+                self.ref_obj.visualize()
+                self.ref_obj.reset()
+
+            # cur = RegistrationUtils.embedding_dissimilarity(t, self.ref_obj, self.tar_obj)
+            # print(cur)
+            # obtain the gradient
+            grad = approx_fprime(t, RegistrationUtils.embedding_dissimilarity, eps, self.ref_obj, self.tar_obj)
+            t -= lr * np.array(grad)
+
+        return -1, t
 
     # total dissimilarity including the cost of the transformation
     def total_dissimalirity(self, p, params = True, target_dis=True, original_dis=True):
@@ -375,12 +409,13 @@ class RegisterTwoObjects:
         if params:
             p = RegistrationUtils.obtain_transformation_matrix(p)
         
-        # TODO: change, try the embedding dissimilarity
+        # # TODO: change, try the embedding dissimilarity
         dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, p, target_nn = self.target_nn, 
                                                             target_dis=target_dis, original_dis=original_dis) 
-        # dissimilarity = RegistrationUtils.embedding_dissimilarity(self.ref_obj, self.tar_obj, p)
+        # dissimilarity = RegistrationUtils.embedding_dissimilarity(p, self.ref_obj, self.tar_obj)
         
         return dissimilarity + (tran_cost / (len(self.ref_obj) + len(self.tar_obj)))   
+
 
     def optimize(self, p = None, params = True, target_dis=True, original_dis=True):
         """optimize the disimilarity function.
@@ -397,6 +432,7 @@ class RegisterTwoObjects:
             x_dif = self.tar_obj.origin_x - self.ref_obj.origin_x
             y_dif = self.tar_obj.origin_y - self.ref_obj.origin_y
             if params:
+                # p = np.array([random.uniform(1, 2), random.uniform(1, 2), 0.0, random.uniform(0, 1), random.uniform(0, 1), x_dif, y_dif])
                 p = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
             else:
                 p = np.array([1.0, 0.0, x_dif, 0.0, 1.0, y_dif])  
@@ -412,15 +448,22 @@ class RegisterTwoObjects:
         self.mn_x, self.mx_x = min(self.ref_obj.get_x()), max(self.ref_obj.get_x())
         self.mn_y, self.mx_y = min(self.ref_obj.get_x()), max(self.ref_obj.get_y())
 
-        # minimize
+        # # minimize
+        # minimizer_kwargs = {"method": "TNC", "options":{'eps':5 * 1e-2}, "args" : (params, target_dis, original_dis)}
         minimizer_kwargs = {"method": "BFGS", "args" : (params, target_dis, original_dis)}
         res = basinhopping(self.total_dissimalirity, p, minimizer_kwargs=minimizer_kwargs, disp=False, niter=1)
-
-        # res = minimize(self.total_dissimalirity, p, method = "Newton-CG")
         d, p = res.fun, res.x 
 
+        # print("Minimum cost", RegistrationUtils.embedding_dissimilarity(p, self.ref_obj, self.tar_obj))
+        
+
+
+        # d, p = self.num_optimize(p)
+
+        # d = p = -1
         return d, p
 
     
 
-            
+    
+

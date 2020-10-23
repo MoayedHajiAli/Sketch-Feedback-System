@@ -298,7 +298,11 @@ class ObjectUtil:
         Returns: the converted sketches to stroke-3 format and store them in arrays
         """
 
-        sketches = copy.deepcopy(sketches)
+        tmp = []
+        for sketch in sketches:
+            tmp.append(sketch.get_copy())
+
+        sketches = tmp
 
         # find the dimentions of the storkes and reduce
         for sketch in sketches:
@@ -318,7 +322,7 @@ class ObjectUtil:
                     p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
 
         # reduce using rdp
-        sketches = ObjectUtil.reduce_rdp(sketches, epsilon=1.5)
+        sketches = ObjectUtil.reduce_rdp(sketches, epsilon=1.0)
 
         converted_sketches = []
         for sketch in sketches:

@@ -13,6 +13,14 @@ import time
 
 array = np.array
 
+"""Summary from last time
+
+1- sketchformer is working good with classification, and its embeddings are a good indication of how similar two 
+    sketches are. However, optimizing the transformation parameters takes so much time (around 60 seconds) and not always working.
+    The optimization is highly dependent on the learning rete and eps. Therefore, it is hard to use it for optimization.
+
+"""
+
 def main():
     q, s = map(int, input().split())
     if q == 0:
@@ -22,8 +30,8 @@ def main():
         a, b = map(int, input().split())
 
         # initial transformation test
-        reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([0.4, 0.4, 1.5, 0.0, 0.0, 0.0, 20.0])))
-        reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([2, 5, 0, 0, 0, 0.0, 20.0])))
+        reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([0.4, 0.6, 1.5, 1.0, 1.2, 0.0, 20.0])))
+        reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([2, 5, 0, 2, 1.2, 0.3, 20.0])))
         reg.original_obj[a] = reg.original_obj[a].get_copy()
         reg.original_obj[a].reset()
         test_single_obj(reg, a, b)
@@ -107,24 +115,30 @@ def main():
         # find the embeddings
         reg = Registration('./input_directory/samples/test_samples/b' + str(s) + '.xml', './input_directory/samples/test_samples/a' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.0, flip=False, shift_target_y = 0)
         a, b = map(int, input().split())
-        embd1, embd2 = ObjectUtil.get_embedding([reg.original_obj[a], reg.target_obj[b]])
-        print("The norm of the difference vertor between the embeddings", np.linalg.norm(embd1 - embd2))
-        print("The predicted classes of the objects are",  ObjectUtil.classify(np.concatenate((reg.original_obj, reg.target_obj))))
 
-        # initial transformation test
-        reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([1.0, 1.0, -0.0001, 0.0, 0.0, 100.0, 100.0])))
-        # reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([2, 5, 0, 0, 0, 0.0, 20.0])))
-        reg.original_obj[a] = reg.original_obj[a].get_copy()
-        reg.original_obj[a].reset()
+        obj1 = reg.original_obj[a]
+        obj2 = reg.target_obj[b]
 
-        embd1, embd2 = ObjectUtil.get_embedding([reg.original_obj[a], reg.target_obj[b]])
-        print("The norm of the difference vertor between the embeddings", np.linalg.norm(embd1 - embd2))
+        tmp1, tmp2 = reg.original_obj[a].get_copy(), reg.target_obj[b].get_copy()
+        obj3 = UnlabeledObject(np.concatenate([tmp1.get_strokes(), tmp2.get_strokes()]))
+
+        embd1, embd2, embd3 = ObjectUtil.get_embedding([obj1, obj2, obj3])
+
+        for i in range(len(embd1)):
+          print(float(embd1[i]), float(embd2[i]), float(embd3[i]))
+
+        print("The norm of the difference vertor between the embeddings", np.linalg.norm(embd1 - embd2))  
+        embd1 += embd2
+        print("The norm of the difference vertor between the embeddings", np.linalg.norm(embd1 - embd3))
         print("The predicted classes of the objects are",  ObjectUtil.classify(np.concatenate((reg.original_obj, reg.target_obj))))
 
 
 # sketchformer is not variant to translation, or diagonal scaling
 # sketchformer is variant to rotation, or shearing 
-# 
+# skethcformer does not change at all for very small step sizes (1e6 or more)
+# after ceratin norm differenc between two sketches (around 30), it becomes harder to make it larger (even with extreem trans) ???
+
+
 def print_lst(lst):
     st = ','.join(map(str, lst))
     print('[', st, ']')
@@ -158,7 +172,7 @@ def test_single_obj(reg, i, j):
     embd1, embd2 = ObjectUtil.get_embedding([obj1, obj2])
     print("The norm of the difference vertor between the embeddings before registration", np.linalg.norm(embd1 - embd2))
 
-    d, p = RegisterTwoObjects(obj1, obj2, reg.total_cost).optimize(target_dis=True)
+    d, p = RegisterTwoObjects(obj1, obj2, reg.total_cost).optimize()
     print(d, [np.array(p)])
     print("Running time: ", time.time()-st)
     # print(RegistrationUtils.identify_similarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p)))
