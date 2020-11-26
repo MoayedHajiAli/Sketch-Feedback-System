@@ -13,23 +13,21 @@ from rdp import rdp
 
 
 class ObjectUtil:
-
-    """for a given file, read the file and transform it to an dictonary of points
-    Params:
-        flip : flip the image vertically
-        mn_len : ignore any strokes with length smaller than mn_len
-        shift_x : inital horizental shift
-        shift_y : inital vertical shift
-
-    Returns:
-        Dictionary: id -> Points dictionary
-    """
-
     sketchformer = None
-
 
     @staticmethod
     def xml_to_pointsDict(file, flip = False, shift_x=0.0, shift_y=0.0):
+        """for a given file, read the file and transform it to an dictonary of points
+        Params:
+            flip : flip the image vertically
+            mn_len : ignore any strokes with length smaller than mn_len
+            shift_x : inital horizental shift
+            shift_y : inital vertical shift
+
+        Returns:
+            Dictionary: id -> Points dictionary
+        """
+
         data = minidom.parse(file)
         points = data.getElementsByTagName('point')
 
@@ -54,18 +52,19 @@ class ObjectUtil:
     def xml_to_points(file, flip = False, shift_x=0.0, shift_y=0.0):
         return list(ObjectUtil.xml_to_pointsDict(file=file, flip=flip, shift_x=shift_x, shift_y=shift_y).values())
 
-    """for a given file, read the file and transform it to a dictionary of strokes
-    Params:
-        flip : flip the image vertically
-        mn_len : ignore any strokes with length smaller than mn_len
-        shift_x : inital horizental shift
-        shift_y : inital vertical shift
 
-    Returns:
-        Dictionary: id -> strokes dictionary
-    """
     @staticmethod
     def xml_to_StrokesDict(file, re_sampling=1.0, mn_len=0, flip=False, shift_x=0.0, shift_y=0.0):
+        """for a given file, read the file and transform it to a dictionary of strokes
+        Params:
+            flip : flip the image vertically
+            mn_len : ignore any strokes with length smaller than mn_len
+            shift_x : inital horizental shift
+            shift_y : inital vertical shift
+
+        Returns:
+            Dictionary: id -> strokes dictionary
+        """
         data = minidom.parse(file)
         strokes = data.getElementsByTagName('stroke')
 
@@ -86,7 +85,6 @@ class ObjectUtil:
                 stroke_dict[strokes_id] = Stroke(pt_lst)
         
         # re-sample the objecte
-        # TODO: re_sampling will contradict with the rdp. Choose one. Now we will assume that the resampling as always 0.0
         if re_sampling != 0.0:
             for id in stroke_dict:
                 stroke_dict[id] = ObjectUtil.stroke_restructure(stroke_dict[id], max(mn_len, int(re_sampling * len(stroke_dict[id]))))
@@ -97,22 +95,23 @@ class ObjectUtil:
     def xml_to_strokes(file, re_sampling = 1.0, mn_len=0, flip=False, shift_x=0.0, shift_y=0.0):
         return list(ObjectUtil.xml_to_StrokesDict(file, re_sampling = re_sampling, mn_len=mn_len, flip=flip, shift_x=shift_x, shift_y=shift_y).values())
     
-    """for a given file, find all objects and their labels
-
-    Params:
-    flip : flip the image vertically
-    mn_len : ignore any strokes with length smaller than mn_len
-    shift_x : inital horizental shift
-    shift_y : inital vertical shift
-    re_sampling: re-draw the object with fewer/more number of points with a uniform distribuion of points
-                along the perimeter. if re_sampling equals 0.0, then no re_drawing will happen.
-
-    Returns:
-        Array-like(N): array of objects
-        Array-line(N): labels to the returned objects 
-    """
+    
     @ staticmethod
-    def xml_to_UnlabeledObjects(file, mn_len=0, re_sampling=1.0, flip=False, shift_x=0.0, shift_y=0.0, rdp=True):
+    def xml_to_UnlabeledObjects(file, mn_len=0, re_sampling=1.0, flip=False, shift_x=0.0, shift_y=0.0, rdp=False):
+        """for a given file, find all objects and their labels
+
+        Params:
+        flip : flip the image vertically
+        mn_len : ignore any strokes with length smaller than mn_len
+        shift_x : inital horizental shift
+        shift_y : inital vertical shift
+        re_sampling: re-draw the object with fewer/more number of points with a uniform distribuion of points
+                    along the perimeter. if re_sampling equals 0.0, then no re_drawing will happen.
+
+        Returns:
+            Array-like(N): array of objects
+            Array-line(N): labels to the returned objects 
+        """
         data = minidom.parse(file)
         objects = data.getElementsByTagName('Object')
 
@@ -288,7 +287,7 @@ class ObjectUtil:
         return object_lst
     
     @staticmethod
-    def poly_to_stroke3(sketches, scale=265.0):
+    def poly_to_stroke3(sketches, scale=100.0, step=5, eps=1.5):
         """convert the given sketches to stroke-3 (x, y, p) format, where x, y are 
          the point relative position to the previous point together with its binary pen state.
          for any two consecutive strokes, a point in the middle will be added with a pen state 1 (pen lifted)
@@ -297,7 +296,8 @@ class ObjectUtil:
         
         Returns: the converted sketches to stroke-3 format and store them in arrays
         """
-
+        
+        # get a copy of sketches to avoid editing on the original sketches
         tmp = []
         for sketch in sketches:
             tmp.append(sketch.get_copy())
@@ -322,7 +322,9 @@ class ObjectUtil:
                     p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
 
         # reduce using rdp
-        sketches = ObjectUtil.reduce_rdp(sketches, epsilon=1.0)
+        # sketches = ObjectUtil.reduce_rdp(sketches, epsilon=eps)
+        # TODO: using rdp for some small sketches are making the sketch so small that it 
+        # is raising an error in the sketchformer  when getting the embeddings.
 
         converted_sketches = []
         for sketch in sketches:
@@ -331,16 +333,27 @@ class ObjectUtil:
             # gather all the points in one stroke
             tmp_stroke_3 = []
             for i in range(len(strokes_lst)):
-                if i != 0:
-                    # insert an imaginary point between the end point of stroke i-1 and the first point in
-                    # stroke i, with a pen lifted state
-                    p1 = strokes_lst[i - 1].get_points()[-1]
-                    p2 = strokes_lst[i].get_points()[0]
-                    tmp_stroke_3.append([(p1.x + p2.x) / 2, (p1.y + p2.y) / 2, 1])
+                # if i != 0:
+                #     # insert an imaginary points between the end point of stroke i-1 and the first point in
+                #     # stroke i, with a pen lifted state
+                #     p1 = strokes_lst[i - 1].get_points()[-1]
+                #     p2 = strokes_lst[i].get_points()[0]
+
+                #     # obtain a unit vector and distanct
+                #     x, y = (p2.x - p1.x), (p2.y - p1.y)
+                #     ln = sqrt(x**2 + y**2)
+                #     x /= ln
+                #     y /= ln
+
+                #     t = 0
+                #     while (t * step) < ln:
+                #         tmp_stroke_3.append([p1.x + (t * step) * x, p1.y + (t * step) * y, 1])
+                #         t += 1
                 
                 # add all stroke's points with state 0
-                for p in strokes_lst[i].get_points():
-                    tmp_stroke_3.append([p.x, p.y, 0])
+                for j, p in enumerate(strokes_lst[i].get_points()):
+                    eos = 0 if j < len(strokes_lst[i]) - 1 else 1
+                    tmp_stroke_3.append([p.x, p.y, eos])
             
             # get the relative position
             tmp_stroke_3 = np.array(tmp_stroke_3)
@@ -374,7 +387,7 @@ class ObjectUtil:
         """
         # get the pre-trained model
         if ObjectUtil.sketchformer is None:
-            ObjectUtil.sketchformer = continuous_embeddings.get_pretrained_model()
+            ObjectUtil.sketchformer = continuous_embeddings.get_continuous_pretrained_model()
 
         # obtain the stroke-3 format of the sketches
         objs = ObjectUtil.poly_to_stroke3(objs)
@@ -391,7 +404,7 @@ class ObjectUtil:
         """
         # get the pre-trained model
         if ObjectUtil.sketchformer is None:
-            ObjectUtil.sketchformer = continuous_embeddings.get_pretrained_model()
+            ObjectUtil.sketchformer = continuous_embeddings.get_continuous_pretrained_model()
 
         # obtain the stroke-3 format of the sketches
         objs = ObjectUtil.poly_to_stroke3(objs)
@@ -435,7 +448,7 @@ class ObjectUtil:
                 reduced_strokes.append(Stroke(res_points))
             
             reduced_objs.append(UnlabeledObject(reduced_strokes))
-        
+            
         return reduced_objs
          
 

@@ -4,7 +4,7 @@ import warnings
 from sketch_object.Point import Point
 
 class NearestSearch():
-    def __init__(self, x, y, step=10, mn_dis=10, mx_dis=1000, fac=1000, dynamic=True, ration_mn=0.0, ration_mx=0.6):
+    def __init__(self, x, y, step=20, mn_dis=5, mx_dis=1000, fac=1000, dynamic=True, ration_mn=0.0, ration_mx=0.8):
         x_dia = max(x) - min(x)
         y_dia = max(y) - min(y)
         x = np.reshape(x, (len(x), 1))

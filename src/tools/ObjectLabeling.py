@@ -11,6 +11,8 @@ from xml.dom.minidom import parseString
 
 
 class ObjectLabeling:
+    """Go throw all the xml files and label the objects using the matlab files
+    """
     def mat_data(self, file):
         data = loadmat(file)['annotData'][0][0]
         label = str(data[1][0])

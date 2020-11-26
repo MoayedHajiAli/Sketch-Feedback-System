@@ -35,3 +35,13 @@ for i in range(len(A)):
     print(A[i]*1000, B[i]*1000, A[i]-B[i])
 
 print(sum(A), sum(B))
+
+
+# square - parallelogram right: 18.3
+# Square - Square: 13.2
+# Trap up - Trap down : 23.6
+# Trap up - square: 26.8
+# squarre - diamond: 26.8
+# x - y : 28.4
+
+# with a larger number of points, the embeddings are better.

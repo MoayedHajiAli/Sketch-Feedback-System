@@ -2,16 +2,20 @@ from utils.RegistrationUtils import RegisterTwoObjects, RegistrationUtils
 from animator.SketchAnimation import SketchAnimation
 from sketch_object.UnlabeledObject import UnlabeledObject
 from utils.ObjectUtil import ObjectUtil
+from utils.NearestSearch import NearestSearch
 import numpy as np
 import time
 from matplotlib import pyplot as plt
+import copy
 
 class ObjectParsing:
 
     @staticmethod
     def extract_corresponding_strokes(ref_obj, tar_obj, p):
         """for a given ref_obj, tar_obj and transformation params for the ref_obj, find all strokes in the tar_obj that matched the 
-        transformed object
+        transformed object. This approach is based on constantly moving the known object on the list of strokes and register it.
+
+        NOTE: This approach did not succeed. Implementation left for further review.
 
         Args:
             ref_obj (UnlabeledObject): 
