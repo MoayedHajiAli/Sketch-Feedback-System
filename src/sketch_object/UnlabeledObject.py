@@ -116,6 +116,6 @@ class UnlabeledObject:
         """
         st_lst = []
         for st in self.strokes_lst:
-            st_lst.append(Stroke(st.get_points()))
+            st_lst.append(st.get_copy())
         
         return UnlabeledObject(st_lst)

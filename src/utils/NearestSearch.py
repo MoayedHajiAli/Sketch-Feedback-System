@@ -4,7 +4,7 @@ import warnings
 from sketch_object.Point import Point
 
 class NearestSearch():
-    def __init__(self, x, y, step=10, mn_dis=10, mx_dis=1000, fac=1000, dynamic=True, ration_mn=0.0, ration_mx=0.6):
+    def __init__(self, x, y, step=20, mn_dis=5, mx_dis=1000, fac=1000, dynamic=True, ration_mn=0.0, ration_mx=0.8):
         x_dia = max(x) - min(x)
         y_dia = max(y) - min(y)
         x = np.reshape(x, (len(x), 1))
@@ -43,13 +43,14 @@ class NearestSearch():
             x1, y1 = self.P[ind[0]][0], self.P[ind[0]][1]
             res = self.f_x(abs(x1 - x)) + self.f_y(abs(y1 - y))
             tot += fac * res
+
         return tot
 
     def query_ind(self, x, y):
         dd, ind = self.tree.query([[x, y]], k=1)
         return ind[0]
 
-    def query_point(self, pPoint) -> Point:
+    def query_point(self, p) -> Point:
         x, y = p.get_x(), p.get_y()
         dd, ind = self.tree.query([x, y], k = 1)
         return Point(self.P[ind[0]][0], self.P[ind[0]][1])
