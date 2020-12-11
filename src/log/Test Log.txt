@@ -69,3 +69,22 @@ Plus                  11.0     1.0  ...             0.0   77.0
 Minus                  5.0     0.0  ...             0.0  132.0
 Cross                 21.0     4.0  ...             0.0  146.0
 Arrow Right            0.0     0.0  ...             0.0    0.0
+
+
+Object parsing for all files in the money questions using continuous embeddings
+true positive: 462
+false positive: 1231
+true negative: 533
+false negative: 1589
+precision 0.2728883638511518
+recall 0.22525597269624573
+accuracy 0.2608125819134993
+
+Object parsing for all files in the money questions using token dict embeddings
+true positive: 343
+false positive: 898
+true negative: 564
+false negative: 1708
+precision 0.2763900080580177
+recall 0.16723549488054607
+accuracy 0.25818388841446055

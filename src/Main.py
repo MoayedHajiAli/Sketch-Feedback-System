@@ -10,6 +10,7 @@ from sketch_object.Stroke import Stroke
 from tools.ClassEvaluation import ClassEvaluation
 from tools.ObjectParsing import ObjectParsing
 from tools.StrokeClustering import DensityClustering
+from tools.ParsingEvaluation import ParsingEvaluation
 import time
 
 array = np.array
@@ -28,15 +29,14 @@ def main():
         evalute()
     elif q == 1:
         reg = Registration('./input_directory/samples/test_samples/a' + str(s) + '.xml', './input_directory/samples/test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.5, flip=False, shift_target_y = 0)
-        a, b ,c = map(int, input().split())
+        a, b = map(int, input().split())
 
         # initial transformation test
         # reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([0.4, 0.6, 1.5, 1.0, 1.2, 0.0, 20.0])))
         # reg.original_obj[a].transform(RegistrationUtils.obtain_transformation_matrix(np.array([2, 5, 0, 2, 1.2, 0.3, 20.0])))
         # reg.original_obj[a] = reg.original_obj[a].get_copy()
         # reg.original_obj[a].reset()
-        test_single_obj(reg, a, c)
-        test_single_obj(reg, b, c)
+        test_single_obj(reg, a, b)
 
     elif q == 2:
         reg = Registration('./input_directory/samples/test_samples/a' + str(s) + '.xml', './input_directory/samples/test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.5, flip=False, shift_target_y = 0)
@@ -114,20 +114,28 @@ def main():
 
     elif q == 4:
         # find the embeddings
-        reg = Registration('./input_directory/samples/test_samples/a' + str(s) + '.xml', './input_directory/samples/test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=1, flip=False, shift_target_y = 0)
+        reg = Registration('./input_directory/samples/test_samples/a' + str(s) + '.xml', './input_directory/samples/test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=1, flip=True, shift_target_y = 0)
         embds = ObjectUtil.get_embedding(np.concatenate([reg.original_obj, reg.target_obj]))
         org_embd = embds[:len(reg.original_obj)]
         tar_embd = embds[len(reg.original_obj):]
 
         for i, embd1 in enumerate(org_embd):
           for j, embd2 in enumerate(tar_embd):
-            print(reg.origninal_labels[i], reg.target_labels[j], np.linalg.norm(embd1 - embd2))  
+            print(reg.origninal_labels[i], reg.target_labels[j], np.linalg.norm(embd1 - embd2))
 
         # for i in range(len(embd1)):
         #   print(float(embd1[i]), float(embd2[i]), float(embd3[i]))
         print("The predicted classes of the objects are",  ObjectUtil.classify(np.concatenate((reg.original_obj, reg.target_obj))))
-
+    
     elif q == 5:
+      #evaluate parsing
+      evaluator = ParsingEvaluation('../ASIST_Dataset/Data/Data_A/MoneyQuestion', '../ASIST_Dataset/Data/Data_A/MoneyQuestion/1_5777f61a-1f9a-45a8-a9aa-7fcd30c8c09a.xml', n_files=100)
+      evaluator.evaluate()
+
+    elif q == 6:
+      tmp_test('./input_directory/samples/test_samples/a' + str(s) + '.xml')
+
+    elif q == 7:
       # go from strokes to object by comparing the embeddings of all combinations of strokes
       org_strokes_lst = ObjectUtil.xml_to_strokes('./input_directory/samples/test_samples/a' + str(s) + '.xml', re_sampling=1.0, flip=True)
       tar_strokes_lst = ObjectUtil.xml_to_strokes('./input_directory/samples/test_samples/b' + str(s) + '.xml', re_sampling=1.0, flip=True)
@@ -192,15 +200,14 @@ def main():
       t = 15
       
       for i, (embd1, obj1) in enumerate(zip(reversed(org_embd), reversed(org_obj))): 
-        if (org_obj[i][1][1] - org_obj[i][1][0]) > 3:
-          continue
-        print(org_obj[i][1][0], org_obj[i][1][1])
-        obj1[0].visualize()
         for j, (embd2, obj2) in enumerate(zip(reversed(tar_embd), reversed(tar_obj))):
           d = np.linalg.norm(embd2 - embd1)
           if d < 18:
             print(np.linalg.norm(embd2 - embd1))
+            obj1[0].visualize()
             obj2[0].visualize()
+            for a, b in zip(embd1, embd2):
+              print(float(a), float(b), float(b-a))
 
       return -1
       for i, (embd1, obj1) in enumerate(zip(reversed(org_embd), reversed(org_obj))):
@@ -284,7 +291,6 @@ def add_obj(reg, obj):
   reg.original_obj.append(new_obj)
 
 def test_single_obj(reg, i, j):
-
     st = time.time()
     obj1, obj2 = reg.original_obj[i], reg.target_obj[j]
     print("objects length", len(obj1), len(obj2))
@@ -332,6 +338,13 @@ def evalute():
     # print("Prediction Accuracy is: ", acc)
     # print("Confusion matrix:")
 
+def tmp_test(file):
+    stroke_lst = ObjectUtil.xml_to_strokes(file)
+    tmp = []
+    for st in stroke_lst:
+      tmp.append(st)
+      obj = UnlabeledObject(tmp)
+      obj.visualize()
 
 
 if __name__ == '__main__':
