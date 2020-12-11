@@ -20,7 +20,6 @@ class DensityClustering:
 
     def __init__(self, tar_obj:UnlabeledObject, objs):
         # obtain all possible combinations of the target object
-        tar_obj.visualize()
         self.tar_objs = self._get_combinations(tar_obj, -1)
 
         # obtain the number of sketches to be clustered
@@ -35,7 +34,7 @@ class DensityClustering:
         self.org_objs = np.array(self.org_objs)
     
     @classmethod
-    def fromDir(cls, tar_file:UnlabeledObject, dir, n=None):
+    def fromDir(cls, tar_file, dir, n=None):
         """Explore the directory and cluster all the sketches inside the directory
 
         Args:
@@ -52,12 +51,13 @@ class DensityClustering:
                 if file.endswith(".xml"): 
                     try:
                         objs.append(UnlabeledObject(ObjectUtil.xml_to_strokes(str(path))))
+                        for st in objs[-1].get_strokes():
+                            assert(len(st) >= 5)
                         if n and len(objs) >= n:
                             break
                     except:
                         print("could not convert file " + file)
         
-        print(len(objs))
         return cls(tar_obj, objs)
 
 
@@ -97,7 +97,7 @@ class DensityClustering:
             selected_cluster = clusters[ind]
 
             print("A new cluster found with max", mx)
-            self.tar_objs[ind]['obj'].visualize()
+            # self.tar_objs[ind]['obj'].visualize()
 
             # filter all intersected clusters
             clusters = [clusters[i] if not self._check_intersection(l, r, self.tar_objs[i]['l'], self.tar_objs[i]['r']) else [] for i in range(len(clusters))]
@@ -141,6 +141,7 @@ class DensityClustering:
                     mn, ind = d, i
             
             if mn <= eps:
+                self.org_objs[j]['dist'] = mn
                 clusters[ind].append(self.org_objs[j])
 
                 
@@ -159,20 +160,21 @@ class DensityClustering:
             
             l, r = self.tar_objs[ind]['l'], self.tar_objs[ind]['r']
             self.tar_seg.append((l, r))
-            print("l, r", l, r)
             selected_cluster = clusters[ind]
 
             print("A new cluster found with max", mx)
-            self.tar_objs[ind]['obj'].visualize()
+            print("l, r", l, r)
+            # self.tar_objs[ind]['obj'].visualize()
 
             # filter all intersected clusters
             clusters = [clusters[i] if not self._check_intersection(l, r, self.tar_objs[i]['l'], self.tar_objs[i]['r']) else [] for i in range(len(clusters))]
 
-
+            # sort the cluster according to the embedding distance
+            selected_cluster = sorted(selected_cluster, key=lambda a : a['dist'])
             while selected_cluster:
                 selected_tpl = selected_cluster[0]
                 p, l, r = selected_tpl['id'], selected_tpl['l'], selected_tpl['r']
-                selected_tpl['obj'].visualize()
+                # selected_tpl['obj'].visualize()
                 self.org_seg[p].append((l, r))
 
                 # filter all intersected sketches

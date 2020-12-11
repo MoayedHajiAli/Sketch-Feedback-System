@@ -11,7 +11,6 @@ import warnings
 from sketchformer.basic_usage.sketchformer import continuous_embeddings
 from rdp import rdp
 
-
 class ObjectUtil:
     sketchformer = None
 
@@ -54,7 +53,7 @@ class ObjectUtil:
 
 
     @staticmethod
-    def xml_to_StrokesDict(file, re_sampling=1.0, mn_len=0, flip=False, shift_x=0.0, shift_y=0.0):
+    def xml_to_StrokesDict(file, re_sampling=0.0, mn_len=5, flip=False, shift_x=0.0, shift_y=0.0):
         """for a given file, read the file and transform it to a dictionary of strokes
         Params:
             flip : flip the image vertically
@@ -92,12 +91,12 @@ class ObjectUtil:
         return stroke_dict
 
     @staticmethod
-    def xml_to_strokes(file, re_sampling = 1.0, mn_len=0, flip=False, shift_x=0.0, shift_y=0.0):
+    def xml_to_strokes(file, re_sampling = 0.0, mn_len=5, flip=False, shift_x=0.0, shift_y=0.0):
         return list(ObjectUtil.xml_to_StrokesDict(file, re_sampling = re_sampling, mn_len=mn_len, flip=flip, shift_x=shift_x, shift_y=shift_y).values())
     
     
-    @ staticmethod
-    def xml_to_UnlabeledObjects(file, mn_len=0, re_sampling=1.0, flip=False, shift_x=0.0, shift_y=0.0, rdp=False):
+    @staticmethod
+    def xml_to_UnlabeledObjects(file, mn_len=5, re_sampling=0.0, flip=False, shift_x=0.0, shift_y=0.0, rdp=False):
         """for a given file, find all objects and their labels
 
         Params:
@@ -125,7 +124,8 @@ class ObjectUtil:
             strokes_lst = []
             for s in sts:
                 id = s.firstChild.nodeValue
-                strokes_lst.append(strokes_dict[id])
+                if id in strokes_dict.keys():
+                    strokes_lst.append(strokes_dict[id])
 
             objs.append(UnlabeledObject(strokes_lst))
         
@@ -133,6 +133,47 @@ class ObjectUtil:
             objs = ObjectUtil.reduce_rdp(objs)
 
         return objs, labels
+    
+    @staticmethod
+    def xml_to_IndexedUnlabeledObjects(file, mn_len=5, re_sampling=0.0, flip=False, shift_x=0.0, shift_y=0.0, rdp=False):
+        """for a given file, find all objects and their labels. Include in the objects the strokes indices
+
+        Params:
+        flip : flip the image vertically
+        mn_len : ignore any strokes with length smaller than mn_len
+        shift_x : inital horizental shift
+        shift_y : inital vertical shift
+        re_sampling: re-draw the object with fewer/more number of points with a uniform distribuion of points
+                    along the perimeter. if re_sampling equals 0.0, then no re_drawing will happen.
+
+        Returns:
+            Array-like(N): array of objects
+            Array-line(N): labels to the returned objects 
+        """
+        data = minidom.parse(file)
+        objects = data.getElementsByTagName('Object')
+
+        # obtian stroke dict
+        strokes_dict = ObjectUtil.xml_to_StrokesDict(file, re_sampling=re_sampling, mn_len=mn_len, flip=flip, shift_x=shift_x, shift_y=shift_y)
+
+        objs, labels, inds = [], [], []
+        for o in objects:
+            labels.append(o.attributes['Label'].value)
+            sts = o.getElementsByTagName('arg')
+            strokes_lst, inds_tmp = [], []
+            for s in sts:
+                id = s.firstChild.nodeValue
+                if id in strokes_dict.keys():
+                    strokes_lst.append(strokes_dict[id])
+                    inds_tmp.append(list(strokes_dict.keys()).index(id))
+
+            objs.append(UnlabeledObject(strokes_lst))
+            inds.append(sorted(inds_tmp))
+        
+        if rdp:
+            objs = ObjectUtil.reduce_rdp(objs)
+
+        return objs, labels, inds
 
 
     # for given two objects, match their size by adding dummy points
@@ -307,7 +348,6 @@ class ObjectUtil:
         # find the dimentions of the storkes and reduce
         for sketch in sketches:
             for stroke in sketch.get_strokes():
-
                 # get dimentions
                 mx_w = max([p.x for p in stroke.get_points()])
                 mn_w = min([p.x for p in stroke.get_points()])
@@ -317,12 +357,16 @@ class ObjectUtil:
                 w, h = mx_w - mn_w, mx_h - mn_h
                 mx_wh = max(w, h)
 
+                if mx_wh == 0:
+                    print(len(stroke))
+                    continue
+
                 for p in stroke.get_points():
                     p.x = ((p.x - mn_w) / mx_wh * 2.0 - 1.0) * scale
                     p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
 
         # reduce using rdp
-        # sketches = ObjectUtil.reduce_rdp(sketches, epsilon=eps)
+        sketches = ObjectUtil.reduce_rdp(sketches, epsilon=eps)
         # TODO: using rdp for some small sketches are making the sketch so small that it 
         # is raising an error in the sketchformer  when getting the embeddings.
 
@@ -333,6 +377,8 @@ class ObjectUtil:
             # gather all the points in one stroke
             tmp_stroke_3 = []
             for i in range(len(strokes_lst)):
+                if len(strokes_lst[i]) == 1:
+                    continue
                 # if i != 0:
                 #     # insert an imaginary points between the end point of stroke i-1 and the first point in
                 #     # stroke i, with a pen lifted state
@@ -413,7 +459,7 @@ class ObjectUtil:
         return ObjectUtil.sketchformer.classify(objs)
 
     @staticmethod
-    def reduce_rdp(objs, epsilon=None):
+    def reduce_rdp(objs, epsilon=None, mn_len = 5):
         """reduce the given set of UnlabeledObjects using Ramer–Douglas–Peucker algorithm
 
         Args:
@@ -427,6 +473,7 @@ class ObjectUtil:
         for obj in objs:
             reduced_strokes = []
             for stroke in obj.get_strokes():
+
                 tmp = [[pt.x, pt.y] for pt in stroke.get_points()]
                 
                 # reduce the strokes points
@@ -444,8 +491,11 @@ class ObjectUtil:
                     if pt.x == reduced_points[ind][0] and pt.y == reduced_points[ind][1]:
                         res_points.append(pt)
                         ind += 1
-            
-                reduced_strokes.append(Stroke(res_points))
+                
+                if len(stroke) < mn_len:
+                    reduced_strokes.append(stroke)
+                else:
+                    reduced_strokes.append(Stroke(res_points))
             
             reduced_objs.append(UnlabeledObject(reduced_strokes))
             
