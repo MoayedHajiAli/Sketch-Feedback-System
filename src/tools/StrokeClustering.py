@@ -1,5 +1,7 @@
 from sketch_object.UnlabeledObject import UnlabeledObject
 from utils.ObjectUtil import ObjectUtil
+from utils.RegistrationUtils import RegisterTwoObjects, RegistrationUtils
+from animator.SketchAnimation import SketchAnimation
 import numpy as np
 import copy
 import pathlib
@@ -187,13 +189,77 @@ class DensityClustering:
         return self.tar_seg, self.org_seg
 
 
-    def _visualize_clusters(clusters):
-        pca = PCA(n_components = 2)
-        pca_res = pca.fit_transform(clusters)
-        x, y = pca_res[:, 0], pca_res[:,1]
-        plt.figure(figsize=(16,10))
-        plt.plot(x, y)
-        plt.show()
+    def reg_based_mut_execlusive_cluster(self, eps=50, per=0.5):
+        self.tar_objs = sorted(self.tar_objs, key=lambda a: (a['l'] - a['r']))
+        self.org_seg, self.tar_seg = [[] for _ in range(self.N)], []
+
+        # cluster
+        clusters = [[] for _ in range(len(self.tar_objs))]
+        # TODO: remove the fixed start index (was used to testing only)
+        for j in range(4, len(self.org_objs)):
+            mn, ind = 1e9, -1
+            for i in range(len(clusters)):
+                d, p = RegisterTwoObjects(self.org_objs[j]['obj'], self.tar_objs[i]['obj'] , RegistrationUtils.total_transformation_cost).optimize()
+                print(d)
+                if d <= eps:
+                    self.org_objs[j]['obj'].visualize()
+                    self.tar_objs[i]['obj'].visualize()
+                    animation = SketchAnimation([self.org_objs[j]['obj']], [self.tar_objs[i]['obj']])
+                    # print(RegistrationUtils.calc_dissimilarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p), target_dis=False))
+                    animation.seq_animate_all([p], save=False, file="./test_videos/example7-obj3-4.mp4")
+                    plt.show()
+
+                if d <= mn:
+                    mn, ind = d, i
+            
+            if mn <= eps:
+                self.org_objs[j]['obj'].visualize()
+                self.tar_objs[ind]['obj'].visualize()
+                self.org_objs[j]['dist'] = mn
+                clusters[ind].append(self.org_objs[j])
+
+                
+        
+        # select and eleminate
+        while True:
+            # find the cluster with the largest number of points
+            ind, mx = -1, -1
+            for i in range(len(clusters)):
+                if len(clusters[i]) > self.N * per:
+                    mx, ind = len(clusters[i]), i
+                    break
+            
+            if mx <= 0:
+                break
+            
+            l, r = self.tar_objs[ind]['l'], self.tar_objs[ind]['r']
+            self.tar_seg.append((l, r))
+            selected_cluster = clusters[ind]
+
+            print("A new cluster found with max", mx)
+            print("l, r", l, r)
+            # self.tar_objs[ind]['obj'].visualize()
+
+            # filter all intersected clusters
+            clusters = [clusters[i] if not self._check_intersection(l, r, self.tar_objs[i]['l'], self.tar_objs[i]['r']) else [] for i in range(len(clusters))]
+
+            # sort the cluster according to the embedding distance
+            selected_cluster = sorted(selected_cluster, key=lambda a : a['dist'])
+            while selected_cluster:
+                selected_tpl = selected_cluster[0]
+                p, l, r = selected_tpl['id'], selected_tpl['l'], selected_tpl['r']
+                # selected_tpl['obj'].visualize()
+                self.org_seg[p].append((l, r))
+
+                # filter all intersected sketches
+                for i in range(len(clusters)):
+                    clusters[i] = [obj for obj in clusters[i] if (obj['id'] != p) or not self._check_intersection(l, r, obj['l'], obj['r'])]
+                
+                # filter intersected sketches in the same cluster
+                selected_cluster = [obj for obj in selected_cluster if (obj['id'] != p) or not self._check_intersection(l, r, obj['l'], obj['r'])]
+            
+        return self.tar_seg, self.org_seg
+
 
 
     def _check_intersection(self, l1, r1, l2, r2):

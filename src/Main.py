@@ -323,8 +323,8 @@ def test_single_obj(reg, i, j):
 
 
 def find_correspondences(dir, obj):
-  cluster = DensityClustering.fromDir(obj, dir, n=10)
-  cluster.mut_execlusive_cluster()
+  cluster = DensityClustering.fromDir(obj, dir, n=2)
+  cluster.reg_based_mut_execlusive_cluster()
 
 def evalute():
     eval = ClassEvaluation([], [], re_sampling=0.5)

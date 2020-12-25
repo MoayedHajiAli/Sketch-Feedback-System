@@ -115,7 +115,7 @@ class RegistrationUtils:
         tot += RegistrationUtils._rotation_cost(p[2], ln)
         tot += RegistrationUtils._shearing_cost(p[3], p[4], mn_x, mn_y, mx_x, mx_y, ln)
         tot += RegistrationUtils._translation_cost(p[5], p[6], ln)
-        return tot
+        return 0
 
     # for given parameters obtain the transformation matrix, according to the following order
     #   p[0]: the scaling the x direction
