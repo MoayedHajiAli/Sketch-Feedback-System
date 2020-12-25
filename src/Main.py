@@ -11,6 +11,7 @@ from tools.ClassEvaluation import ClassEvaluation
 from tools.ObjectParsing import ObjectParsing
 from tools.StrokeClustering import DensityClustering
 from tools.ParsingEvaluation import ParsingEvaluation
+from registrationNN.models import registration_model
 import time
 
 array = np.array
@@ -136,7 +137,11 @@ def main():
       tmp_test('./input_directory/samples/test_samples/a' + str(s) + '.xml')
 
     elif q == 7:
-      # go from strokes to object by comparing the embeddings of all combinations of strokes
+      reg = Registration('./input_directory/samples/test_samples/a' + str(s) + '.xml', './input_directory/samples/test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=1, flip=True, shift_target_y = 0)
+      registration_model(reg.original_obj)
+
+    elif q == 8:
+      # go from z̄strokes to object by comparing the embeddings of all combinations of strokes
       org_strokes_lst = ObjectUtil.xml_to_strokes('./input_directory/samples/test_samples/a' + str(s) + '.xml', re_sampling=1.0, flip=True)
       tar_strokes_lst = ObjectUtil.xml_to_strokes('./input_directory/samples/test_samples/b' + str(s) + '.xml', re_sampling=1.0, flip=True)
 
