@@ -6,7 +6,6 @@ import numpy as np
 import copy
 import pathlib
 import os
-import sklearn.decomposition.pca
 import matplotlib.pyplot as plt
 
 class DensityClustering:
