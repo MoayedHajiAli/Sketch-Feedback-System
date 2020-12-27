@@ -328,6 +328,37 @@ class ObjectUtil:
         return object_lst
     
     @staticmethod
+    def stroke3_to_poly(sketches):
+        """convert array of sketches in stroke-3 format to array of UnlabeledObject
+        time of drawing are set randomly with taking into account the order of the points 
+        Args:
+            sketches (list): list of sketches in stroke-3
+
+        Returns:
+            [list]: list of Unlabeled objects
+        """
+        ret = []
+        for sketch in sketches:
+            pt_lst, strokes = [], []
+            last_tm = 1.0
+            x, y = 0, 0
+            for p in sketch:
+                if p[2] == 1:
+                    # obtain a new stroke
+                    if len(pt_lst) > 0:
+                        strokes.append(Stroke(pt_lst))
+                        pt_lst = []
+                else:
+                    pt_lst.append(Point(p[0] + x, p[1] + y, last_tm))
+                    last_tm += 1
+                    x, y = p[0] + x, p[1] + y
+            if len(pt_lst) > 0:
+                strokes.append(Stroke(pt_lst))
+            
+            ret.append(UnlabeledObject(strokes))
+        return ret
+
+    @staticmethod
     def poly_to_stroke3(sketches, scale=100.0, step=5, eps=1.5):
         """convert the given sketches to stroke-3 (x, y, p) format, where x, y are 
          the point relative position to the previous point together with its binary pen state.
@@ -364,9 +395,9 @@ class ObjectUtil:
                 for p in stroke.get_points():
                     p.x = ((p.x - mn_w) / mx_wh * 2.0 - 1.0) * scale
                     p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
-
+        
         # reduce using rdp
-        sketches = ObjectUtil.reduce_rdp(sketches, epsilon=eps)
+        # sketches = ObjectUtil.reduce_rdp(sketches, epsilon=eps)
         # TODO: using rdp for some small sketches are making the sketch so small that it 
         # is raising an error in the sketchformer  when getting the embeddings.
 
@@ -379,22 +410,6 @@ class ObjectUtil:
             for i in range(len(strokes_lst)):
                 if len(strokes_lst[i]) == 1:
                     continue
-                # if i != 0:
-                #     # insert an imaginary points between the end point of stroke i-1 and the first point in
-                #     # stroke i, with a pen lifted state
-                #     p1 = strokes_lst[i - 1].get_points()[-1]
-                #     p2 = strokes_lst[i].get_points()[0]
-
-                #     # obtain a unit vector and distanct
-                #     x, y = (p2.x - p1.x), (p2.y - p1.y)
-                #     ln = sqrt(x**2 + y**2)
-                #     x /= ln
-                #     y /= ln
-
-                #     t = 0
-                #     while (t * step) < ln:
-                #         tmp_stroke_3.append([p1.x + (t * step) * x, p1.y + (t * step) * y, 1])
-                #         t += 1
                 
                 # add all stroke's points with state 0
                 for j, p in enumerate(strokes_lst[i].get_points()):
