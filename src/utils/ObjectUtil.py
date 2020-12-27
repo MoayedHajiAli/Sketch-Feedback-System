@@ -378,6 +378,7 @@ class ObjectUtil:
 
         # find the dimentions of the storkes and reduce
         for sketch in sketches:
+            mx_w, mx_h, mn_w, mn_w = -1, -1, 1e9, 1e9
             for stroke in sketch.get_strokes():
                 # get dimentions
                 mx_w = max([p.x for p in stroke.get_points()])
@@ -385,13 +386,11 @@ class ObjectUtil:
                 mx_h = max([p.y for p in stroke.get_points()])
                 mn_h = min([p.y for p in stroke.get_points()])
 
-                w, h = mx_w - mn_w, mx_h - mn_h
-                mx_wh = max(w, h)
+            w, h = mx_w - mn_w, mx_h - mn_h
+            mx_wh = max(w, h)
 
-                if mx_wh == 0:
-                    print(len(stroke))
-                    continue
-
+            # normalize strokes
+            for stroke in sketch.get_strokes():
                 for p in stroke.get_points():
                     p.x = ((p.x - mn_w) / mx_wh * 2.0 - 1.0) * scale
                     p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
