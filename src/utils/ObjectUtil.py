@@ -368,7 +368,7 @@ class ObjectUtil:
         
         Returns: the converted sketches to stroke-3 format and store them in arrays
         """
-        
+        # TODO: document what step represents 
         # get a copy of sketches to avoid editing on the original sketches
         tmp = []
         for sketch in sketches:
@@ -423,6 +423,32 @@ class ObjectUtil:
             converted_sketches.append(tmp_stroke_3[1:])
 
         return converted_sketches
+
+    @staticmethod 
+    def poly_to_accumulative_stroke3(sketches, scale=100.0, step=5, eps=1.5):
+        # convert to stroke-3
+        sketches = ObjectUtil.poly_to_stroke3(sketches, scale=scale, step=step, eps=eps)
+
+        # accumulate the strokes
+        for sketch in sketches:
+            for i in range(1, len(sketch)):
+                sketch[i][0:2] += sketch[i-1][0:2]
+        
+        return sketches
+
+    @staticmethod
+    def accumalitive_stroke3_to_poly(sketches):
+        # deep copy the arrays
+        sketches = copy.deepcopy(sketches)
+
+        # convert to stroke 3
+        for sketch in sketches:
+            sketch[1:, 0:2] -= sketch[:-1, 0:2]
+
+        # convert from stroke-3 to poly
+        return ObjectUtil.stroke3_to_poly(sketches)    
+
+
 
     @staticmethod
     def lines_to_strokes(lines, omit_first_point=True):

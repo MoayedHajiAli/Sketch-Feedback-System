@@ -9,7 +9,7 @@ import os
 import matplotlib.pyplot as plt
 
 class DensityClustering:
-    """Perfore density based clustering of all possible stroke cominations of the objects around all combinations of strokes 
+    """Perform density based clustering of all possible stroke cominations of the objects around all combinations of strokes 
     of the target object. This is follwed by a process of selection of the clusters with the most number of point, and then elimination
     of points that have intersected strokes with the selected points. Sketchformer embeddings are used for moving the sketches into
     the embedding space.
@@ -20,6 +20,12 @@ class DensityClustering:
     """
 
     def __init__(self, tar_obj:UnlabeledObject, objs):
+        # TODO: remove stroke visualization
+        # tar_obj.visualize()
+
+        # for obj in objs:
+        #     obj.visualize()
+
         # obtain all possible combinations of the target object
         self.tar_objs = self._get_combinations(tar_obj, -1)
 
@@ -98,7 +104,7 @@ class DensityClustering:
             selected_cluster = clusters[ind]
 
             print("A new cluster found with max", mx)
-            # self.tar_objs[ind]['obj'].visualize()
+            self.tar_objs[ind]['obj'].visualize()
 
             # filter all intersected clusters
             clusters = [clusters[i] if not self._check_intersection(l, r, self.tar_objs[i]['l'], self.tar_objs[i]['r']) else [] for i in range(len(clusters))]
@@ -106,11 +112,13 @@ class DensityClustering:
 
             while selected_cluster:
                 selected_tpl = selected_cluster[0]
+                # each sketch has a distinct id so that we eliminate the intersected combination only from the same
+                # sketch.
                 p, l, r = selected_tpl['id'], selected_tpl['l'], selected_tpl['r']
                 # selected_tpl['obj'].visualize()
                 self.org_seg[p].append((l, r))
 
-                # filter all intersected sketches
+                # filter all intersected sketches in all clusters
                 for i in range(len(clusters)):
                     clusters[i] = [obj for obj in clusters[i] if (obj['id'] != p) or not self._check_intersection(l, r, obj['l'], obj['r'])]
                 
@@ -121,20 +129,22 @@ class DensityClustering:
     
 
     def mut_execlusive_cluster(self, eps=18, per=0.5):
-        
+        # store object decreasengly according to the number of strokes
         self.tar_objs = sorted(self.tar_objs, key=lambda a: (a['l'] - a['r']))
 
         # obtain embeddings for all objects
-        print("Obtaining embeddings")
+        print("Obtaining embeddings...")
         self.tar_embds = ObjectUtil.get_embedding([obj['obj'] for obj in self.tar_objs])
         print("target embeddings obtained")
         self.org_embds = ObjectUtil.get_embedding([obj['obj'] for obj in self.org_objs])
         print("original embeddings obtained")
         self.org_seg, self.tar_seg = [[] for _ in range(self.N)], []
 
-        # cluster
+        # initialize empty clusters for all target possible objects
         clusters = [[] for _ in range(len(self.tar_objs))]
+
         for j in range(len(self.org_objs)):
+            # find the cluster with the minimum distance
             mn, ind = 1e9, -1
             for i in range(len(clusters)):
                 d = self._embd_dist(self.tar_embds[i], self.org_embds[j])
@@ -144,6 +154,10 @@ class DensityClustering:
             if mn <= eps:
                 self.org_objs[j]['dist'] = mn
                 clusters[ind].append(self.org_objs[j])
+                # # TODO: remove visualization
+                # print(mn)
+                # self.org_objs[j]['obj'].visualize()
+                # self.tar_objs[ind]['obj'].visualize()
 
                 
         
@@ -152,10 +166,10 @@ class DensityClustering:
             # find the cluster with the largest number of points
             ind, mx = -1, -1
             for i in range(len(clusters)):
-                if len(clusters[i]) > self.N * per:
+                if len(clusters[i]) > mx:
                     mx, ind = len(clusters[i]), i
-                    break
             
+            # terminate if all clusters are empty
             if mx <= 0:
                 break
             
@@ -164,7 +178,7 @@ class DensityClustering:
             selected_cluster = clusters[ind]
 
             print("A new cluster found with max", mx)
-            print("l, r", l, r)
+            # self.tar_objs[ind]['obj'].visualize()
             # self.tar_objs[ind]['obj'].visualize()
 
             # filter all intersected clusters
@@ -172,13 +186,20 @@ class DensityClustering:
 
             # sort the cluster according to the embedding distance
             selected_cluster = sorted(selected_cluster, key=lambda a : a['dist'])
+
             while selected_cluster:
                 selected_tpl = selected_cluster[0]
+                # each sketch has a distinct id so that we eliminate the intersected combination only from the same
+                # sketch.
                 p, l, r = selected_tpl['id'], selected_tpl['l'], selected_tpl['r']
+                
+                print(selected_tpl['dist'])
                 # selected_tpl['obj'].visualize()
+                
+                
                 self.org_seg[p].append((l, r))
 
-                # filter all intersected sketches
+                # filter all intersected sketches from all clusters
                 for i in range(len(clusters)):
                     clusters[i] = [obj for obj in clusters[i] if (obj['id'] != p) or not self._check_intersection(l, r, obj['l'], obj['r'])]
                 

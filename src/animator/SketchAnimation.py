@@ -11,7 +11,7 @@ class SketchAnimation():
 
     original_labels = []
     target_labels = []
-    dim = [[0, 1500], [-700, 1000]]
+    dim = [[-500, 500], [-500, 500]]
     
     fig, ax = plt.gcf(), plt.gca()
     

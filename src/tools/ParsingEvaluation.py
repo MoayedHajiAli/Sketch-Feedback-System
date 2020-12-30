@@ -19,7 +19,7 @@ class ParsingEvaluation:
         self.test_dir = test_dir
         self.tar_file = tar_file
 
-        # obtain all objects with their indicies
+        # obtain all objects with their indices and labels
         self.tar_objs, self.tar_lbs, self.tar_segs = ObjectUtil.xml_to_IndexedUnlabeledObjects(tar_file, re_sampling=re_sampling)
         print("[ParsingEvaluation] taget object contains", len(self.tar_objs), "objects")
         self.test_objs, self.test_lbs, self.test_segs = self.explore(test_dir, n_files=n_files)
@@ -28,8 +28,11 @@ class ParsingEvaluation:
 
 
     def explore(self, directory, n_files=-1, re_sampling=0.0):
-        # prepare queue of regiteration objects for multiprocessing
+        # explore n_files in the directory. extracts the objects and their stroke's ordering 
         unorderd_objs = 0
+
+        # objs : (N x M) M ordered objects for N sketches
+        # labels: (N x M) for each object m in sketch n, store its label
         objs, labels, segs = [], [], []
 
         for path in pathlib.Path(directory).iterdir():
@@ -40,7 +43,9 @@ class ParsingEvaluation:
                     break
                 if str(path).endswith(".xml"): 
                     try:
+                        # extract all objects in the file along with their labels, and indices
                         res_obj, res_lbl, res_segs = ObjectUtil.xml_to_IndexedUnlabeledObjects(str(path), re_sampling=re_sampling)
+                        
                         # discard any unordered objects
                         tmp_obj, tmp_lbl, tmp_segs = [], [], []
                         for obj, lbl, seg in zip(res_obj, res_lbl, res_segs):
@@ -50,6 +55,8 @@ class ParsingEvaluation:
                                 tmp_obj.append(obj)
                                 tmp_lbl.append(lbl)
                                 tmp_segs.append((seg[0], seg[-1]))
+                        
+                        # add all resulted objects
                         objs.append(tmp_obj)
                         labels.append(tmp_lbl)
                         segs.append(set(tmp_segs))
@@ -67,13 +74,22 @@ class ParsingEvaluation:
         pred_tar_segs, pred_test_segs = clustering.mut_execlusive_cluster()
 
         n = sum([len(a) for a in pred_test_segs])
-        print("[ParsingEvaluation] info: clustering predected total", n, "objects")
+        print("[ParsingEvaluation] info: clustering predicted total", n, "objects")
         # find test set accuracy
         tp = tn = fp = fn = 0
-        for t_segs, lbl_lst, p_segs in zip(self.test_segs, self.test_lbs, pred_test_segs):
-            # print("true segments", [seg for seg, lbl in zip(t_segs, lbl_lst) if lbl in self.tar_lbs])
-            # print("predicted segments", p_segs)
+        for t_objs, t_segs, lbl_lst, p_segs in zip(self.test_objs, self.test_segs, self.test_lbs, pred_test_segs):
+            # TODO: remove visulaizeing true objects
+            
+            t_segs_2 = sorted([seg for seg, lbl in zip(t_segs, lbl_lst) if lbl in self.tar_lbs])
+            print("true segments", t_segs_2)
+            print("predicted segments", sorted(p_segs))
             # print("")
+
+            for obj, seg in zip(t_objs, t_segs):
+                print(seg)
+                obj.visualize()
+
+                
             c = 0
             for t_seg, lbl in zip(t_segs, lbl_lst):
                 # if the object belong to the target sketch
