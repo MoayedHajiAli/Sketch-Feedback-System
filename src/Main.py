@@ -25,51 +25,6 @@ array = np.array
 """
 
 def main():
-    q, s = map(int, input().split())
-    if q == 0:
-        # recognition evaluation
-        evalute()
-    elif q == 1:
-        # register two objects
-        reg = Registration('./input_directory/samples/test_samples/a' + str(s) + '.xml', './input_directory/samples/test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.5, flip=False, shift_target_y = 0)
-        a, b = map(int, input().split())
-        test_single_obj(reg, a, b)
-
-    elif q == 2:
-        # register two sketches
-        reg = Registration('./input_directory/samples/test_samples/a' + str(s) + '.xml', './input_directory/samples/test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=0.5, flip=False, shift_target_y = 0)
-        # add missing objects (temporarily as pre-calculation is running on ssh server)
-        add_objects(reg, [])
-        st = time.time()
-        p = reg.register(mx_dissimilarity=100)
-        print([np.array(p)])
-        t = []
-        for lst in p:
-            t.append(RegistrationUtils.obtain_transformation_matrix(lst))
-        print(t)
-        print("Running time:", time.time()-st)
-        SketchAnimation = SketchAnimation(reg.original_obj, reg.target_obj)
-        SketchAnimation.seq_animate_all(p, save=False
-                              , file="./test_videos/example6-seq.mp4")
-    elif q == 3:
-        # find correspondences from all possible combination of a sketch and a file
-        find_correspondences('../ASIST_Dataset/Data/Data_A/MoneyQuestion', '../ASIST_Dataset/Data/Data_A/MoneyQuestion/1_5777f61a-1f9a-45a8-a9aa-7fcd30c8c09a.xml')
-
-    elif q == 4:
-        # find the pair-wise embeddings distance of two sketches
-        reg = Registration('./input_directory/samples/test_samples/a' + str(s) + '.xml', './input_directory/samples/test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=1, flip=True, shift_target_y = 0)
-        embds = ObjectUtil.get_embedding(np.concatenate([reg.original_obj, reg.target_obj]))
-        org_embd = embds[:len(reg.original_obj)]
-        tar_embd = embds[len(reg.original_obj):]
-
-        for i, embd1 in enumerate(org_embd):
-          for j, embd2 in enumerate(tar_embd):
-            print(reg.origninal_labels[i], reg.target_labels[j], np.linalg.norm(embd1 - embd2))
-
-        # for i in range(len(embd1)):
-        #   print(float(embd1[i]), float(embd2[i]), float(embd3[i]))
-        print("The predicted classes of the objects are",  ObjectUtil.classify(np.concatenate((reg.original_obj, reg.target_obj))))
-    
     elif q == 5:
       #evaluate sketch object level segmentation
       evaluator = ParsingEvaluation('../ASIST_Dataset/Data/Data_A/MoneyQuestion', '../ASIST_Dataset/Data/Data_A/MoneyQuestion/1_5777f61a-1f9a-45a8-a9aa-7fcd30c8c09a.xml', n_files=5)
@@ -77,11 +32,6 @@ def main():
 
     elif q == 6:
       tmp_test('./input_directory/samples/test_samples/a' + str(s) + '.xml')
-
-    elif q == 7:
-      # train a MLP for registration
-      reg = Registration('./input_directory/samples/test_samples/a' + str(s) + '.xml', './input_directory/samples/test_samples/b' + str(s) + '.xml', mn_stroke_len=3, re_sampling=1, flip=True, shift_target_y = 0)
-      registration_model(reg.original_obj)
 
     elif q == 8:
       # perform a quick test (for now: convertion between stroke-3 and poly format)

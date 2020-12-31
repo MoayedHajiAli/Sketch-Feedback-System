@@ -200,15 +200,15 @@ class registration_model:
                 org_sketches.append(np.array(train_sketches[i]))
                 tar_sketches.append(np.array(train_sketches[j]))
         
-        tar_sketches = np.array(train_sketches[0:15])
-        org_sketches = np.array(train_sketches[0:15])
+        tar_sketches = np.array(train_sketches[0:10])
+        org_sketches = np.array(train_sketches[0:10])
 
         org_sketches = np.float32(np.expand_dims(org_sketches, -1))
         tar_sketches = np.float32(np.expand_dims(tar_sketches, -1))
         cmb_sketches = np.stack((org_sketches, tar_sketches), axis=1)
         
         experiment_id = 1
-        load = False
+        load = True
         if load:
             self.model = load_model("saved_models/experiment"+ str(experiment_id), custom_objects={'knn_loss': self.knn_loss})
         
@@ -245,7 +245,7 @@ class registration_model:
         # for obj, p in zip(org_objs, params):
         #     obj.transform(RegistrationUtils.obtain_transformation_matrix(p))
         
-        for i in range(15):
+        for i in range(10):
             animation = SketchAnimation([org_objs[i]], [tar_objs[i]])
             # print(RegistrationUtils.calc_dissimilarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p), target_dis=False))
             animation.seq_animate_all([params[i]])
