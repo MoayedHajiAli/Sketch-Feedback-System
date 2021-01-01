@@ -1,5 +1,5 @@
 import keras.backend as K
-from keras.layers import Input, Dense, concatenate, Conv2D, Reshape, Flatten, LayerNormalization
+from keras.layers import Input, Dense, concatenate, Conv2D, Reshape, Flatten, LayerNormalization, MaxPool2D
 from keras.optimizers import Adam, SGD, RMSprop
 from keras.callbacks import Callback
 from keras.losses import mse
@@ -13,6 +13,7 @@ import tensorflow as tf
 from utils.ObjectUtil import ObjectUtil
 from utils.RegistrationUtils import RegistrationUtils
 from animator.SketchAnimation import SketchAnimation
+from sketchformer.builders.layers.transformer import Encoder, SelfAttnV1
 
 class registration_model:
   
@@ -71,7 +72,7 @@ class registration_model:
         # sm_cost: (batch, )
 
         # normalize with the number of points
-        # sm_cost /= 126 - K.sum(org_pen, axis=-1) + 126 - K.sum(tar_pen, axis=-1) 
+        sm_cost /= 128 - K.sum(org_pen, axis=-1) + 128 - K.sum(tar_pen, axis=-1) 
 
         return sm_cost         
 
@@ -82,7 +83,6 @@ class registration_model:
         tar = sketches[:, 1, :, :2, 0]
         org_pen = sketches[:, 0, :, 2, 0]
         tar_pen = sketches[:, 1, :, 2, 0]
-        print("original point", org[0][0][0])
         # org: (batch, 126, 2)  tar: (batch, 126, 2)
         # org_pen: (batch, 126) tar_pen: (batch, 126)   represents the pen state in stroke-3 format
 
@@ -94,7 +94,6 @@ class registration_model:
         t.append(p[:, 1] * (np.sin(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) + p[:, 4] * np.cos(p[:, 2])))
         t.append(p[:, 1] * (p[:, 3] * np.sin(p[:, 2]) + np.cos(p[:, 2])))
         t.append(p[:, 6])
-        print("t", t)
         t = np.expand_dims(t, -1)
         # t: (batch, 6, 1)
 
@@ -131,7 +130,7 @@ class registration_model:
         # sm_cost: (batch, )
 
         # normalize with the number of points
-        # sm_cost /= 126 - np.sum(org_pen, axis=-1) + 126 - np.sum(tar_pen, axis=-1) 
+        sm_cost /= 128 - np.sum(org_pen, axis=-1) + 128 - np.sum(tar_pen, axis=-1) 
 
         return sm_cost    
 
@@ -153,33 +152,42 @@ class registration_model:
     def init_model(self):
         # build the model with stroke-3 format
         org_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
+        org_reshaped = Reshape((128, 3))(org_inputs)
         tar_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
+        tar_reshaped = Reshape((128, 3))(tar_inputs)
 
-        # feature extraction layers
-        org_fe_layer0 = Conv2D(1, (3, 3), 1, kernel_initializer=HeNormal(seed=1))(org_inputs)
-        org_fe_layer0 = Reshape((126,)) (org_fe_layer0)
-        org_fe_layer1= Dense(126, activation='relu', kernel_initializer=HeNormal(seed=2))(org_fe_layer0)
-        org_fe_layer1 = LayerNormalization()(org_fe_layer1)
-        org_fe_layer2= Dense(64, activation='relu', kernel_initializer=HeNormal(seed=3))(org_fe_layer1)
+        org_fe_layer0= Dense(64, activation='relu')(org_reshaped)
+        org_fe_layer0 = LayerNormalization()(org_fe_layer0)
+        org_fe_layer0 = Reshape((128, 64, 1))(org_fe_layer0)
+        org_fe_layer1 = Conv2D(1, (3, 3), 1)(org_fe_layer0) 
+        org_fe_layer1 = MaxPool2D((3, 3))(org_fe_layer1)
+        org_fe_layer1 = Reshape((42 * 20,)) (org_fe_layer1)
+        # org_enc = Encoder(1, 128, 4, 256, None)(org_inputs)
+        # org_embd = SelfAttnV1(128)(org_enc)
+        org_fe_layer2= Dense(64, activation='relu')(org_fe_layer1)
         org_fe_layer2 = LayerNormalization()(org_fe_layer2)
-        org_fe_layer3= Dense(32, activation='relu', kernel_initializer=HeNormal(seed=4))(org_fe_layer2)
-        org_fe_layer3 = LayerNormalization()(org_fe_layer2)
+        org_fe_layer3= Dense(32, activation='relu')(org_fe_layer2)
+        org_fe_layer3 = LayerNormalization()(org_fe_layer3)
         org_fe = Model(org_inputs, org_fe_layer3)
 
-        tar_fe_layer0 = Conv2D(1, (3, 3), 1)(tar_inputs)
-        tar_fe_layer0 = Reshape((126, )) (tar_fe_layer0)
-        tar_fe_layer1= Dense(126, activation='relu', kernel_initializer=HeNormal(seed=12))(tar_fe_layer0)
-        tar_fe_layer1 = LayerNormalization()(tar_fe_layer1)
-        tar_fe_layer2= Dense(64, activation='relu', kernel_initializer=HeNormal(seed=13))(tar_fe_layer1)
+
+        tar_fe_layer0= Dense(64, activation='relu')(tar_reshaped)
+        tar_fe_layer0 = LayerNormalization()(tar_fe_layer0)
+        tar_fe_layer0 = Reshape((128, 64, 1))(tar_fe_layer0)
+        tar_fe_layer1 = Conv2D(1, (3, 3), 1)(tar_fe_layer0)
+        tar_fe_layer1 = MaxPool2D((3, 3))(tar_fe_layer1)
+        tar_fe_layer1 = Reshape((42 * 20, )) (tar_fe_layer1)
+        # tar_enc = Encoder(1, 128, 4, 256, None)(tar_inputs)
+        # tar_embd = SelfAttnV1(128)(tar_enc)
+        tar_fe_layer2 = Dense(64, activation='relu')(tar_fe_layer1)
         tar_fe_layer2 = LayerNormalization()(tar_fe_layer2)
-        tar_fe_layer3= Dense(32, activation='relu', kernel_initializer=HeNormal(seed=14))(tar_fe_layer2)
+        tar_fe_layer3 = Dense(32, activation='relu')(tar_fe_layer2)
         tar_fe_layer3 = LayerNormalization()(tar_fe_layer3)
         tar_fe = Model(tar_inputs, tar_fe_layer3)
 
         merged_fe = concatenate([org_fe.output, tar_fe.output])
         # original and target extracted features
         layer1 = Dense(32, activation='relu', kernel_initializer=HeNormal(seed=5))(merged_fe)
-        layer1 = LayerNormalization()(layer1)
         params = Dense(7, activation="linear", kernel_initializer=HeNormal(seed=6))(layer1)
 
         self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
@@ -202,11 +210,11 @@ class registration_model:
         
         tar_sketches = np.array(train_sketches[0:10])
         org_sketches = np.array(train_sketches[0:10])
-
-        org_sketches = np.float32(np.expand_dims(org_sketches, -1))
-        tar_sketches = np.float32(np.expand_dims(tar_sketches, -1))
+        org_sketches = np.expand_dims(org_sketches, axis=-1)
+        tar_sketches = np.expand_dims(tar_sketches, axis=-1)
         cmb_sketches = np.stack((org_sketches, tar_sketches), axis=1)
-        
+
+
         experiment_id = 1
         load = True
         if load:
@@ -228,13 +236,15 @@ class registration_model:
                     print("End epoch {} of training; loss: {}".format(epoch, loss))
 
             self.init_model()
-            self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=15000)
+            # print("model summary", self.model.summary())
+            self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=2000)
 
             # save the model 
             self.model.save("saved_models/experiment" + str(experiment_id))
             # predict transformation
         
         params = self.model.predict((org_sketches, tar_sketches))
+
         print("params", params)
 
         print("resulted loss", self.np_knn_loss(cmb_sketches, params))
