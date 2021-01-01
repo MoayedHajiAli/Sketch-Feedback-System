@@ -19,7 +19,7 @@ import time
 
 
 # train a MLP for registration
-FILE = '../input_directory/samples/test_samples/a3.xml'
+FILE = '../input_directory/samples/test_samples/single_strokes_circles.xml'
 
 objs, labels = ObjectUtil.xml_to_UnlabeledObjects(FILE, mn_len=5)
 print(labels)

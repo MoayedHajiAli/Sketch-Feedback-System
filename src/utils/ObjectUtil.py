@@ -448,7 +448,12 @@ class ObjectUtil:
         # convert from stroke-3 to poly
         return ObjectUtil.stroke3_to_poly(sketches)    
 
-
+    @staticmethod
+    def transform_stroke3(sketch, t):
+        tmp = copy.deepcopy(sketch)
+        for p in tmp:
+            p[0], p[1] = p[0] * t[0] + p[1] * t[1] + t[2], p[0] * t[3] + p[1] * t[4] + t[5] 
+        return tmp
 
     @staticmethod
     def lines_to_strokes(lines, omit_first_point=True):

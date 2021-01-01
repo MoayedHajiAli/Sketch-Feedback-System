@@ -14,17 +14,19 @@ from utils.ObjectUtil import ObjectUtil
 from utils.RegistrationUtils import RegistrationUtils
 from animator.SketchAnimation import SketchAnimation
 from sketchformer.builders.layers.transformer import Encoder, SelfAttnV1
+import copy
+from matplotlib import pyplot as plt
 
 class registration_model:
   
     def knn_loss(self, sketches, p):
-        # sketches (batch, 2, 126, 3, 1)  p(batch, 7)
         sketches = tf.identity(sketches)
+        # sketches (batch, 2, 126, 3, 1)  p(batch, 7)
         org = sketches[:, 0, :, :2, 0]
         tar = sketches[:, 1, :, :2, 0]
+        # org: (batch, 126, 2)  tar: (batch, 126, 2)
         org_pen = sketches[:, 0, :, 2, 0]
         tar_pen = sketches[:, 1, :, 2, 0]
-        # org: (batch, 126, 2)  tar: (batch, 126, 2)
         # org_pen: (batch, 126) tar_pen: (batch, 126)   represents the pen state in stroke-3 format
 
         # obtain transformation matrix parameters
@@ -50,6 +52,8 @@ class registration_model:
         # org_y: (represent x coords) (batch, 126, 1)
 
         org_cmb = tf.concat([org_x, org_y], axis=-1)
+        # org_cmb : (batch, 126, 2)
+
         org_cmb = K.expand_dims(org_cmb, 1)
         # org_cmb: (batch, 1, 126, 2)
 
@@ -65,7 +69,7 @@ class registration_model:
         # sm_sqrt: (batch, 126, 126)
 
         # obtain nearest points from org->tar + from tar->org
-        mn = K.min(sm, axis=-2) * (1 - org_pen) + K.min(sm, axis=-1) * (1 - tar_pen)
+        mn = K.min(sm_sqrt, axis=-2) * (1 - org_pen) + K.min(sm_sqrt, axis=-1) * (1 - tar_pen)
         # mn: (batch, 126)
 
         sm_cost = K.sum(mn, axis=1) 
@@ -77,13 +81,15 @@ class registration_model:
         return sm_cost         
 
     @staticmethod
-    def np_knn_loss(sketches, p):
+    def np_knn_loss(sketches, p, maxlen=128):
+        sketches = copy.deepcopy(sketches)
+        # sketches = tf.identity(sketches)
         # sketches (batch, 2, 126, 3, 1)  p(batch, 7)
         org = sketches[:, 0, :, :2, 0]
         tar = sketches[:, 1, :, :2, 0]
+        # org: (batch, 126, 2)  tar: (batch, 126, 2)
         org_pen = sketches[:, 0, :, 2, 0]
         tar_pen = sketches[:, 1, :, 2, 0]
-        # org: (batch, 126, 2)  tar: (batch, 126, 2)
         # org_pen: (batch, 126) tar_pen: (batch, 126)   represents the pen state in stroke-3 format
 
         # obtain transformation matrix parameters
@@ -100,6 +106,7 @@ class registration_model:
         # apply transformation on all points in original 
         org_x = org[:, :, 0] * t[0] + org[:, :, 1] * t[1] + t[2]
         org_y = org[:, :, 0] * t[3] + org[:, :, 1] * t[4] + t[5]
+
         # org_x: represent x coords (batch, 126)
         # org_y: represent x coords (batch, 126)
         org_x = np.expand_dims(org_x, 2)
@@ -108,6 +115,7 @@ class registration_model:
         # org_y: (represent x coords) (batch, 126, 1)
 
         org_cmb = np.concatenate([org_x, org_y], axis=-1)
+        # org_cmb : (batch, 126, 2)
         org_cmb = np.expand_dims(org_cmb, 1)
         # org_cmb: (batch, 1, 126, 2)
 
@@ -117,25 +125,25 @@ class registration_model:
         # obtain pairwise differences between original and target sketches
         diff = org_cmb - tar_cmb
         # diff: (batch, 126, 126, 2)
+ 
         sm = np.sum(diff ** 2, axis=-1)
         sm_sqrt = np.sqrt(sm)
-        # print(sm)
         # sm_sqrt: (batch, 126, 126)
 
         # obtain nearest points from org->tar + from tar->org
-        mn = np.min(sm, axis=-2) * (1 - org_pen) + np.min(sm, axis=-1) * (1 - tar_pen)
-        # mn: (batch, 126) d
+        mn = np.min(sm_sqrt, axis=-2) * (1 - org_pen) + np.min(sm_sqrt, axis=-1) * (1 - tar_pen)
+        # mn: (batch, 126)
 
         sm_cost = np.sum(mn, axis=1) 
         # sm_cost: (batch, )
 
         # normalize with the number of points
-        sm_cost /= 128 - np.sum(org_pen, axis=-1) + 128 - np.sum(tar_pen, axis=-1) 
+        sm_cost /= maxlen - np.sum(org_pen, axis=-1) + maxlen - np.sum(tar_pen, axis=-1) 
 
-        return sm_cost    
+        return sm_cost     
 
 
-    def _pad_sketches(self, sketches, maxlen=128, inf=0):
+    def _pad_sketches(self, sketches, maxlen=128, inf=1e9):
         converted_sketches = []
         for i in range(len(sketches)):
             tmp = []
@@ -162,8 +170,11 @@ class registration_model:
         org_fe_layer1 = Conv2D(1, (3, 3), 1)(org_fe_layer0) 
         org_fe_layer1 = MaxPool2D((3, 3))(org_fe_layer1)
         org_fe_layer1 = Reshape((42 * 20,)) (org_fe_layer1)
+        # org_fe_layer1 = Flatten()(org_fe_layer0)
+
         # org_enc = Encoder(1, 128, 4, 256, None)(org_inputs)
         # org_embd = SelfAttnV1(128)(org_enc)
+
         org_fe_layer2= Dense(64, activation='relu')(org_fe_layer1)
         org_fe_layer2 = LayerNormalization()(org_fe_layer2)
         org_fe_layer3= Dense(32, activation='relu')(org_fe_layer2)
@@ -177,6 +188,8 @@ class registration_model:
         tar_fe_layer1 = Conv2D(1, (3, 3), 1)(tar_fe_layer0)
         tar_fe_layer1 = MaxPool2D((3, 3))(tar_fe_layer1)
         tar_fe_layer1 = Reshape((42 * 20, )) (tar_fe_layer1)
+        # tar_fe_layer1 = Flatten()(tar_fe_layer0)
+
         # tar_enc = Encoder(1, 128, 4, 256, None)(tar_inputs)
         # tar_embd = SelfAttnV1(128)(tar_enc)
         tar_fe_layer2 = Dense(64, activation='relu')(tar_fe_layer1)
@@ -191,9 +204,10 @@ class registration_model:
         params = Dense(7, activation="linear", kernel_initializer=HeNormal(seed=6))(layer1)
 
         self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
-        self.model.compile(loss=self.knn_loss, optimizer=Adam(learning_rate=0.0005), metrics=['accuracy'])
+        self.model.compile(loss=self.knn_loss, optimizer=Adam(learning_rate=0.005), metrics=['accuracy'])
 
     def __init__(self, train_sketches):
+
         # convert train sketches into stroke-3 format
         train_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_sketches)
 
@@ -208,8 +222,13 @@ class registration_model:
                 org_sketches.append(np.array(train_sketches[i]))
                 tar_sketches.append(np.array(train_sketches[j]))
         
-        tar_sketches = np.array(train_sketches[0:10])
-        org_sketches = np.array(train_sketches[0:10])
+        # tar_sketches = np.array(train_sketches[0:10])
+        # org_sketches = np.array(train_sketches[0:10])
+        # org_sketches = org_sketches[:20]
+        # tar_sketches = tar_sketches[:20]
+        # test tranlation
+        # org_sketches = train_sketches[0:5]
+        # tar_sketches = train_sketches[0:5]
         org_sketches = np.expand_dims(org_sketches, axis=-1)
         tar_sketches = np.expand_dims(tar_sketches, axis=-1)
         cmb_sketches = np.stack((org_sketches, tar_sketches), axis=1)
@@ -217,6 +236,8 @@ class registration_model:
 
         experiment_id = 1
         load = True
+        save = False
+
         if load:
             self.model = load_model("saved_models/experiment"+ str(experiment_id), custom_objects={'knn_loss': self.knn_loss})
         
@@ -225,27 +246,29 @@ class registration_model:
             class epoch_callback(Callback):
                 def on_epoch_begin(self, epoch, logs=None):
                     params = self.model.predict((org_sketches, tar_sketches))
-                    print("Start epoch {} of training; params predictions: {}".format(epoch, params))
-                    loss = registration_model.np_knn_loss(cmb_sketches, params)
+                    print("Start epoch {} of training; params predictions: {}".format(epoch, params[0:1]))
+                    loss = registration_model.np_knn_loss(cmb_sketches[0:1], params[0:1])
                     print("Start epoch {} of training; loss: {}".format(epoch, loss))
 
                 def on_epoch_end(self, epoch, logs={}):
                     params = self.model.predict((org_sketches, tar_sketches))
-                    print("End epoch {} of training; params predictions: {}".format(epoch, params))
-                    loss = registration_model.np_knn_loss(cmb_sketches, params)
+                    print("End epoch {} of training; params predictions: {}".format(epoch, params[0:1]))
+                    loss = registration_model.np_knn_loss(cmb_sketches[0:1], params[0:1])
                     print("End epoch {} of training; loss: {}".format(epoch, loss))
 
             self.init_model()
             # print("model summary", self.model.summary())
-            self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=2000)
+            # self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=10, callbacks=(epoch_callback()))
+            self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=500)
 
             # save the model 
-            self.model.save("saved_models/experiment" + str(experiment_id))
-            # predict transformation
-        
+            if save:
+                self.model.save("saved_models/experiment" + str(experiment_id))
+            
+        # predict transformation
         params = self.model.predict((org_sketches, tar_sketches))
-
         print("params", params)
+
 
         print("resulted loss", self.np_knn_loss(cmb_sketches, params))
         # visualize selected pairs
@@ -255,7 +278,7 @@ class registration_model:
         # for obj, p in zip(org_objs, params):
         #     obj.transform(RegistrationUtils.obtain_transformation_matrix(p))
         
-        for i in range(10):
+        for i in range(len(org_sketches)):
             animation = SketchAnimation([org_objs[i]], [tar_objs[i]])
             # print(RegistrationUtils.calc_dissimilarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p), target_dis=False))
             animation.seq_animate_all([params[i]])

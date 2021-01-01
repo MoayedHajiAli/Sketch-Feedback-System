@@ -83,7 +83,7 @@ class UnlabeledObject:
             stroke.reset()
 
     # for a given transformation parameters, transform all the points
-    def transform(self, t, upd_step=False, restore_origin=True):
+    def transform(self, t, upd_step=False, restore_origin=False):
         xo = yo = 0
         if restore_origin:
             xo, yo = self.origin_x, self.origin_y
@@ -91,7 +91,7 @@ class UnlabeledObject:
             stroke.transform(t, xo, yo, upd_step=upd_step)
 
     # update step vector to prepare for the SketchAnimationing
-    def upd_step_vector(self, t, restore_origin=True):
+    def upd_step_vector(self, t, restore_origin=False):
         xo = yo = 0
         if restore_origin:
             xo, yo = self.origin_x, self.origin_y
