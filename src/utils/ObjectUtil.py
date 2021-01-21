@@ -378,7 +378,7 @@ class ObjectUtil:
 
         # find the dimentions of the storkes and reduce
         for sketch in sketches:
-            mx_w, mx_h, mn_w, mn_w = -1, -1, 1e9, 1e9
+            mx_w, mx_h, mn_w, mn_h = -1, -1, 1e9, 1e9
             for stroke in sketch.get_strokes():
                 # get dimentions
                 mx_w = max([p.x for p in stroke.get_points()])
