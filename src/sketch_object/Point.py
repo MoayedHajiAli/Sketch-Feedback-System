@@ -14,6 +14,17 @@ class Point:
             return Point(self.x * o, self.y * o, self.t)
         else:
             return Point(self.x * o.x, self.y * o.y, self.t)
+    
+    def __eq__(self, other):
+        """equality does not depends on time t (as for some points, I am considering a dummy time)
+
+        Args:
+            other ([type]): [description]
+        """
+        if isinstance(other, Point):
+            return self.get_x() == other.get_x() and self.get_y() == other.get_y()
+        else: 
+            return false 
 
     def get_x(self):
         return self.x

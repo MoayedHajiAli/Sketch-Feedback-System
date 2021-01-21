@@ -15,9 +15,15 @@ class Stroke:
         ind = np.argmin(self.get_x())
         self.origin_x, self.origin_y = self.get_x()[ind], self.get_y()[ind]
         self.step_vector = []
-
+        
     def __len__(self):
         return len(self.points_lst)
+
+    def __eq__(self, other):
+        if isinstance(other, Stroke):
+            return self.len() == len(other) and all([x == y for x, y in zip(self.get_points(), other.get_points())])
+        else:
+            return False
 
     def move_step(self, steps):
         for p, v in zip(self.points_lst, self.step_vector):

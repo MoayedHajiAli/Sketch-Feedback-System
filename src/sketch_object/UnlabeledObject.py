@@ -20,6 +20,12 @@ class UnlabeledObject:
     def __len__(self):
         return sum([len(stroke) for stroke in self.strokes_lst])
 
+    def __eq__(self, other):
+        if isinstance(other, UnlabeledObject):
+            return self.len() == len(other) and all([x == y for x, y in zip(self.get_strokes(), other.get_strokes())])
+        else:
+            return False  
+
     def move_step(self, steps):
         for stroke in self.strokes_lst:
             stroke.move_step(steps)
