@@ -10,6 +10,7 @@ class Stroke:
         print("")
 
     def __init__(self, lst):
+        # reorder the list of points according to time
         self.points_lst = sorted(lst, key=lambda p: p.t)
         self.init_lst = copy.deepcopy(self.points_lst)
         ind = np.argmin(self.get_x())

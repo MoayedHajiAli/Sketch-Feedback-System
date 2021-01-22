@@ -15,6 +15,9 @@ class Point:
         else:
             return Point(self.x * o.x, self.y * o.y, self.t)
     
+    def __str__(self):
+        return "({0}, {1}, {2})".format(self.x, self.y, self.t)
+    
     def __eq__(self, other):
         """equality does not depends on time t (as for some points, I am considering a dummy time)
 

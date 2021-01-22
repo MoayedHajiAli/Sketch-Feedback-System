@@ -1,6 +1,7 @@
 from utils.RegistrationUtils import RegistrationUtils
 from utils.ObjectUtil import ObjectUtil
 from tools.StrokeClustering import DensityClustering
+from sketch_object.UnlabeledObject import UnlabeledObject
 import numpy as np 
 from progress.bar import Bar
 from tqdm import tqdm
@@ -26,6 +27,10 @@ class ParsingEvaluation:
         print("[ParsingEvaluation] testing directory contains", sum([len(a) for a in self.test_objs]), "objects")
         self.n_files = n_files
 
+        # remove unwanted objects
+        self.clean()
+        print("[ParsingEvaluation] after cleaning, taget object contains", len(self.tar_objs), "objects")
+        print("[ParsingEvaluation] after cleaning, testing directory contains", sum([len(a) for a in self.test_objs]), "objects")
 
     def explore(self, directory, n_files=-1, re_sampling=0.0):
         # explore n_files in the directory. extracts the objects and their stroke's ordering 
@@ -57,9 +62,10 @@ class ParsingEvaluation:
                                 tmp_segs.append((seg[0], seg[-1]))
                         
                         # add all resulted objects
-                        objs.append(tmp_obj)
-                        labels.append(tmp_lbl)
-                        segs.append(set(tmp_segs))
+                        if len(tmp_obj) > 0:
+                            objs.append(tmp_obj)
+                            labels.append(tmp_lbl)
+                            segs.append(tmp_segs)
                     except Exception as e: 
                         print("ParsingEvaluation] error: could not read file succefully " + str(path))
                         print(str(e))
@@ -67,41 +73,95 @@ class ParsingEvaluation:
         print("[ParsingEvaluation] warn:", unorderd_objs, "unordered objects were found and discarded" )
         return objs, labels, segs
 
-    def evaluate(self):
-        st = time.time()
+    def clean(self, org_removable_labels = ['Number'], tar_removable_labels = ['Number']):
+        """Clean the target and orignal storkes by removing unrelated objects such as handwritting
+        """
+        i = 0
+        while i < len(self.tar_objs):
+            if self.tar_lbs[i] in tar_removable_labels:
+                self.tar_lbs.pop(i)
+                self.tar_objs.pop(i)
+                self.tar_segs.pop(i)
+            else:
+                i += 1
         
-        clustering = DensityClustering.fromDir(self.tar_file, self.test_dir, n=self.n_files)
-        pred_tar_segs, pred_test_segs = clustering.mut_execlusive_cluster()
+        for i in range(len(self.test_objs)):
+            j = 0
+            while j < len(self.test_objs[i]):
+                if self.test_lbs[i][j] in org_removable_labels:
+                    self.test_lbs[i].pop(j)
+                    self.test_objs[i].pop(j)
+                    self.test_segs[i].pop(j)
+                else:
+                    j += 1
 
-        n = sum([len(a) for a in pred_test_segs])
+    def evaluate(self):
+        tar_sketch = UnlabeledObject(np.concatenate([obj.get_strokes() for obj in self.tar_objs]))
+        c , n = 0, 0
+        tmp_sketch = []
+        for sketch in self.test_objs:
+            tmp = []
+            for obj in sketch:
+                tmp.append(obj.get_strokes())
+                if len(obj.get_strokes()) == 1:
+                    c += 1
+                n += 1
+            try:
+                tmp_sketch.append(UnlabeledObject(np.concatenate((tmp))))
+            except Exception as e:
+                print(len(tmp), len(sketch))
+
+        print("[ParsingEvaluation] Total number of objects: ", n)
+        print("[ParsingEvaluation] Single stroke objects: ", c)
+        print("[ParsingEvaluation] Single stroke/number of objects ration: ", c/n)
+
+        test_sketch_lst = [UnlabeledObject(np.concatenate([obj.get_strokes() for obj in sketch])) for sketch in self.test_objs]
+
+        st = time.time()
+        clustering = DensityClustering(tar_sketch, test_sketch_lst)
+        pred_tar_objs, pred_tar_segs, pred_test_objs, pred_test_segs = clustering.mut_execlusive_cluster()
+        
+        tp = 0
+        for p_obj, lbl_lst in zip(pred_tar_objs, self.tar_lbs):
+            # if the object belong to the target sketch
+            if p_obj in self.tar_objs: 
+                    tp += 1
+            p_obj.visualize()
+        
+        print("[ParsingEvaluation] info: target object segmentation accuracy", tp/len(self.tar_objs))
+        
+        n = sum([len(a) for a in pred_test_objs])
         print("[ParsingEvaluation] info: clustering predicted total", n, "objects")
         # find test set accuracy
         tp = tn = fp = fn = 0
-        for t_objs, t_segs, lbl_lst, p_segs in zip(self.test_objs, self.test_segs, self.test_lbs, pred_test_segs):
-            # TODO: remove visulaizeing true objects
-            
-            t_segs_2 = sorted([seg for seg, lbl in zip(t_segs, lbl_lst) if lbl in self.tar_lbs])
-            print("true segments", t_segs_2)
-            print("predicted segments", sorted(p_segs))
-            # print("")
-
-            for obj, seg in zip(t_objs, t_segs):
-                print(seg)
-                obj.visualize()
-
-                
+        fn_objs, fp_objs = [], []
+        print("target labels", self.tar_lbs)
+        for t_objs, lbl_lst, p_objs in zip(self.test_objs, self.test_lbs, pred_test_objs):
             c = 0
-            for t_seg, lbl in zip(t_segs, lbl_lst):
+            for t_obj, lbl in zip(t_objs, lbl_lst):
                 # if the object belong to the target sketch
                 if lbl in self.tar_lbs:
-                    if t_seg in p_segs:
+                    if t_obj in p_objs: 
                         tp += 1
                         c += 1
                     else:
                         fn += 1
+                        fn_objs.append(t_obj)
+                        obj.visualize()
+                        print("False negative embds dist: ", ObjectUtil.get_embedding_dist(t_obj, pred_tar_objs[2]))
+
                 else:
-                    if t_seg not in p_segs:
+                    if t_obj not in p_objs:
                         tn += 1
+                    
+            for obj in p_objs:
+                if obj not in t_objs:
+                    fp_objs.append(obj)
+                    obj.visualize()
+                    print("False positive embds dist: ", ObjectUtil.get_embedding_dist(obj, pred_tar_objs[2]))
+            
+
+
         fp = n - tp
 
         # obtain clustered 

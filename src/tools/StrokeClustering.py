@@ -20,6 +20,12 @@ class DensityClustering:
     """
 
     def __init__(self, tar_obj:UnlabeledObject, objs):
+        """set the inital combinations obtained from the target sketch and test sketches
+
+        Args:
+            tar_obj (UnlabeledObject): a target sketch where meaningful objects will be extracted from
+            objs (list of UnlabledObject): list of sketches that we want to segment
+        """
         # TODO: remove stroke visualization
         # tar_obj.visualize()
 
@@ -43,6 +49,7 @@ class DensityClustering:
     @classmethod
     def fromDir(cls, tar_file, dir, n=None):
         """Explore the directory and cluster all the sketches inside the directory
+        centroids will be taken only from the strokes combinations of the target sketch in the target-file
 
         Args:
             tar_obj(UnlabeledObject)
@@ -71,12 +78,14 @@ class DensityClustering:
 
     def mut_inclusive_cluster(self, eps = 18):
         # obtain embeddings for all objects
-        print("Obtaining embeddings")
+        print("[StrokeClustering] Obtaining embeddings")
         self.tar_embds = ObjectUtil.get_embedding([obj['obj'] for obj in self.tar_objs])
-        print("target embeddings obtained")
+        print("[StrokeClustering] Target embeddings obtained")
         self.org_embds = ObjectUtil.get_embedding([obj['obj'] for obj in self.org_objs])
-        print("original embeddings obtained")
+        print("[StrokeClustering] Original embeddings obtained")
         self.org_seg, self.tar_seg = [[] for _ in range(self.N)], []
+        self.org_ret_objs, self.tar_ret_objs = [[] for _ in range(self.N)], []
+
 
         # cluster
         clusters = [[] for _ in range(len(self.tar_objs))]
@@ -91,7 +100,6 @@ class DensityClustering:
             ind, mx = -1, -1
             for i in range(len(clusters)):
                 self.tar_objs[i]['obj'].visualize()
-                print(len(clusters[i]))
                 if len(clusters[i]) > mx:
                     mx, ind = len(clusters[i]), i
             
@@ -100,10 +108,10 @@ class DensityClustering:
             
             l, r = self.tar_objs[ind]['l'], self.tar_objs[ind]['r']
             self.tar_seg.append((l, r))
-            print("l, r", l, r)
+            self.tar_ret_objs.append(self.tar_objs[ind]['obj'])
             selected_cluster = clusters[ind]
 
-            print("A new cluster found with max", mx)
+            print("[StrokeClustering] A new cluster found with max", mx)
             self.tar_objs[ind]['obj'].visualize()
 
             # filter all intersected clusters
@@ -117,6 +125,7 @@ class DensityClustering:
                 p, l, r = selected_tpl['id'], selected_tpl['l'], selected_tpl['r']
                 # selected_tpl['obj'].visualize()
                 self.org_seg[p].append((l, r))
+                self.org_ret_objs[p].append(selected_tpl['obj'])
 
                 # filter all intersected sketches in all clusters
                 for i in range(len(clusters)):
@@ -125,10 +134,10 @@ class DensityClustering:
                 # filter intersected sketches in the same cluster
                 selected_cluster = [obj for obj in selected_cluster if (obj['id'] != p) or not self._check_intersection(l, r, obj['l'], obj['r'])]
             
-        return self.tar_seg, self.org_seg
+        return self.tar_ret_objs, self.tar_seg, self.org_ret_objs, self.org_seg
     
 
-    def mut_execlusive_cluster(self, eps=18, per=0.5):
+    def mut_execlusive_cluster(self, eps=22, per=0.5):
         # store object decreasengly according to the number of strokes
         self.tar_objs = sorted(self.tar_objs, key=lambda a: (a['l'] - a['r']))
 
@@ -139,29 +148,41 @@ class DensityClustering:
         self.org_embds = ObjectUtil.get_embedding([obj['obj'] for obj in self.org_objs])
         print("original embeddings obtained")
         self.org_seg, self.tar_seg = [[] for _ in range(self.N)], []
+        self.org_ret_objs, self.tar_ret_objs = [[] for _ in range(self.N)], []
 
         # initialize empty clusters for all target possible objects
         clusters = [[] for _ in range(len(self.tar_objs))]
 
         for j in range(len(self.org_objs)):
             # find the cluster with the minimum distance
-            mn, ind = 1e9, -1
+            mn, ind= 1e9, -1
             for i in range(len(clusters)):
                 d = self._embd_dist(self.tar_embds[i], self.org_embds[j])
-                if d <= mn:
+                if d <= mn and d <= eps:
                     mn, ind = d, i
+                    break
             
             if mn <= eps:
                 self.org_objs[j]['dist'] = mn
                 clusters[ind].append(self.org_objs[j])
+                # print("[StrokeClustering] adding a new object to cluster {0}".format(ind))
                 # # TODO: remove visualization
                 # print(mn)
                 # self.org_objs[j]['obj'].visualize()
                 # self.tar_objs[ind]['obj'].visualize()
 
                 
-        
+        # visualizing clusters
+        for i in range(len(self.tar_objs)):
+            if len(clusters[i]) > 0:
+                print("new cluster")
+                self.tar_objs[i]['obj'].visualize()
+                for tpl in clusters[i]:
+                    tpl['obj'].visualize()
+                
+
         # select and eleminate
+        x = 0
         while True:
             # find the cluster with the largest number of points
             ind, mx = -1, -1
@@ -172,9 +193,9 @@ class DensityClustering:
             # terminate if all clusters are empty
             if mx <= 0:
                 break
-            
             l, r = self.tar_objs[ind]['l'], self.tar_objs[ind]['r']
             self.tar_seg.append((l, r))
+            self.tar_ret_objs.append(self.tar_objs[ind]['obj'])
             selected_cluster = clusters[ind]
 
             print("A new cluster found with max", mx)
@@ -187,17 +208,27 @@ class DensityClustering:
             # sort the cluster according to the embedding distance
             selected_cluster = sorted(selected_cluster, key=lambda a : a['dist'])
 
+            # sort the cluster (decreasingly) according to the number of strokes
+            selected_cluster = sorted(selected_cluster, key=lambda a : a['l'] - a['r'])
+
+            x += 1
+            print(x)
+            if x == 3:
+                for tpl in selected_cluster:
+                    tpl['obj'].visualize()
+
+
             while selected_cluster:
                 selected_tpl = selected_cluster[0]
                 # each sketch has a distinct id so that we eliminate the intersected combination only from the same
                 # sketch.
                 p, l, r = selected_tpl['id'], selected_tpl['l'], selected_tpl['r']
                 
-                print(selected_tpl['dist'])
+                # print(selected_tpl['dist'])
                 # selected_tpl['obj'].visualize()
                 
-                
                 self.org_seg[p].append((l, r))
+                self.org_ret_objs[p].append(selected_tpl['obj'])
 
                 # filter all intersected sketches from all clusters
                 for i in range(len(clusters)):
@@ -206,7 +237,7 @@ class DensityClustering:
                 # filter intersected sketches in the same cluster
                 selected_cluster = [obj for obj in selected_cluster if (obj['id'] != p) or not self._check_intersection(l, r, obj['l'], obj['r'])]
             
-        return self.tar_seg, self.org_seg
+        return self.tar_ret_objs, self.tar_seg, self.org_ret_objs, self.org_seg
 
 
     def reg_based_mut_execlusive_cluster(self, eps=50, per=0.5):

@@ -22,7 +22,7 @@ class UnlabeledObject:
 
     def __eq__(self, other):
         if isinstance(other, UnlabeledObject):
-            return self.len() == len(other) and all([x == y for x, y in zip(self.get_strokes(), other.get_strokes())])
+            return len(self) == len(other) and all([x == y for x, y in zip(self.get_strokes(), other.get_strokes())])
         else:
             return False  
 

@@ -487,6 +487,12 @@ class ObjectUtil:
         return ObjectUtil.sketchformer.get_embeddings(objs)
 
     @staticmethod
+    def get_embedding_dist(obj1, obj2):
+        embds = ObjectUtil.get_embedding([obj1, obj2])
+        return np.linalg.norm(embds[1] - embds[0])
+
+
+    @staticmethod
     def classify(objs):
         """classify the given sketches of the polyline format 
 
