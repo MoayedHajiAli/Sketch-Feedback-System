@@ -396,7 +396,7 @@ class ObjectUtil:
                     p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
         
         # reduce using rdp
-        # sketches = ObjectUtil.reduce_rdp(sketches, epsilon=eps)
+        sketches = ObjectUtil.reduce_rdp(sketches, epsilon=eps)
         # TODO: using rdp for some small sketches are making the sketch so small that it 
         # is raising an error in the sketchformer  when getting the embeddings.
 
@@ -543,7 +543,7 @@ class ObjectUtil:
                         res_points.append(pt)
                         ind += 1
                 
-                if len(stroke) < mn_len:
+                if len(res_points) < mn_len:
                     reduced_strokes.append(stroke)
                 else:
                     reduced_strokes.append(Stroke(res_points))

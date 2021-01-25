@@ -29,12 +29,12 @@ class UnlabeledObject:
     def move_step(self, steps):
         for stroke in self.strokes_lst:
             stroke.move_step(steps)
-
+  
     def visualize(self, show=True, axis=[], ax=plt.gca()):
         if len(axis) == 4:
             ax.axis = axis
         for stroke in self.strokes_lst:
-            stroke.visualize(show=False, ax = plt.gca())
+            stroke.visualize(show=False, ax=ax)
         if show:
             plt.show()
 

@@ -1,6 +1,6 @@
 from utils.RegistrationUtils import RegistrationUtils
 from utils.ObjectUtil import ObjectUtil
-from tools.StrokeClustering import DensityClustering
+from tools.StrokeClustering import DensityClustering, DBScanClustering
 from sketch_object.UnlabeledObject import UnlabeledObject
 import numpy as np 
 from progress.bar import Bar
@@ -16,20 +16,23 @@ pd.set_option('max_columns', None)
 
 class ParsingEvaluation:
 
-    def __init__(self, test_dir, tar_file, n_files=-1, re_sampling=0.0):
+    def __init__(self, test_dir, tar_file=None, n_files=-1, re_sampling=0.0):
         self.test_dir = test_dir
         self.tar_file = tar_file
 
         # obtain all objects with their indices and labels
-        self.tar_objs, self.tar_lbs, self.tar_segs = ObjectUtil.xml_to_IndexedUnlabeledObjects(tar_file, re_sampling=re_sampling)
-        print("[ParsingEvaluation] taget object contains", len(self.tar_objs), "objects")
+        if self.tar_file:
+            self.tar_objs, self.tar_lbs, self.tar_segs = ObjectUtil.xml_to_IndexedUnlabeledObjects(tar_file, re_sampling=re_sampling)
+            print("[ParsingEvaluation] taget object contains", len(self.tar_objs), "objects")
         self.test_objs, self.test_lbs, self.test_segs = self.explore(test_dir, n_files=n_files)
         print("[ParsingEvaluation] testing directory contains", sum([len(a) for a in self.test_objs]), "objects")
         self.n_files = n_files
 
         # remove unwanted objects
         self.clean()
-        print("[ParsingEvaluation] after cleaning, taget object contains", len(self.tar_objs), "objects")
+
+        if self.tar_file:
+            print("[ParsingEvaluation] after cleaning, taget object contains", len(self.tar_objs), "objects")
         print("[ParsingEvaluation] after cleaning, testing directory contains", sum([len(a) for a in self.test_objs]), "objects")
 
     def explore(self, directory, n_files=-1, re_sampling=0.0):
@@ -76,14 +79,15 @@ class ParsingEvaluation:
     def clean(self, org_removable_labels = ['Number'], tar_removable_labels = ['Number']):
         """Clean the target and orignal storkes by removing unrelated objects such as handwritting
         """
-        i = 0
-        while i < len(self.tar_objs):
-            if self.tar_lbs[i] in tar_removable_labels:
-                self.tar_lbs.pop(i)
-                self.tar_objs.pop(i)
-                self.tar_segs.pop(i)
-            else:
-                i += 1
+        if self.tar_file:
+            i = 0
+            while i < len(self.tar_objs):
+                if self.tar_lbs[i] in tar_removable_labels:
+                    self.tar_lbs.pop(i)
+                    self.tar_objs.pop(i)
+                    self.tar_segs.pop(i)
+                else:
+                    i += 1
         
         for i in range(len(self.test_objs)):
             j = 0
@@ -96,7 +100,9 @@ class ParsingEvaluation:
                     j += 1
 
     def evaluate(self):
-        tar_sketch = UnlabeledObject(np.concatenate([obj.get_strokes() for obj in self.tar_objs]))
+        if self.tar_file:
+            tar_sketch = UnlabeledObject(np.concatenate([obj.get_strokes() for obj in self.tar_objs]))
+        
         c , n = 0, 0
         tmp_sketch = []
         for sketch in self.test_objs:
@@ -118,17 +124,19 @@ class ParsingEvaluation:
         test_sketch_lst = [UnlabeledObject(np.concatenate([obj.get_strokes() for obj in sketch])) for sketch in self.test_objs]
 
         st = time.time()
-        clustering = DensityClustering(tar_sketch, test_sketch_lst)
-        pred_tar_objs, pred_tar_segs, pred_test_objs, pred_test_segs = clustering.mut_execlusive_cluster()
+        clustering = DBScanClustering(test_sketch_lst)
+        pred_test_objs, pred_test_segs = clustering.evaluate()
+        # clustering = DensityClustering(tar_sketch, test_sketch_lst)
+        # pred_tar_objs, pred_tar_segs, pred_test_objs, pred_test_segs = clustering.mut_execlusive_cluster()
         
-        tp = 0
-        for p_obj, lbl_lst in zip(pred_tar_objs, self.tar_lbs):
-            # if the object belong to the target sketch
-            if p_obj in self.tar_objs: 
-                    tp += 1
-            p_obj.visualize()
+        # tp = 0
+        # for p_obj, lbl_lst in zip(pred_tar_objs, self.tar_lbs):
+        #     # if the object belong to the target sketch
+        #     if p_obj in self.tar_objs: 
+        #             tp += 1
+        #     # p_obj.visualize()
         
-        print("[ParsingEvaluation] info: target object segmentation accuracy", tp/len(self.tar_objs))
+        # print("[ParsingEvaluation] info: target object segmentation accuracy", tp/len(self.tar_objs))
         
         n = sum([len(a) for a in pred_test_objs])
         print("[ParsingEvaluation] info: clustering predicted total", n, "objects")
@@ -147,21 +155,17 @@ class ParsingEvaluation:
                     else:
                         fn += 1
                         fn_objs.append(t_obj)
-                        obj.visualize()
-                        print("False negative embds dist: ", ObjectUtil.get_embedding_dist(t_obj, pred_tar_objs[2]))
 
                 else:
                     if t_obj not in p_objs:
                         tn += 1
                     
             for obj in p_objs:
+                # obj.visualize()
                 if obj not in t_objs:
                     fp_objs.append(obj)
-                    obj.visualize()
-                    print("False positive embds dist: ", ObjectUtil.get_embedding_dist(obj, pred_tar_objs[2]))
             
-
-
+            
         fp = n - tp
 
         # obtain clustered 
