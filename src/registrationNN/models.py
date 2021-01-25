@@ -16,6 +16,7 @@ from animator.SketchAnimation import SketchAnimation
 from sketchformer.builders.layers.transformer import Encoder, SelfAttnV1
 import copy
 from matplotlib import pyplot as plt
+import random as rnd
 
 class registration_model:
   
@@ -236,7 +237,7 @@ class registration_model:
 
         experiment_id = 1
         load = True
-        save = False
+        save = True
 
         if load:
             self.model = load_model("saved_models/experiment"+ str(experiment_id), custom_objects={'knn_loss': self.knn_loss})
@@ -259,7 +260,7 @@ class registration_model:
             self.init_model()
             # print("model summary", self.model.summary())
             # self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=10, callbacks=(epoch_callback()))
-            self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=500)
+            self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=100)
 
             # save the model 
             if save:
@@ -279,9 +280,19 @@ class registration_model:
         #     obj.transform(RegistrationUtils.obtain_transformation_matrix(p))
         
         for i in range(len(org_sketches)):
-            animation = SketchAnimation([org_objs[i]], [tar_objs[i]])
+            # animation = SketchAnimation([org_objs[i]], [tar_objs[i]])
             # print(RegistrationUtils.calc_dissimilarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p), target_dis=False))
-            animation.seq_animate_all([params[i]])
+            # animation.seq_animate_all([params[i]])
+            org_objs[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
         
-        # # tf.keras.utils.plot_model(self.model, to_file='model.png', show_layer_names=True, rankdir='TB', expand_
+        # visualize random 20 objects
+        inds = rnd.choices(range(len(org_sketches)), k=16)
+        fig, axs = plt.subplots(4, 4)
+        for i, ind in enumerate(inds):
+            org_objs[ind].visualize(ax=axs[int(i/4)][int(i%4)], show=False)
+            tar_objs[ind].visualize(ax=axs[int(i/4)][int(i%4)], show=False)
+            axs[int(i/4)][int(i%4)].set_axis_off()
+        
+        plt.show()
+        tf.keras.utils.plot_model(self.model, to_file='model.png', show_layer_names=True, rankdir='TB', show_shapes=True)
         

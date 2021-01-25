@@ -378,7 +378,7 @@ class ObjectUtil:
 
         # find the dimentions of the storkes and reduce
         for sketch in sketches:
-            mx_w, mx_h, mn_w, mn_w = -1, -1, 1e9, 1e9
+            mx_w, mx_h, mn_w, mn_h = -1, -1, 1e9, 1e9
             for stroke in sketch.get_strokes():
                 # get dimentions
                 mx_w = max([p.x for p in stroke.get_points()])
@@ -396,7 +396,7 @@ class ObjectUtil:
                     p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
         
         # reduce using rdp
-        # sketches = ObjectUtil.reduce_rdp(sketches, epsilon=eps)
+        sketches = ObjectUtil.reduce_rdp(sketches, epsilon=eps)
         # TODO: using rdp for some small sketches are making the sketch so small that it 
         # is raising an error in the sketchformer  when getting the embeddings.
 
@@ -487,6 +487,12 @@ class ObjectUtil:
         return ObjectUtil.sketchformer.get_embeddings(objs)
 
     @staticmethod
+    def get_embedding_dist(obj1, obj2):
+        embds = ObjectUtil.get_embedding([obj1, obj2])
+        return np.linalg.norm(embds[1] - embds[0])
+
+
+    @staticmethod
     def classify(objs):
         """classify the given sketches of the polyline format 
 
@@ -537,7 +543,7 @@ class ObjectUtil:
                         res_points.append(pt)
                         ind += 1
                 
-                if len(stroke) < mn_len:
+                if len(res_points) < mn_len:
                     reduced_strokes.append(stroke)
                 else:
                     reduced_strokes.append(Stroke(res_points))
