@@ -17,6 +17,7 @@ from sketchformer.builders.layers.transformer import Encoder, SelfAttnV1
 import copy
 from matplotlib import pyplot as plt
 import random as rnd
+import os
 
 class registration_model:
   
@@ -234,16 +235,25 @@ class registration_model:
         tar_sketches = np.expand_dims(tar_sketches, axis=-1)
         cmb_sketches = np.stack((org_sketches, tar_sketches), axis=1)
 
-
         experiment_id = 1
-        load = True
+        batch_size = 20
+        load = False
         save = True
+        cp_dir = "../registrationNN/saved_models/experiment{0}".format(str(experiment_id))
+        cp_path = cp_dir + "/cp-{epoch:04d}.ckpt"
+
+        if not os.path.isdir(cp_dir):
+            os.mkdir(cp_dir)
 
         if load:
-            self.model = load_model("saved_models/experiment"+ str(experiment_id), custom_objects={'knn_loss': self.knn_loss})
+            self.model = load_model(cp_dir, custom_objects={'knn_loss': self.knn_loss})
         
         else:
             # init model
+            cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=cp_path,
+                                                 save_weights_only=True,
+                                                 verbose=10,
+                                                 save_freq=10*batch_size)
             class epoch_callback(Callback):
                 def on_epoch_begin(self, epoch, logs=None):
                     params = self.model.predict((org_sketches, tar_sketches))
@@ -258,10 +268,14 @@ class registration_model:
                     print("End epoch {} of training; loss: {}".format(epoch, loss))
 
             self.init_model()
+
+            # restore latest checkpoint
+            latest_cp = tf.train.latest_checkpoint(cp_dir)
+            print(latest_cp)
+            self.model.load_weights(latest_cp)
             # print("model summary", self.model.summary())
             # self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=10, callbacks=(epoch_callback()))
-            self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=100)
-
+            self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=batch_size, epochs=100, callbacks=[cp_callback])
             # save the model 
             if save:
                 self.model.save("saved_models/experiment" + str(experiment_id))

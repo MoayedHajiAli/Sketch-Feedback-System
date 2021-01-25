@@ -25,15 +25,13 @@ import matplotlib.pyplot as plt
 dir = 'ASIST_Dataset/Data/Data_B/Circle'
 dir = path.join(path.abspath(path.join(__file__ ,"../../..")), dir)
 objs, labels = [], []
-n, N = 0, 120
+n, N = 0, 10
 for path in pathlib.Path(dir).iterdir():
     if n >= N:
         break
     a, b = ObjectUtil.xml_to_UnlabeledObjects(str(path))
-    if n > 110:
-        print(path)
-        objs.extend(a)
-        labels.extend(b)
+    objs.extend(a)
+    labels.extend(b)
     n += len(a)
 
 # print(len(objs))
