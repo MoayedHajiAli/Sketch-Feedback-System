@@ -236,7 +236,7 @@ class registration_model:
 
 
         experiment_id = 1
-        load = False
+        load = True
         save = True
 
         if load:
