@@ -239,15 +239,18 @@ class registration_model:
         batch_size = 20
         load = False
         save = True
+        gpu = True
         cp_dir = "../registrationNN/saved_models/experiment{0}".format(str(experiment_id))
         cp_path = cp_dir + "/cp-{epoch:04d}.ckpt"
 
         if not os.path.isdir(cp_dir):
             os.mkdir(cp_dir)
 
+        if gpu:
+            sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+            
         if load:
             self.model = load_model(cp_dir, custom_objects={'knn_loss': self.knn_loss})
-        
         else:
             # init model
             cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=cp_path,
