@@ -239,16 +239,12 @@ class registration_model:
         batch_size = 20
         load = False
         save = True
-        gpu = True
         cp_dir = "../registrationNN/saved_models/experiment{0}".format(str(experiment_id))
         cp_path = cp_dir + "/cp-{epoch:04d}.ckpt"
 
         if not os.path.isdir(cp_dir):
             os.mkdir(cp_dir)
 
-        if gpu:
-            sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
-            
         if load:
             self.model = load_model(cp_dir, custom_objects={'knn_loss': self.knn_loss})
         else:
@@ -303,13 +299,16 @@ class registration_model:
             org_objs[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
         
         # visualize random 20 objects
-        inds = rnd.choices(range(len(org_sketches)), k=16)
-        fig, axs = plt.subplots(4, 4)
-        for i, ind in enumerate(inds):
-            org_objs[ind].visualize(ax=axs[int(i/4)][int(i%4)], show=False)
-            tar_objs[ind].visualize(ax=axs[int(i/4)][int(i%4)], show=False)
-            axs[int(i/4)][int(i%4)].set_axis_off()
-        
-        plt.show()
+        for j in range(5):
+            inds = rnd.choices(range(len(org_sketches)), k=16)
+            fig, axs = plt.subplots(4, 4)
+            for i, ind in enumerate(inds):
+                org_objs[ind].visualize(ax=axs[int(i/4)][int(i%4)], show=False)
+                tar_objs[ind].visualize(ax=axs[int(i/4)][int(i%4)], show=False)
+                axs[int(i/4)][int(i%4)].set_axis_off()
+            
+            plt.savefig(cp_dir + "_res{0}.png".format(j))
+
+
         tf.keras.utils.plot_model(self.model, to_file='model.png', show_layer_names=True, rankdir='TB', show_shapes=True)
         
