@@ -25,19 +25,20 @@ import matplotlib.pyplot as plt
 dir = 'ASIST_Dataset/Data/Data_B/Circle'
 dir = path.join(path.abspath(path.join(__file__ ,"../../..")), dir)
 objs, labels = [], []
-n, N = 0, 10
+n, N = 0, 2500
 for path in pathlib.Path(dir).iterdir():
     if n >= N:
         break
     a, b = ObjectUtil.xml_to_UnlabeledObjects(str(path))
-    objs.extend(a)
-    labels.extend(b)
+    if n > 0:
+        objs.extend(a)
+        labels.extend(b)
     n += len(a)
-
+print("Total size: {0}".format(n))
 # print(len(objs))
-fig, axs = plt.subplots(4, 4)
-for i, obj in enumerate(objs):
-    obj.visualize(ax=axs[int(i/4), int(i%4)], show=False)
+# fig, axs = plt.subplots(4, 4)
+# for i, obj in enumerate(objs):
+#     obj.visualize(ax=axs[int(i/4), int(i%4)], show=False)
 
 # plt.show()
 registration_model(objs)

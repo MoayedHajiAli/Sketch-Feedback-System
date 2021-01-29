@@ -18,6 +18,7 @@ import copy
 from matplotlib import pyplot as plt
 import random as rnd
 import os
+from tensorflow.python.client import device_lib
 
 class registration_model:
   
@@ -209,7 +210,8 @@ class registration_model:
         self.model.compile(loss=self.knn_loss, optimizer=Adam(learning_rate=0.005), metrics=['accuracy'])
 
     def __init__(self, train_sketches):
-
+        print(device_lib.list_local_devices())
+        
         # convert train sketches into stroke-3 format
         train_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_sketches)
 
@@ -224,6 +226,7 @@ class registration_model:
                 org_sketches.append(np.array(train_sketches[i]))
                 tar_sketches.append(np.array(train_sketches[j]))
         
+        print("[models.py] finshed loading the data")
         # tar_sketches = np.array(train_sketches[0:10])
         # org_sketches = np.array(train_sketches[0:10])
         # org_sketches = org_sketches[:20]
@@ -235,9 +238,10 @@ class registration_model:
         tar_sketches = np.expand_dims(tar_sketches, axis=-1)
         cmb_sketches = np.stack((org_sketches, tar_sketches), axis=1)
 
-        experiment_id = 1
-        batch_size = 20
+        experiment_id = 2
+        batch_size = 256
         load = False
+        load_cp = True
         save = True
         cp_dir = "../registrationNN/saved_models/experiment{0}".format(str(experiment_id))
         cp_path = cp_dir + "/cp-{epoch:04d}.ckpt"
@@ -251,8 +255,7 @@ class registration_model:
             # init model
             cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=cp_path,
                                                  save_weights_only=True,
-                                                 verbose=10,
-                                                 save_freq=10*batch_size)
+                                                 verbose=10)
             class epoch_callback(Callback):
                 def on_epoch_begin(self, epoch, logs=None):
                     params = self.model.predict((org_sketches, tar_sketches))
@@ -270,14 +273,16 @@ class registration_model:
 
             # restore latest checkpoint
             latest_cp = tf.train.latest_checkpoint(cp_dir)
-            print(latest_cp)
-            self.model.load_weights(latest_cp)
-            # print("model summary", self.model.summary())
+            print("[model.py latest checkpoint is: ]", latest_cp)
+
+            if load_cp:
+                self.model.load_weights(latest_cp)
+            # # print("model summary", self.model.summary())
             # self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=10, callbacks=(epoch_callback()))
             self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=batch_size, epochs=100, callbacks=[cp_callback])
             # save the model 
             if save:
-                self.model.save("saved_models/experiment" + str(experiment_id))
+                self.model.save(cp_dir)
             
         # predict transformation
         params = self.model.predict((org_sketches, tar_sketches))
@@ -288,26 +293,35 @@ class registration_model:
         # visualize selected pairs
         org_objs = ObjectUtil.accumalitive_stroke3_to_poly(org_sketches)
         tar_objs = ObjectUtil.accumalitive_stroke3_to_poly(tar_sketches)
+        # org_transformed = copy.deepcopy(org_objs)
 
         # for obj, p in zip(org_objs, params):
         #     obj.transform(RegistrationUtils.obtain_transformation_matrix(p))
         
-        for i in range(len(org_sketches)):
-            # animation = SketchAnimation([org_objs[i]], [tar_objs[i]])
-            # print(RegistrationUtils.calc_dissimilarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p), target_dis=False))
-            # animation.seq_animate_all([params[i]])
-            org_objs[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
+        # for i in range(len(org_sketches)):
+        #     # animation = SketchAnimation([org_objs[i]], [tar_objs[i]])
+        #     # print(RegistrationUtils.calc_dissimilarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p), target_dis=False))
+        #     # animation.seq_animate_all([params[i]])
+        #     org_transformed[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
         
         # visualize random 20 objects
-        for j in range(5):
-            inds = rnd.choices(range(len(org_sketches)), k=16)
-            fig, axs = plt.subplots(4, 4)
+        vis_dir = "../registrationNN/saved_results/experiment{0}".format(str(experiment_id))
+        if not os.path.isdir(vis_dir):
+            os.mkdir(vis_dir)
+
+        print("[models.py] Saving visualizations")
+        for j in range(10):
+            inds = rnd.choices(range(len(org_sketches)), k=5)
+            fig, axs = plt.subplots(len(inds), 3)
             for i, ind in enumerate(inds):
-                org_objs[ind].visualize(ax=axs[int(i/4)][int(i%4)], show=False)
-                tar_objs[ind].visualize(ax=axs[int(i/4)][int(i%4)], show=False)
-                axs[int(i/4)][int(i%4)].set_axis_off()
-            
-            plt.savefig(cp_dir + "_res{0}.png".format(j))
+                org_objs[ind].reset()
+                org_objs[ind].visualize(ax=axs[i][0], show=False)
+                tar_objs[ind].visualize(ax=axs[i][1], show=False)
+                tar_objs[ind].visualize(ax=axs[i][2], show=False)
+                org_objs[ind].transform(RegistrationUtils.obtain_transformation_matrix(params[ind]))
+                org_objs[ind].visualize(ax=axs[i][2], show=False)
+
+            plt.savefig(vis_dir + "/res{0}.png".format(j))
 
 
         tf.keras.utils.plot_model(self.model, to_file='model.png', show_layer_names=True, rankdir='TB', show_shapes=True)
