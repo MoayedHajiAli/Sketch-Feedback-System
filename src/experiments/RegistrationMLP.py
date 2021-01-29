@@ -22,10 +22,10 @@ import matplotlib.pyplot as plt
 
 
 # train a MLP for registration
-dir = 'ASIST_Dataset/Data/Data_B/Circle'
+dir = 'ASIST_Dataset/Data/Data_B/Triangles'
 dir = path.join(path.abspath(path.join(__file__ ,"../../..")), dir)
 objs, labels = [], []
-n, N = 0, 2500
+n, N = 1200, 1300
 for path in pathlib.Path(dir).iterdir():
     if n >= N:
         break

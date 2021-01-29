@@ -238,9 +238,9 @@ class registration_model:
         tar_sketches = np.expand_dims(tar_sketches, axis=-1)
         cmb_sketches = np.stack((org_sketches, tar_sketches), axis=1)
 
-        experiment_id = 2
+        experiment_id = 3
         batch_size = 256
-        load = False
+        load = True
         load_cp = True
         save = True
         cp_dir = "../registrationNN/saved_models/experiment{0}".format(str(experiment_id))
