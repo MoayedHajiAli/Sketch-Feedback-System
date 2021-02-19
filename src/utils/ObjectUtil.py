@@ -570,17 +570,13 @@ class ObjectUtil:
         return reduced_objs
 
 
-    def extract_objects_from_directory(directory, n_files = -1, re_sampling=0.0, labels=None):
+    def extract_objects_from_directory(directory, n_files = -1, re_sampling=0.0, acceptable_labels=None):
         # objs : (N x M) M ordered objects for N sketches
         # labels: (N x M) for each object m in sketch n, store its label
         objs, labels = [], []
-
         for path in pathlib.Path(directory).iterdir():
             if path.is_dir():
-                tmp_n = -1
-                if n_files != -1:
-                    tmp_n = int(n_files/10)
-                tmp_objs, tmp_labels = ObjectUtil.extract_objects_from_directory(path, tmp_n)
+                tmp_objs, tmp_labels = ObjectUtil.extract_objects_from_directory(path, n_files, acceptable_labels=acceptable_labels)
                 if n_files != -1:
                     n_files -= len(tmp_objs)
                 objs.extend(tmp_objs)
@@ -593,11 +589,13 @@ class ObjectUtil:
                     try:
                         # extract all objects in the file along with their labels, and indices
                         tmp_objs, tmp_labels = ObjectUtil.xml_to_UnlabeledObjects(str(path), re_sampling=re_sampling)
-                        objs.extend(tmp_objs)
-                        labels.extend(tmp_labels)
-                        n_files -= len(tmp_objs)
+                        tmp_objs, tmp_labels = np.asarray(tmp_objs), np.asarray(tmp_labels) 
+                        inds = [i for i, lbl in enumerate(tmp_labels) if lbl in acceptable_labels]
+                        objs.extend(tmp_objs[inds])
+                        labels.extend(tmp_labels[inds])
+                        n_files -= len(inds)
                     except Exception as e: 
-                        print("ParsingEvaluation] error: could not read file succefully " + str(path))
+                        print("ObjectUtil] error: could not read file succefully " + str(path))
                         print(str(e))
         return objs, labels
 
