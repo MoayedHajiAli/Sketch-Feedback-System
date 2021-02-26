@@ -58,7 +58,7 @@ class RegistrationUtils:
         # a is the shearing parallel to the x axis
         # b is the shearing parallel to the y axis
     @staticmethod
-    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=10, fac_y=10):
+    def _shearing_cost(a, b, ln, fac_x=10, fac_y=10):
         a = abs(a)
         b = abs(b)
 
@@ -109,11 +109,11 @@ class RegistrationUtils:
     
     @staticmethod
     # obtain total transformation **parameters** cost
-    def total_transformation_cost(p, mn_x, mx_x, mn_y, mx_y, ln):
+    def total_transformation_cost(p, ln):
         tot = 0.0
         tot += RegistrationUtils._scaling_cost(p[0], p[1], ln) 
         tot += RegistrationUtils._rotation_cost(p[2], ln)
-        tot += RegistrationUtils._shearing_cost(p[3], p[4], mn_x, mn_y, mx_x, mx_y, ln)
+        tot += RegistrationUtils._shearing_cost(p[3], p[4], ln)
         tot += RegistrationUtils._translation_cost(p[5], p[6], ln)
         return 0
 

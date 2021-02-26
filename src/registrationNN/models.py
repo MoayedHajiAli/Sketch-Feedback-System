@@ -22,8 +22,13 @@ from tensorflow.python.client import device_lib
 from datetime import datetime
 
 class registration_model:
-  
+    
     def knn_loss(self, sketches, p):
+        # constants
+        scaling_f = 5
+        shearing_f = 5
+        rotation_f = 1.5
+
         sketches = tf.identity(sketches)
         # sketches (batch, 2, 126, 3, 1)  p(batch, 7)
         org = sketches[:, 0, :, :2, 0]
@@ -82,7 +87,19 @@ class registration_model:
         # normalize with the number of points
         sm_cost /= 128 - K.sum(org_pen, axis=-1) + 128 - K.sum(tar_pen, axis=-1) 
 
-        return sm_cost         
+        # add penalty to the transformation parameters
+        # @size p: (batch, 7)
+        # add scaling cost
+        tran_cost = sum(max(p[:, 0] ** 2, 1 / (p[:, 0] ** 2)) * scaling_f)
+        tran_cost += sum(max(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
+        # add roation cost
+        tran_cost += sum((p[:, 2] ** 2) * rotation_f)
+        # add shearing cost
+        tran_cost += sum((p[:, 3] ** 2) * shearing_f)
+        tran_cost += sum((p[:, 4] ** 2) * shearing_f)
+        # add shearing cost
+
+        return sm_cost + tran_cost        
 
     @staticmethod
     def np_knn_loss(sketches, p, maxlen=128):
@@ -258,14 +275,14 @@ class registration_model:
         val_tar_sketches = np.expand_dims(val_tar_sketches, axis=-1)
         val_cmb_sketches = np.stack((val_org_sketches, val_tar_sketches), axis=1)
 
-        batch_size = 256
+        batch_size = 64
         num_epochs = 100
         load = False
         load_cp = False
-        save = True
-        vis_train = True
-        vis_test = True
-        refine_prediction = True
+        save = False
+        vis_train = False
+        vis_test = False
+        refine_prediction = False
         iter_refine_prediction = False
         cp_dir = "../registrationNN/saved_models/experiment{0}".format(str(experiment_id))
         cp_path = cp_dir + "/cp-{epoch:04d}.ckpt"
@@ -298,12 +315,12 @@ class registration_model:
 
             self.init_model()
 
-            # restore latest checkpoint
-            latest_cp = tf.train.latest_checkpoint(cp_dir)
-            print("[model.py] latest checkpoint is:", latest_cp)
-
             if load_cp:
+                # restore latest checkpoint
+                latest_cp = tf.train.latest_checkpoint(cp_dir)
+                print("[model.py] latest checkpoint is:", latest_cp)
                 self.model.load_weights(latest_cp)
+
             # # print("model summary", self.model.summary())
             # self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=10, callbacks=(epoch_callback()))
             model_history = self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=batch_size, epochs=num_epochs, callbacks=[cp_callback],\
@@ -322,17 +339,20 @@ class registration_model:
 
         val_org_objs = ObjectUtil.accumalitive_stroke3_to_poly(val_org_sketches)
         val_tar_objs = ObjectUtil.accumalitive_stroke3_to_poly(val_tar_sketches)
-        # org_transformed = copy.deepcopy(org_objs)
 
-        # for obj, p in zip(org_objs, params):
-        #     obj.transform(RegistrationUtils.obtain_transformation_matrix(p))
-        
-        # for i in range(len(org_sketches)):
-        #     # animation = SketchAnimation([org_objs[i]], [tar_objs[i]])
-        #     # print(RegistrationUtils.calc_dissimilarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p), target_dis=False))
-        #     # animation.seq_animate_all([params[i]])
-        #     org_transformed[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
-        # visualize random 20 objects
+        if vis_transformation:
+            print("[models.py] visualizing transformation")
+            params = self.model.predict((org_sketches, tar_sketches))
+            inds = rnd.choices(range(len(org_sketches)), k=5)
+
+            for i in inds:
+                org_objs[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
+            
+            for i in inds:
+                animation = SketchAnimation([org_objs[i]], [tar_objs[i]])
+                animation.seq_animate_all([params[i]])
+                org_transformed[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
+
         if vis_train:
             tag = ""
             vis_dir = "../registrationNN/saved_results/experiment{0}".format(str(experiment_id))
@@ -345,7 +365,7 @@ class registration_model:
             print("[models.py] Saving training visualizations")
             params = self.model.predict((org_sketches, tar_sketches))
             for j in range(10):
-                inds = rnd.choices(range(len(org_sketches)), k=5)
+                inds = rnd.choices(range(len(org_objs)), k=5)
                 fig, axs = plt.subplots(len(inds), 3)
                 for i, ind in enumerate(inds):
                     org_objs[ind].reset()
