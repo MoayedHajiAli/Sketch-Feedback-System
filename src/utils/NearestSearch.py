@@ -26,8 +26,8 @@ class NearestSearch():
         c = np.log((1 + 0.01) / (1 - 0.01)) ** (1 / n)
         d = np.log((1 + 0.99) / (1 - 0.99)) ** (1 / n)
         def f(x):
+            x2 = (x - a) * (d - c) / (b - a) + c
             try:
-                x2 = (x - a) * (d - c) / (b - a) + c
                 #TODO: why >= 40? where did 40 come from? 
                 if (x2 ** n) >= 40:
                     return 1.0

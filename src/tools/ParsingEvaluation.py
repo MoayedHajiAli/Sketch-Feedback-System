@@ -15,7 +15,6 @@ import pandas as pd
 pd.set_option('max_columns', None)
 
 class ParsingEvaluation:
-
     def __init__(self, test_dir, tar_file=None, n_files=-1, re_sampling=0.0):
         self.test_dir = test_dir
         self.tar_file = tar_file
@@ -25,6 +24,26 @@ class ParsingEvaluation:
             self.tar_objs, self.tar_lbs, self.tar_segs = ObjectUtil.xml_to_IndexedUnlabeledObjects(tar_file, re_sampling=re_sampling)
             print("[ParsingEvaluation] taget object contains", len(self.tar_objs), "objects")
         self.test_objs, self.test_lbs, self.test_segs = self.explore(test_dir, n_files=n_files)
+        self.test_objs, self.test_lbs, self.test_segs = \
+                        np.asarray(self.test_objs), np.asarray(self.test_lbs), np.asarray(self.test_segs)
+
+        labels = [
+            'Arrow Up', 'Arrow Right', 'Arrow Left', 'Two Boxes', 'Two Boxes Null', "Star Bullet"
+            'Arrow Down', 'Star', 'Triangle', 'Circle', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus']
+        # discard any objects that are not in labels
+        c = 0
+        for i, (sketch, lbls, segs) in enumerate(zip(self.test_objs, self.test_lbs, self.test_segs)):    
+            sketch, lbls, segs = np.asarray(sketch), np.asarray(lbls), np.asarray(segs)
+            inds = np.asarray([j for j, lbl in enumerate(lbls) if lbl in labels])
+            if len(inds) == 0:
+                print("[ParsingEvaluation] warn: a sketch has no object of the accepted labels -- its labels are{0}".format(lbls))
+            else:
+                self.test_objs[c], self.test_lbs[c], self.test_segs[c] = \
+                    sketch[inds], lbls[inds], segs[inds]
+                c += 1
+
+        self.test_objs, self.test_lbs, self.test_segs = self.test_objs[:c], self.test_lbs[:c], self.test_segs[:c]
+        
         print("[ParsingEvaluation] testing directory contains", sum([len(a) for a in self.test_objs]), "objects")
         self.n_files = n_files
 
@@ -99,7 +118,7 @@ class ParsingEvaluation:
                 else:
                     j += 1
 
-    def evaluate(self):
+    def evaluate(self, save_dir=None):
         if self.tar_file:
             tar_sketch = UnlabeledObject(np.concatenate([obj.get_strokes() for obj in self.tar_objs]))
         
@@ -125,7 +144,7 @@ class ParsingEvaluation:
 
         st = time.time()
         clustering = DBScanClustering(test_sketch_lst)
-        pred_test_objs, pred_test_segs = clustering.evaluate()
+        pred_test_objs, pred_test_segs = clustering.evaluate(np.concatenate(self.test_objs), save_dir=save_dir)
         # clustering = DensityClustering(tar_sketch, test_sketch_lst)
         # pred_tar_objs, pred_tar_segs, pred_test_objs, pred_test_segs = clustering.mut_execlusive_cluster()
         

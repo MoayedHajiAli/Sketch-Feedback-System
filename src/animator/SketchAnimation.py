@@ -11,7 +11,7 @@ class SketchAnimation():
 
     original_labels = []
     target_labels = []
-    dim = [[-500, 500], [-500, 500]]
+    dim = [[0, 2000], [-200, 1000]]
     
     fig, ax = plt.gcf(), plt.gca()
     
@@ -152,6 +152,23 @@ class SketchAnimation():
 
         return self.get_all_patches()
 
+    def _seq_obj_anim(self, i, obj_steps, steps, trans_matrix):
+        obj_ind = int(i/obj_steps)
+        if (i % obj_steps) % steps == 0:
+            # apply the next transformation
+            ind = int((i % obj_steps)/steps)
+            print(i, ind, obj_ind)
+            self.original_obj[obj_ind].upd_step_vector(trans_matrix[obj_ind][ind])
+            time.sleep(0.2)
+
+        # move objects
+        self.original_obj[obj_ind].move_step(steps)
+        for pt_lst, obj in zip(self.original_patches, self.original_obj):
+            for pt, stroke in zip(pt_lst, obj.get_strokes()):
+                pt.set_data(stroke.get_x(), stroke.get_y())
+
+        return self.get_all_patches()
+
     # animate according to the transformation parameters p, where p has 7 parameters as follows:
         # p[0]: the scaling the x direction
         # p[1]: the scaling the y direction
@@ -170,9 +187,9 @@ class SketchAnimation():
             t.append(RegistrationUtils.get_seq_translation_matrices(p))
 
         # animate
-        anim = animation.FuncAnimation(self.fig, func=self._seq_anim,
-                                       init_func=self._init_animation, frames=5 * steps, interval=1, blit=True,
-                                       repeat_delay=2000, fargs=[steps, t], repeat=False)
+        anim = animation.FuncAnimation(self.fig, func=self._seq_obj_anim,
+                                       init_func=self._init_animation, frames=5 * 5 * steps, interval=1, blit=True,
+                                       repeat_delay=2000, fargs=[5 * steps, steps, t], repeat=False)
         if save:
             self._save_anim(anim, file)
         plt.show()

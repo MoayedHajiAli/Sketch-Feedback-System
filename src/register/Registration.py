@@ -37,7 +37,7 @@ class Registration:
     # original_strokes_collection = [[0, 1, 2, 6], [3, 4, 5], [7, 8, 9], [10], [11], [12], [13], [14]] 
     # target_strokes_collection = [[0], [1], [2], [3], [4], [5]]
 
-    def __init__(self, org_file, tar_file, re_sampling=1.0, mn_stroke_len=0, flip=False, shift_target_x = 0.0, shift_target_y = 0.0,
+    def __init__(self, org_file, tar_file, re_sampling=1.0, mn_stroke_len=0, flip=False, shift_target_x = 1000.0, shift_target_y = 1000.0,
                  shearing_cost=RegistrationUtils._shearing_cost, translation_cost=RegistrationUtils._translation_cost,
                  rotation_cost=RegistrationUtils._rotation_cost, scaling_cost=RegistrationUtils._scaling_cost):
 
@@ -72,7 +72,6 @@ class Registration:
         # fill the result in the res_matrix
         t = 0
         for i in range(dim):
-            print(i)
             # t = np.random.rand(7)
             for j in range(dim):
                 if i >= n or j >= m:
@@ -84,6 +83,7 @@ class Registration:
                 self.tra_matrix[i, j] = p
         
         print("res_matrix", self.res_matrix)
+        self.res_matrix = np.asarray(self.res_matrix)
 
         # calculate the minimum assignment
         org_asg, tar_asg, total_cost = lapjv(self.res_matrix)
@@ -93,12 +93,13 @@ class Registration:
 
         for i, ind in enumerate(org_asg):
             dissimilarity = self.res_matrix[i, ind]
-            if i < n and ind < m:
-                ln = max(len(self.original_obj[i]), len(self.target_obj[ind]))
-                ref_obj = ObjectUtil.object_restructure(self.original_obj[i], n=ln)
-                tar_obj = ObjectUtil.object_restructure(self.target_obj[ind], n=ln)
-                dissimilarity = RegistrationUtils.calc_dissimilarity(ref_obj, tar_obj, self.tra_matrix[i, ind], cum_ang=True, turning_ang=False)
-            print(dissimilarity, self.res_matrix[i, ind])
+            # if i < n and ind < m:
+            #     ln = max(len(self.original_obj[i]), len(self.target_obj[ind]))
+            #     ref_obj = ObjectUtil.object_restructure(self.original_obj[i], n=ln)
+            #     tar_obj = ObjectUtil.object_restructure(self.target_obj[ind], n=ln)
+            #     dissimilarity = RegistrationUtils.calc_dissimilarity(ref_obj, tar_obj, self.tra_matrix[i, ind], cum_ang=False, turning_ang=False)
+            # print(dissimilarity, self.res_matrix[i, ind])
+            
             # check if one of the objects is dummy or their dissimilarity is above the maximum threshold
             if dissimilarity > mx_dissimilarity:
                 diff = dissimilarity != RegistrationUtils.inf

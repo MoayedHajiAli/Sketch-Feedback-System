@@ -25,6 +25,9 @@ class Stroke:
             return self.len() == len(other) and all([x == y for x, y in zip(self.get_points(), other.get_points())])
         else:
             return False
+    
+    def __str__(self):
+        return '[' + ', '.join([str(pt) for pt in self.get_points()]) + ']'
 
     def move_step(self, steps):
         for p, v in zip(self.points_lst, self.step_vector):
