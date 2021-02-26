@@ -19,6 +19,7 @@ from matplotlib import pyplot as plt
 import random as rnd
 import os
 from tensorflow.python.client import device_lib
+from datetime import datetime
 
 class registration_model:
   
@@ -209,40 +210,64 @@ class registration_model:
         self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
         self.model.compile(loss=self.knn_loss, optimizer=Adam(learning_rate=0.005), metrics=['accuracy'])
 
-    def __init__(self, train_sketches):
+    def __init__(self, train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches, k=-1):
         print(device_lib.list_local_devices())
-        
-        # convert train sketches into stroke-3 format
-        train_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_sketches)
+        print(len(train_org_sketches), len(train_tar_sketches))
+        # convert sketches into stroke-3 format
+        train_org_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_org_sketches)
+        train_tar_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_tar_sketches)
+        val_org_sketches = ObjectUtil.poly_to_accumulative_stroke3(val_org_sketches)
+        val_tar_sketches = ObjectUtil.poly_to_accumulative_stroke3(val_tar_sketches)
 
         # add padding
-        train_sketches = self._pad_sketches(train_sketches, maxlen=128)
-        # train_sketches = pad_sequences(train_sketches, maxlen=128)
+        train_org_sketches = self._pad_sketches(train_org_sketches, maxlen=128)
+        train_tar_sketches = self._pad_sketches(train_tar_sketches, maxlen=128)
+        val_org_sketches = self._pad_sketches(val_org_sketches, maxlen=128)
+        val_tar_sketches = self._pad_sketches(val_tar_sketches, maxlen=128)
 
+        print(len(train_org_sketches), len(train_tar_sketches))
         # add every pair of objects to the training set
-        org_sketches, tar_sketches = [], []
-        for i in range(len(train_sketches)):
-            for j in range(len(train_sketches)):
-                org_sketches.append(np.array(train_sketches[i]))
-                tar_sketches.append(np.array(train_sketches[j]))
+        # org_sketches, tar_sketches = [], []
+        # for i in range(len(train_sketches)):
+        #     if k == -1:
+        #         inds = range(len(train_sketches))
+        #     else:
+        #         inds = rnd.choices(range(len(train_sketches)), k=k)
+        #     for j in inds:
+        #         org_sketches.append(np.array(train_sketches[i]))
+        #         tar_sketches.append(np.array(train_sketches[j]))
+        org_sketches, tar_sketches = train_org_sketches, train_tar_sketches
+        # add every pair of objects to the training set
+        # val_org_sketches, val_tar_sketches = [], []
+        # for i in range(len(val_sketches)):
+        #     for j in range(len(val_sketches)):
+        #         val_org_sketches.append(np.array(val_sketches[i]))
+        #         val_tar_sketches.append(np.array(val_sketches[j]))
         
         print("[models.py] finshed loading the data")
-        # tar_sketches = np.array(train_sketches[0:10])
-        # org_sketches = np.array(train_sketches[0:10])
-        # org_sketches = org_sketches[:20]
-        # tar_sketches = tar_sketches[:20]
-        # test tranlation
-        # org_sketches = train_sketches[0:5]
-        # tar_sketches = train_sketches[0:5]
         org_sketches = np.expand_dims(org_sketches, axis=-1)
         tar_sketches = np.expand_dims(tar_sketches, axis=-1)
+        print(len(org_sketches))
+        print(len(tar_sketches))
+        print(org_sketches.shape)
+        print(tar_sketches.shape)
         cmb_sketches = np.stack((org_sketches, tar_sketches), axis=1)
 
-        experiment_id = 3
+        # validation
+        val_org_sketches = np.expand_dims(val_org_sketches, axis=-1)
+        val_tar_sketches = np.expand_dims(val_tar_sketches, axis=-1)
+        val_cmb_sketches = np.stack((val_org_sketches, val_tar_sketches), axis=1)
+
+        experiment_id = 5
         batch_size = 256
-        load = True
-        load_cp = True
+        num_epochs = 10
+        load = False
+        load_cp = False
         save = True
+        vis_train = True
+        vis_test = True
+        refine_prediction = True
+        iter_refine_prediction = True
         cp_dir = "../registrationNN/saved_models/experiment{0}".format(str(experiment_id))
         cp_path = cp_dir + "/cp-{epoch:04d}.ckpt"
 
@@ -250,6 +275,7 @@ class registration_model:
             os.mkdir(cp_dir)
 
         if load:
+            print("[model.py] loading saved model of experiment", experiment_id)
             self.model = load_model(cp_dir, custom_objects={'knn_loss': self.knn_loss})
         else:
             # init model
@@ -268,31 +294,35 @@ class registration_model:
                     print("End epoch {} of training; params predictions: {}".format(epoch, params[0:1]))
                     loss = registration_model.np_knn_loss(cmb_sketches[0:1], params[0:1])
                     print("End epoch {} of training; loss: {}".format(epoch, loss))
+                
 
             self.init_model()
 
             # restore latest checkpoint
             latest_cp = tf.train.latest_checkpoint(cp_dir)
-            print("[model.py latest checkpoint is: ]", latest_cp)
+            print("[model.py] latest checkpoint is:", latest_cp)
 
             if load_cp:
                 self.model.load_weights(latest_cp)
             # # print("model summary", self.model.summary())
             # self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=20, epochs=10, callbacks=(epoch_callback()))
-            self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=batch_size, epochs=100, callbacks=[cp_callback])
+            model_history = self.model.fit(x=[org_sketches, tar_sketches], y=cmb_sketches, batch_size=batch_size, epochs=num_epochs, callbacks=[cp_callback],\
+                            validation_data=([val_org_sketches, val_tar_sketches], val_cmb_sketches))
+            
             # save the model 
             if save:
+                print("[model.py] saving new model of experiment ", experiment_id)
                 self.model.save(cp_dir)
             
-        # predict transformation
-        params = self.model.predict((org_sketches, tar_sketches))
-        print("params", params)
-
-
-        print("resulted loss", self.np_knn_loss(cmb_sketches, params))
+        # print("resulted loss", self.np_knn_loss(cmb_sketches, params))
+        
         # visualize selected pairs
         org_objs = ObjectUtil.accumalitive_stroke3_to_poly(org_sketches)
         tar_objs = ObjectUtil.accumalitive_stroke3_to_poly(tar_sketches)
+
+        val_org_objs = ObjectUtil.accumalitive_stroke3_to_poly(val_org_sketches)
+        val_tar_objs = ObjectUtil.accumalitive_stroke3_to_poly(val_tar_sketches)
+        print("first obj len", len(val_org_objs[0]), len(val_org_objs[1]))
         # org_transformed = copy.deepcopy(org_objs)
 
         # for obj, p in zip(org_objs, params):
@@ -303,26 +333,170 @@ class registration_model:
         #     # print(RegistrationUtils.calc_dissimilarity(obj1, obj2, RegistrationUtils.obtain_transformation_matrix(p), target_dis=False))
         #     # animation.seq_animate_all([params[i]])
         #     org_transformed[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
-        
+        print("here")
         # visualize random 20 objects
-        vis_dir = "../registrationNN/saved_results/experiment{0}".format(str(experiment_id))
-        if not os.path.isdir(vis_dir):
-            os.mkdir(vis_dir)
+        if vis_train:
+            tag = ""
+            vis_dir = "../registrationNN/saved_results/experiment{0}".format(str(experiment_id))
+            if not os.path.isdir(vis_dir):
+                os.mkdir(vis_dir)
+            vis_dir = os.path.join(vis_dir, 'on_training')
+            if not os.path.isdir(vis_dir):
+                os.mkdir(vis_dir)
 
-        print("[models.py] Saving visualizations")
-        for j in range(10):
-            inds = rnd.choices(range(len(org_sketches)), k=5)
-            fig, axs = plt.subplots(len(inds), 3)
-            for i, ind in enumerate(inds):
-                org_objs[ind].reset()
-                org_objs[ind].visualize(ax=axs[i][0], show=False)
-                tar_objs[ind].visualize(ax=axs[i][1], show=False)
-                tar_objs[ind].visualize(ax=axs[i][2], show=False)
-                org_objs[ind].transform(RegistrationUtils.obtain_transformation_matrix(params[ind]))
-                org_objs[ind].visualize(ax=axs[i][2], show=False)
+            print("[models.py] Saving training visualizations")
+            params = self.model.predict((org_sketches, tar_sketches))
+            for j in range(10):
+                inds = rnd.choices(range(len(org_sketches)), k=5)
+                fig, axs = plt.subplots(len(inds), 3)
+                for i, ind in enumerate(inds):
+                    org_objs[ind].reset()
+                    org_objs[ind].visualize(ax=axs[i][0], show=False)
+                    tar_objs[ind].visualize(ax=axs[i][1], show=False)
+                    tar_objs[ind].visualize(ax=axs[i][2], show=False)
+                    org_objs[ind].transform(RegistrationUtils.obtain_transformation_matrix(params[ind]))
+                    org_objs[ind].visualize(ax=axs[i][2], show=False)
+                    org_objs[ind].reset()
+                    
+                plt.savefig(vis_dir + "/res{0}-{1}.png".format(j, tag))
 
-            plt.savefig(vis_dir + "/res{0}.png".format(j))
+            train_loss = model_history.history['loss']
+            xc = range(num_epochs)
+            ax = plt.subplot()
+            ax.set_title("Training loss")
+            ax.set_xlabel("Epochs")
+            ax.set_ylabel("loss")
+            ax.plot(xc, train_loss)
+            plt.savefig(vis_dir + "/epochs-loss.png")
+
+        # visualizing the validation
+        if vis_test:
+            tag = "without-refinment"
+            # predict transformation
+            print("predicting")
+            params = self.model.predict((val_org_sketches, val_tar_sketches))
+            print("resulted average loss without refinment", np.mean(self.np_knn_loss(val_cmb_sketches, params)))
+            vis_dir = "../registrationNN/saved_results/experiment{0}/on_testing".format(str(experiment_id))
+            if not os.path.isdir(vis_dir):
+                os.mkdir(vis_dir)
+
+            print("[models.py] Saving testing visualizations")
+            for j in range(10):
+                # inds = rnd.choices(range(len(val_org_sketches)), k=5)
+                inds = np.concatenate([[0], rnd.choices(range(len(val_org_sketches)), k=4)])
+                fig, axs = plt.subplots(len(inds), 3)
+                for i, ind in enumerate(inds):
+                    val_org_objs[ind].reset()
+                    val_org_objs[ind].visualize(ax=axs[i][0], show=False)
+                    val_tar_objs[ind].visualize(ax=axs[i][1], show=False)
+                    val_tar_objs[ind].visualize(ax=axs[i][2], show=False)
+                    val_org_objs[ind].transform(RegistrationUtils.obtain_transformation_matrix(params[ind]))
+                    val_org_objs[ind].visualize(ax=axs[i][2], show=False)
+                    val_org_objs[ind].reset()
+
+                plt.savefig(vis_dir + "/res{0}-{1}.png".format(j, tag))
+            
+            if refine_prediction:
+                tag = "with-refinement"
+                refine_epochs = 10
+                refine_history = self.model.fit(x=[val_org_sketches, val_tar_sketches], y=val_cmb_sketches, batch_size=batch_size, epochs=refine_epochs)
+                # visualize loss
+                ax = plt.subplot()
+                ax.set_title("Testing loss")
+                ax.set_xlabel("Epochs")
+                ax.set_ylabel("loss")
+                ax.plot(range(refine_epochs), refine_history.history['loss'])
+                plt.savefig(vis_dir + "/refine-epochs-loss{0}.png".format(tag))
+                params = self.model.predict((val_org_sketches, val_tar_sketches))
+                print("resulted average loss after refinment", np.mean(self.np_knn_loss(val_cmb_sketches, params)))
+
+                # TEST: uncomment
+                print("[models.py] Saving testing visualizations")
+                for j in range(10):
+                    # inds = rnd.choices(range(len(val_org_sketches)), k=5)
+                    inds = np.concatenate([[0], rnd.choices(range(len(val_org_sketches)), k=4)])
+                    fig, axs = plt.subplots(len(inds), 3)
+                    for i, ind in enumerate(inds):
+                        val_org_objs[ind].visualize(ax=axs[i][0], show=False)
+                        val_tar_objs[ind].visualize(ax=axs[i][1], show=False)
+                        val_tar_objs[ind].visualize(ax=axs[i][2], show=False)
+                        val_org_objs[ind].transform(RegistrationUtils.obtain_transformation_matrix(params[ind]))
+                        val_org_objs[ind].visualize(ax=axs[i][2], show=False)
+                        val_org_objs[ind].reset()
+
+                    plt.savefig(vis_dir + "/res{0}-{1}.png".format(j, tag))
+            
+            if iter_refine_prediction:
+                print("[registration_model] predicting with iterative refinement")
+                tag = "with-iter-refinement"
+                refine_iter = 10
+                N = 7
+                # choose random k indices
+                # TEST: for now always including an identical object in the visualization
+                inds = np.concatenate([[0], rnd.choices(range(len(val_org_sketches)), k=N-1)])
+                for i in range(refine_iter):
+                    params = self.model.predict((val_org_sketches, val_tar_sketches))
+                    print("resulted average loss with iterative refinment at iter {0}: {1}".format(i, np.mean(self.np_knn_loss(val_cmb_sketches, params))))
+                    # visualize first 5 sketches
+                    fig, axs = plt.subplots(N, 3)
+                    for j, ind in enumerate(inds):
+                        print(params[ind])
+                        val_org_objs[ind].visualize(ax=axs[j][0], show=False)
+                        val_tar_objs[ind].visualize(ax=axs[j][1], show=False)
+                        val_tar_objs[ind].visualize(ax=axs[j][2], show=False)
+                        val_org_objs[ind].transform(RegistrationUtils.obtain_transformation_matrix(params[ind]))
+                        val_org_objs[ind].visualize(ax=axs[j][2], show=False)
+                    
+                    plt.savefig(vis_dir + "/iter{0}-{1}.png".format(i, tag))
+
+                    # transform all validation sketches
+                    for j in range(len(val_org_objs)):
+                        if j in inds:
+                            continue
+                        val_org_objs[j].transform(RegistrationUtils.obtain_transformation_matrix(params[ind]))
 
 
-        tf.keras.utils.plot_model(self.model, to_file='model.png', show_layer_names=True, rankdir='TB', show_shapes=True)
+                    # obtain stroke 3 representation
+                    val_org_sketches = ObjectUtil.poly_to_accumulative_stroke3(val_org_objs, red_rdp=False, normalize=False)
+                    val_org_sketches = self._pad_sketches(val_org_sketches, maxlen=128)
+                    val_org_sketches = np.expand_dims(val_org_sketches, axis=-1)
+                    val_cmb_sketches = np.stack((val_org_sketches, val_tar_sketches), axis=1)
+                    # obtain objs from stroke 3 represtentation
+                    val_org_objs = ObjectUtil.accumalitive_stroke3_to_poly(val_org_sketches)
+
+
+
+                # visualize loss
+                ax = plt.subplot()
+                ax.set_title("Testing loss")
+                ax.set_xlabel("Epochs")
+                ax.set_ylabel("loss")
+                ax.plot(range(refine_epochs), refine_history.history['loss'])
+                plt.savefig(vis_dir + "/refine-epochs-loss{0}.png".format(tag))
+                params = self.model.predict((val_org_sketches, val_tar_sketches))
+                print("resulted average loss after refinment", np.mean(self.np_knn_loss(val_cmb_sketches, params)))
+
+                print("[registration_model] Saving testing visualizations")
+                for j in range(10):
+                    inds = rnd.choices(range(len(val_org_sketches)), k=5)
+                    fig, axs = plt.subplots(len(inds), 3)
+                    for i, ind in enumerate(inds):
+                        val_org_objs[ind].reset()
+                        val_org_objs[ind].visualize(ax=axs[i][0], show=False)
+                        val_tar_objs[ind].visualize(ax=axs[i][1], show=False)
+                        val_tar_objs[ind].visualize(ax=axs[i][2], show=False)
+                        val_org_objs[ind].transform(RegistrationUtils.obtain_transformation_matrix(params[ind]))
+                        val_org_objs[ind].visualize(ax=axs[i][2], show=False)
+
+                    plt.savefig(vis_dir + "/res{0}-{1}.png".format(j, tag))
+            # visualize loss
+            val_loss  = model_history.history['val_loss']
+            xc = range(num_epochs)
+            ax = plt.subplot()
+            ax.set_title("Testing loss")
+            ax.set_xlabel("Epochs")
+            ax.set_ylabel("loss")
+            ax.plot(xc, val_loss)
+            plt.savefig(vis_dir + "/epochs-loss{0}.png".format(str(datetime.now())))
+        # tf.keras.utils.plot_model(self.model, to_file='model.png', show_layer_names=True, rankdir='TB', show_shapes=True)
         
