@@ -20,6 +20,8 @@ import pathlib
 import os.path as path
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+import random
+import os
 
 
 
@@ -61,22 +63,32 @@ from sklearn.model_selection import train_test_split
 # for i, obj in enumerate(objs):
 #     obj.visualize(ax=axs[int(i/4), int(i%4)], show=False)
 
-dir = 'ASIST_Dataset/Data/Data_A/'
+dir = 'ASIST_Dataset/Data/Data_A'
 dir = path.join(path.abspath(path.join(__file__ ,"../../..")), dir)
-K = 100
+K = 200
 org_objs, tar_objs = [], []
-objs, labels = ObjectUtil.extract_objects_from_directory(dir, n_files=5000, labels=['circle'])
-labels = np.asarray(labels)
-objs = np.asarray(objs)
+objs, labels = ObjectUtil.extract_objects_from_directory(dir, n_files=5000, \
+                acceptable_labels=['Circle', 'Star', 'Triangle', 'Star Bullet', 'Square', 'Arrow Right', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus'])
+labels, objs = np.asarray(labels), np.asarray(objs)
+
 for obj, lbl in zip(objs, labels):
     matched_objs = objs[labels == lbl]
-    matched_objs = matched_objs[:min(K, len(matched_objs))]
+    # choose k random matched objects
+    matched_objs = random.choices(matched_objs, k=K)
+    # matched_objs = matched_objs[:min(K, len(matched_objs))]
     for obj2 in matched_objs:
         org_objs.append(obj)
         tar_objs.append(obj2)
 
+
 # split train test
 train_org_sketches, val_org_sketches, train_tar_sketches, val_tar_sketches = train_test_split(org_objs, tar_objs, test_size=0.2)
-print(len(train_org_sketches), len(train_tar_sketches))
+
+experiment_id = 7
+save_dir = '../registrationNN/saved_models/experiment{0}'.format(experiment_id)
+if not os.path.isdir(save_dir):
+    os.mkdir(save_dir)
+# redirect output to log
+sys.stdout = open(os.path.join(save_dir, 'log.out'), 'w+')
 # plt.show()
-registration_model(train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches)
+registration_model(train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches, experiment_id=experiment_id)
