@@ -90,7 +90,7 @@ class registration_model:
         # add penalty to the transformation parameters
         # @size p: (batch, 7)
         # add scaling cost
-        tran_cost = sum(max(p[:, 0] ** 2, 1 / (p[:, 0] ** 2)) * scaling_f)
+        tran_cost = sum(max(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
         tran_cost += sum(max(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
         # add roation cost
         tran_cost += sum((p[:, 2] ** 2) * rotation_f)
@@ -99,7 +99,7 @@ class registration_model:
         tran_cost += sum((p[:, 4] ** 2) * shearing_f)
         # add shearing cost
 
-        return sm_cost + tran_cost        
+        return sm_cost         
 
     @staticmethod
     def np_knn_loss(sketches, p, maxlen=128):
@@ -162,6 +162,7 @@ class registration_model:
         sm_cost /= maxlen - np.sum(org_pen, axis=-1) + maxlen - np.sum(tar_pen, axis=-1) 
 
         return sm_cost     
+
 
 
     def _pad_sketches(self, sketches, maxlen=128, inf=1e9):
@@ -328,7 +329,7 @@ class registration_model:
             
             # save the model 
             if save:
-                print("[model.py] saving new model of experiment ", experiment_id)
+                print("[model.py] saving new model of experiment", experiment_id)
                 self.model.save(cp_dir)
             
         # print("resulted loss", self.np_knn_loss(cmb_sketches, params))
