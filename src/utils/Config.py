@@ -16,9 +16,9 @@ class Config:
         model_config.dataset_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), 'ASIST_Dataset/Data/Data_A')
 
         # model related
-        model_config.batch_size = 64
-        model_config.learning_rate = 5e4
-        model_config.epochs = 100
+        model_config.batch_size = 128
+        model_config.learning_rate = 2e-3
+        model_config.epochs = 200
         model_config.load = False
         model_config.load_ckpt = False
         model_config.save = True
