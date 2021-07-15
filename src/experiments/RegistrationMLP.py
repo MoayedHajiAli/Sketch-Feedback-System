@@ -1,29 +1,15 @@
 import sys
 sys.path.insert(0, '../')
 
-from animator.SketchAnimation import SketchAnimation
-from register.Registration import Registration, RegisterTwoObjects
-from matplotlib import pyplot as plt
 import numpy as np
-from utils.RegistrationUtils import RegistrationUtils
-from utils.ObjectUtil import ObjectUtil
-import copy
-from sketch_object.UnlabeledObject import UnlabeledObject
-from sketch_object.Stroke import Stroke
-from tools.ClassEvaluation import ClassEvaluation
-from tools.ObjectParsing import ObjectParsing
-from tools.StrokeClustering import DensityClustering
-from tools.ParsingEvaluation import ParsingEvaluation
+from utils.Config import Config 
 from registrationNN.models import registration_model
-import time
-import pathlib
-import os.path as path
-import matplotlib.pyplot as plt
+from utils.ObjectUtil import ObjectUtil
 from sklearn.model_selection import train_test_split
-import random
 import os
-
-
+from munch import Munch
+import time
+import random
 
 # # train a MLP for registration
 # dir = 'ASIST_Dataset/Data/Data_B/Circle'
@@ -63,19 +49,27 @@ import os
 # for i, obj in enumerate(objs):
 #     obj.visualize(ax=axs[int(i/4), int(i%4)], show=False)
 
-dir = 'ASIST_Dataset/Data/Data_A'
-dir = path.join(path.abspath(path.join(__file__ ,"../../..")), dir)
-K = 200
+
+
+model_config = Config.default_model_config(10)
+model_config.n_files = 10
+model_config.k_select = 5
+model_config.epochs = 5
+model_config.num_vis_samples = 3 
+
+print(f"[RegisterationMLP.py] {time.ctime()}: Expermint {model_config.exp_id} started")
+
 org_objs, tar_objs = [], []
-objs, labels = ObjectUtil.extract_objects_from_directory(dir, n_files=5000, \
-                acceptable_labels=['Circle', 'Star', 'Triangle', 'Star Bullet', 'Square', 'Arrow Right', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus'])
+objs, labels = ObjectUtil.extract_objects_from_directory(model_config.dataset_path, n_files=model_config.n_files, \
+                acceptable_labels=model_config.obj_accepted_labels)
 labels, objs = np.asarray(labels), np.asarray(objs)
 
 for obj, lbl in zip(objs, labels):
     matched_objs = objs[labels == lbl]
+
     # choose k random matched objects
-    matched_objs = random.choices(matched_objs, k=K)
-    # matched_objs = matched_objs[:min(K, len(matched_objs))]
+    matched_objs = random.choices(matched_objs, k=model_config.k_select)
+
     for obj2 in matched_objs:
         org_objs.append(obj)
         tar_objs.append(obj2)
@@ -84,11 +78,8 @@ for obj, lbl in zip(objs, labels):
 # split train test
 train_org_sketches, val_org_sketches, train_tar_sketches, val_tar_sketches = train_test_split(org_objs, tar_objs, test_size=0.2)
 
-experiment_id = 7
-save_dir = '../registrationNN/saved_models/experiment{0}'.format(experiment_id)
-if not os.path.isdir(save_dir):
-    os.mkdir(save_dir)
 # redirect output to log
-sys.stdout = open(os.path.join(save_dir, 'log.out'), 'w+')
-# plt.show()
-registration_model(train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches, experiment_id=experiment_id)
+# sys.stdout = open(os.path.join(model_config.exp_dir, 'log.out'), 'w+')
+
+
+registration_model(train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches, model_config)
