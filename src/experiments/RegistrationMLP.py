@@ -3,7 +3,7 @@ sys.path.insert(0, '../')
 
 import numpy as np
 from utils.Config import Config 
-from registrationNN.models import registration_model
+from registrationNN.models import registration_model, model_visualizer
 from utils.ObjectUtil import ObjectUtil
 from sklearn.model_selection import train_test_split
 import os
@@ -53,8 +53,8 @@ import random
 
 model_config = Config.default_model_config(10)
 model_config.n_files = 20
-model_config.k_select = 5
-model_config.epochs = 200
+model_config.k_select = 2
+model_config.epochs = 5
 model_config.num_vis_samples = 5 
 model_config.obj_accepted_labels = ['Circle', 'Star', 'Triangle']
 
@@ -77,10 +77,13 @@ for obj, lbl in zip(objs, labels):
 
 
 # split train test
-train_org_sketches, val_org_sketches, train_tar_sketches, val_tar_sketches = train_test_split(org_objs, tar_objs, test_size=0.2)
+train_org_sketches, val_org_sketches, train_tar_sketches, val_tar_sketches = train_test_split(org_objs, tar_objs, random_state=model_config.seed, test_size=0.2)
 
 # redirect output to log
 # sys.stdout = open(os.path.join(model_config.exp_dir, 'log.out'), 'w+')
 
+model = registration_model(model_config)
+model.fit(train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches)
 
-registration_model(train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches, model_config)
+# visualize model and save results
+model_visualizer.visualize_model(model, train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches, model_config)

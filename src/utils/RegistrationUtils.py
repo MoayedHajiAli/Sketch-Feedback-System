@@ -371,6 +371,23 @@ class RegistrationUtils:
         return ret
 
 
+    @staticmethod
+    def pad_sketches(sketches, maxlen=128, inf=1e9):
+        """
+        add padding at the end of the sketches 
+        """
+        converted_sketches = []
+        for i in range(len(sketches)):
+            tmp = []
+            if len(sketches[i]) >= maxlen:
+                tmp = np.array(sketches[i][:maxlen-1])
+            else:
+                tmp = sketches[i]
+            # add at least one padding
+            extra = np.repeat(np.array([[inf, inf, 1]]), maxlen-len(tmp), axis=0)
+            converted_sketches.append(np.concatenate((tmp, extra), axis=0))
+        return np.asarray(converted_sketches)
+
 
 
 

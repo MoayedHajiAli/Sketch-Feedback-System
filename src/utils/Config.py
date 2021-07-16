@@ -14,6 +14,7 @@ class Config:
         model_config.k_select = 200
         model_config.obj_accepted_labels = ['Circle', 'Star', 'Triangle', 'Star Bullet', 'Square', 'Arrow Right', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus']
         model_config.dataset_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), 'ASIST_Dataset/Data/Data_A')
+        model_config.seed = 1
 
         # model related
         model_config.batch_size = 128
