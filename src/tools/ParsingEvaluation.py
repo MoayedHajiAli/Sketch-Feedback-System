@@ -1,6 +1,6 @@
 from utils.RegistrationUtils import RegistrationUtils
 from utils.ObjectUtil import ObjectUtil
-from tools.StrokeClustering import DensityClustering, DBScanClustering
+from tools.StrokeClustering import DensityClustering, DBSCAN_segmentation
 from sketch_object.UnlabeledObject import UnlabeledObject
 import numpy as np 
 from progress.bar import Bar
@@ -44,17 +44,26 @@ class ParsingEvaluation:
 
         self.test_objs, self.test_lbs, self.test_segs = self.test_objs[:c], self.test_lbs[:c], self.test_segs[:c]
         
+
+    # def __init__(self, test_dir, config, tar_file=None, n_files=-1, re_sampling=0.0):
+    #     self.config = config
+
+    #     # obtain all objects with their labels and index of start and end stroke (all unordered objects will be discarded)
+    #     if self.config.tar_file:
+    #         self.tar_objs, self.tar_lbs, self.tar_segs = ObjectUtil.xml_to_IndexedUnlabeledObjects(self.config.tar_file, re_sampling=self.config.re_sampling)
+    #         print("[ParsingEvaluation] target object contains", len(self.tar_objs), "objects")
+        
+    #     self.test_objs, self.test_lbs, self.test_segs = self.extract_objs_from_dir(self.config.test_dir, n_files=self.config.n_files, re_sampling=self.config.re_sampling)
         print("[ParsingEvaluation] testing directory contains", sum([len(a) for a in self.test_objs]), "objects")
-        self.n_files = n_files
 
-        # remove unwanted objects
-        self.clean()
+        # remove unwanted objects such as number
+        self.clean(self.config.remove_lables)
 
-        if self.tar_file:
+        if self.config.tar_file:
             print("[ParsingEvaluation] after cleaning, taget object contains", len(self.tar_objs), "objects")
         print("[ParsingEvaluation] after cleaning, testing directory contains", sum([len(a) for a in self.test_objs]), "objects")
 
-    def explore(self, directory, n_files=-1, re_sampling=0.0):
+    def extract_objs_from_dir(self, directory, n_files=-1, re_sampling=0.0):
         # explore n_files in the directory. extracts the objects and their stroke's ordering 
         unorderd_objs = 0
 
@@ -64,7 +73,7 @@ class ParsingEvaluation:
 
         for path in pathlib.Path(directory).iterdir():
             if path.is_dir():
-                self.explore(path)
+                self.extract_objs_from_dir(path)
             elif path.is_file():
                 if n_files != -1 and len(objs) > n_files:
                     break
@@ -95,13 +104,13 @@ class ParsingEvaluation:
         print("[ParsingEvaluation] warn:", unorderd_objs, "unordered objects were found and discarded" )
         return objs, labels, segs
 
-    def clean(self, org_removable_labels = ['Number'], tar_removable_labels = ['Number']):
+    def clean(self, remove_lables):
         """Clean the target and orignal storkes by removing unrelated objects such as handwritting
         """
-        if self.tar_file:
+        if self.config.tar_file:
             i = 0
             while i < len(self.tar_objs):
-                if self.tar_lbs[i] in tar_removable_labels:
+                if self.tar_lbs[i] in remove_lables:
                     self.tar_lbs.pop(i)
                     self.tar_objs.pop(i)
                     self.tar_segs.pop(i)
@@ -111,7 +120,7 @@ class ParsingEvaluation:
         for i in range(len(self.test_objs)):
             j = 0
             while j < len(self.test_objs[i]):
-                if self.test_lbs[i][j] in org_removable_labels:
+                if self.test_lbs[i][j] in remove_lables:
                     self.test_lbs[i].pop(j)
                     self.test_objs[i].pop(j)
                     self.test_segs[i].pop(j)
@@ -120,9 +129,12 @@ class ParsingEvaluation:
 
     def evaluate(self, save_dir=None):
         if self.tar_file:
+    # def evaluate(self):
+    #     # comine the objects to their sketches (this way unlabeled objects will be removed from the sketches)
+    #     if self.config.tar_file:
             tar_sketch = UnlabeledObject(np.concatenate([obj.get_strokes() for obj in self.tar_objs]))
         
-        c , n = 0, 0
+        c, n = 0, 0
         tmp_sketch = []
         for sketch in self.test_objs:
             tmp = []
@@ -145,6 +157,10 @@ class ParsingEvaluation:
         st = time.time()
         clustering = DBScanClustering(test_sketch_lst)
         pred_test_objs, pred_test_segs = clustering.evaluate(np.concatenate(self.test_objs), save_dir=save_dir)
+        
+        # clustering = DBSCAN_segmentation(test_sketch_lst, config)
+        # pred_test_objs, pred_test_segs = clustering.segment()
+        
         # clustering = DensityClustering(tar_sketch, test_sketch_lst)
         # pred_tar_objs, pred_tar_segs, pred_test_objs, pred_test_segs = clustering.mut_execlusive_cluster()
         

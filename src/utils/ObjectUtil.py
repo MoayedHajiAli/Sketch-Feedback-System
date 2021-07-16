@@ -17,7 +17,7 @@ class ObjectUtil:
 
     @staticmethod
     def xml_to_pointsDict(file, flip = False, shift_x=0.0, shift_y=0.0):
-        """for a given file, read the file and transform it to an dictonary of points
+        """for a given file, read the file and transform it to an dictonary of points where for each point id, return x, y and time
         Params:
             flip : flip the image vertically
             mn_len : ignore any strokes with length smaller than mn_len
@@ -43,7 +43,6 @@ class ObjectUtil:
 
             x += shift_x
             y += shift_y
-
             point_dic[el.attributes['id'].value] = (x, y, time)
         
         return point_dic
@@ -55,7 +54,8 @@ class ObjectUtil:
 
     @staticmethod
     def xml_to_StrokesDict(file, re_sampling=0.0, mn_len=5, flip=False, shift_x=0.0, shift_y=0.0):
-        """for a given file, read the file and transform it to a dictionary of strokes
+        """for a given file, read the file and transform it to a dictionary of strokes where for each stroke id, we store a stoke 
+        containing all of the points
         Params:
             flip : flip the image vertically
             mn_len : ignore any strokes with length smaller than mn_len
