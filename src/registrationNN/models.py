@@ -231,7 +231,6 @@ class registration_model:
 
     
     def fit(self, train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches):
-        print(train_org_sketches.shape, train_tar_sketches.shape, val_org_sketches.shape, val_tar_sketches.shape)
         print("Devices:", device_lib.list_local_devices())
         print(f"length of original sketchs:{len(train_org_sketches)}")
         # convert sketches into stroke-3 format

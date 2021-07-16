@@ -376,22 +376,24 @@ class DensityClustering:
 
 
 
-class DBScanClustering:
+class DBSCAN_segmentation:
     """object-level segmentation of a set of sketches
     """
-    def __init__(self, objs):
+    def __init__(self, objs, config):
         """set the inital combinations obtained from the target sketch and test sketches
 
         Args:
             objs (list of UnlabledObject): list of sketches that we want to segment
         """
 
+        # sketches are assumed to be stored in a format of objects
         # obtain the number of sketches to be clustered
+        self.config = config
         self.N = len(objs)
 
         self.org_objs = []
-        for i in range(len(objs)):
-            tmp = self._get_combinations(objs[i], i)
+        for i in range(self.N):
+            tmp = self._get_combinations(objs[i], i, mx_dis=config.mx_dis)
             for obj in tmp:
                 self.org_objs.append(obj)
         
@@ -400,12 +402,11 @@ class DBScanClustering:
     @classmethod
     def fromDir(cls, dir, n=None):
         """Explore the directory and cluster all the sketches inside the directory
-        centroids will be taken only from the strokes combinations of the target sketch in the target-file
 
         Args:
             dir (str): a directoy where the sketches exits
         """
-        objs = []
+        objs = [] # sketches will be stored in the format of a single object
         for path in pathlib.Path(dir).iterdir():
             if path.is_file():
                 file = os.path.basename(path)
@@ -424,6 +425,8 @@ class DBScanClustering:
 
         Args:
             obj ([UnlabeledObject]): [description]
+            id (int): unique id to label the combination of a specific sketch
+            mx_dis (int): maximum distance between any two strokes TODO: experiment removing this parameter
 
         Returns: list of dict, each of have information of obj, id, l, r
         """
@@ -463,7 +466,8 @@ class DBScanClustering:
         
         return max(d1, d2) 
 
-    def evaluate(self, mn_samples=0.1, eps=8):
+    def segment(self):
+        mn_samples = self.config.mnPts
         if mn_samples <= 1:
             mn_samples = int(self.N * mn_samples)
         
@@ -478,7 +482,7 @@ class DBScanClustering:
         plt.plot(tsne_embeddings[:, 0], tsne_embeddings[:, 1], 'k.')
         plt.show()
 
-        labels = np.asarray(DBSCAN(eps=eps, min_samples=mn_samples).fit(org_embds).labels_)
+        labels = np.asarray(DBSCAN(eps=self.config.eps, min_samples=mn_samples).fit(org_embds).labels_)
         n_clusters = max(labels) + 1
         clusters = []
         for i in range(n_clusters):

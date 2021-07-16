@@ -52,9 +52,9 @@ import random
 
 
 model_config = Config.default_model_config(10)
-model_config.n_files = 20
-model_config.k_select = 2
-model_config.epochs = 5
+model_config.n_files = 200
+model_config.k_select = 10
+model_config.epochs = 200
 model_config.num_vis_samples = 5 
 model_config.obj_accepted_labels = ['Circle', 'Star', 'Triangle']
 

@@ -6,41 +6,67 @@ class Config:
 
     def default_model_config(exp_id):
         # prepare configuration
-        model_config = Munch()
-        model_config.exp_id = exp_id
+        config = Munch()
+        config.exp_id = exp_id
 
         # dataset realted
-        model_config.n_file = 5000
-        model_config.k_select = 200
-        model_config.obj_accepted_labels = ['Circle', 'Star', 'Triangle', 'Star Bullet', 'Square', 'Arrow Right', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus']
-        model_config.dataset_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), 'ASIST_Dataset/Data/Data_A')
-        model_config.seed = 1
+        config.n_file = 5000
+        config.k_select = 200
+        config.obj_accepted_labels = ['Circle', 'Star', 'Triangle', 'Star Bullet', 'Square', 'Arrow Right', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus']
+        config.dataset_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), 'ASIST_Dataset/Data/Data_A')
+        config.seed = 1
 
         # model related
-        model_config.batch_size = 128
-        model_config.learning_rate = 2e-3
-        model_config.epochs = 200
-        model_config.load = False
-        model_config.load_ckpt = False
-        model_config.save = True
-        model_config.save_ckpt = True
-        model_config.save_best_only = True
-        model_config.exp_dir = "../registrationNN/saved_models/experiment{0}".format(str(exp_id)) # save path
-        model_config.hist_path = model_config.exp_dir + "/hist.pkl"
-        model_config.ckpt_path = model_config.exp_dir + "/cp-{epoch:04d}.ckpt"
-        model_config.verbose = 5
+        config.batch_size = 128
+        config.learning_rate = 2e-3
+        config.epochs = 200
+        config.load = False
+        config.load_ckpt = False
+        config.save = True
+        config.save_ckpt = True
+        config.save_best_only = True
+        config.exp_dir = "../registrationNN/saved_models/experiment{0}".format(str(exp_id)) # save path
+        config.hist_path = config.exp_dir + "/hist.pkl"
+        config.ckpt_path = config.exp_dir + "/cp-{epoch:04d}.ckpt"
+        config.verbose = 5
 
         # visualization realted
-        model_config.vis_train = True
-        model_config.vis_test = True
-        model_config.fine_tune = True
-        model_config.fine_tune_epochs = 10
-        model_config.iter_refine_prediction = True
-        model_config.vis_transformation = False
-        model_config.vis_dir = "../registrationNN/saved_results/experiment{0}".format(str(exp_id))
-        model_config.num_vis_samples = 10
+        config.vis_train = True
+        config.vis_test = True
+        config.fine_tune = True
+        config.fine_tune_epochs = 10
+        config.iter_refine_prediction = True
+        config.vis_transformation = False
+        config.vis_dir = "../registrationNN/saved_results/experiment{0}".format(str(exp_id))
+        config.num_vis_samples = 10
 
-        os.makedirs(model_config.exp_dir, exist_ok=True)
-        os.makedirs(model_config.vis_dir, exist_ok=True)
+        os.makedirs(config.exp_dir, exist_ok=True)
+        os.makedirs(config.vis_dir, exist_ok=True)
 
-        return model_config
+        return config
+
+    def default_segmentation_config(exp_id):
+        # prepare configuration
+        config = Munch()
+        config.exp_id = exp_id
+
+        # experiment realted
+        config.n_file = 5000
+        config.remove_lables = ['Number']
+        config.test_dir = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), 'ASIST_Dataset/Data/Data_A/MoneyQuestion')
+        config.tar_file = None
+        config.seed = 1
+        config.verbose = 5
+        config.re_sampling = 0.0
+        
+
+        # algorith related
+        config.eps = 8
+        config.mnPts = 0.1
+        config.mx_dis = 30
+        
+
+        # visualization realted
+        
+
+        return config
