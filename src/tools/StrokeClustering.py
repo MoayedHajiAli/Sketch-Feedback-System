@@ -466,11 +466,6 @@ class DBScanClustering:
         
         return max(d1, d2) 
 
-    def _strokes_count(tpls:list):
-        ret = []
-        for tpl in tpls:
-            ret.append(tpl['obj'].get_strokes)
-
     def _visualize_TSNE(self, embeddings, labels, false_neg=[], false_pos=[], save_path=None):
         # obtain tsne  embeddings
         tsne_embeddings = TSNE(2).fit_transform(embeddings)
@@ -487,15 +482,11 @@ class DBScanClustering:
             # append cluster color
             self.cluster_colors.append(plt.gca().lines[-1].get_color())
 
-        # color false negative in beige with 'x'
+        # color false negative with green boarder 
         if len(false_neg) > 0:
-            # x = [shaplypt(tsne_embeddings[i][0],tsne_embeddings[i][1]).buffer(0.02) for i in false_neg]
-            # x = cascaded_union(x) 
-            # polygon1 = ptc.Polygon(np.array(polygon1.exterior), facecolor="red", lw=0, alpha=alpha)
-            # ax.add_patch(polygon1)
             plt.scatter(tsne_embeddings[false_neg, 0], tsne_embeddings[false_neg, 1], marker = 'o', c='green', s=5**2, alpha=0.6)
         
-        # color false positive in beige with 'x'
+        # color false negative with fusia boarder
         if len(false_pos) > 0:
             plt.scatter(tsne_embeddings[false_pos, 0], tsne_embeddings[false_pos, 1], marker = 'o', c='fuchsia', s=5**2, alpha=0.6)
 
@@ -505,6 +496,12 @@ class DBScanClustering:
             plt.show()
     
     def _visualize_samples(self, objs, save_path=None):
+        """visualize given objects
+
+        Args:
+            objs ([type]): [description]
+            save_path ([type], optional): [description]. Defaults to None.
+        """
         dim = int(np.sqrt(len(objs)))
         fig, axs = plt.subplots(dim, dim)  
         for i in range(dim):
@@ -541,21 +538,32 @@ class DBScanClustering:
             plt.show()
 
     def _filter(self, lst, indcies):
+        """
+        remove elements of given indicies form the list
+        """
         return np.asarray([obj for i, obj in enumerate(lst) if i not in indcies])
 
     def _is_intersected(self, obj1, check):
+        """
+        True if check is intersected with obj1 but obj1 is not fully contained within check 
+        """
         if obj1 == check or obj1['id'] != check['id']:
             return False
 
         l1, r1, l2, r2 = obj1['l'], obj1['r'], check['l'], check['r']
-        return not ((r1 < l2) or (l1 > r2))
+
+        #            before        after                check is fully contained in obj1
+        return not ((r1 < l2) or (l1 > r2) or self._is_contained(check, obj1)) #TODO check this out, this would remove check that fully contains object CHECK
 
     def _eliminate_intersected(self, obj):
         indices = [i for i, a in enumerate(self.org_objs) if self._is_intersected(obj, a)]
         self.org_objs = self._filter(self.org_objs, indices)
         self.org_embds = self._filter(self.org_embds, indices)
 
-    def _is_contained(self, obj1, check):
+    def _is_contained(self, obj1, check): # TODO contained is already covered with intersected CHECK
+        """
+        True if check is a part of obj1
+        """
         if obj1 == check or obj1['id'] != check['id']:
             return False
 
@@ -568,6 +576,16 @@ class DBScanClustering:
         self.org_embds = self._filter(self.org_embds, indices)
 
     def _find_false_negative(self, pred_objs, true_objs, save_path=None):
+        """Find objects in true_objs that are not in pred_objs and return their indicies in the self.org_objs
+
+        Args:
+            pred_objs ([type]): [description]
+            true_objs ([type]): [description]
+            save_path ([type], optional): [description]. Defaults to None.
+
+        Returns:
+            [type]: [description]
+        """
         indices, tot = [], 0
         obj_to_vis = []
         for obj in true_objs:
@@ -637,22 +655,23 @@ class DBScanClustering:
             self._visualize_TSNE(self.org_embds, labels, false_neg=fn_ind, false_pos=fp_ind, save_path=os.path.join(save_dir, 'iter{0}-TSNE'.format(d)))
             self._visualize_random_samples(labels, save_path=os.path.join(save_dir, 'iter{0}-samples'.format(d)))
 
-            # STEP 1: combine strokes that has a single stroke representation
+
             n_clusters = max(labels)
             clusters = [self.org_objs[np.where(labels==i)[0]] for i in range(n_clusters)]
+
             pre_len = len(self.org_objs)
             for cluster in clusters:
                 # if np.any([obj['len'] == 1 for obj in cluster]): # check for single stroke obj
                 for obj in cluster:
                     if obj['len'] == 1:
-                        continue
-                    self._eliminate_contained(obj)
-                    obj['len'] = 1 # edit len to one
+                        continue # objects on length one or already processed objects do not need to be processed again 
+                    self._eliminate_contained(obj) # TODO: we are only eliminating the contained objects 
+                    obj['len'] = 1 # edit len to one. This is used in order to not process the project again
 
             print("[StrokeClustering] info: {0} objects were discarded".format(pre_len-len(self.org_objs)))
             print("-------------------------------------------------------------")
 
-        # STEP 2: discard an object if it contained entirly with another cluster object
+        
 
         # STEP 2: recluster
         labels = np.asarray(DBSCAN(eps=13, min_samples=int(self.N * 0.1)).fit(self.org_embds).labels_)
