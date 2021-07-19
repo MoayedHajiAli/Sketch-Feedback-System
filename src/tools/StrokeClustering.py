@@ -379,36 +379,40 @@ class DensityClustering:
 
 
 
-class DBScanClustering:
+class DBSCAN_segmentation:
     """object-level segmentation of a set of sketches
     """
-    def __init__(self, objs):
+    def __init__(self, objs, config):
         """set the inital combinations obtained from the target sketch and test sketches
 
         Args:
             objs (list of UnlabledObject): list of sketches that we want to segment
         """
 
+        # sketches are assumed to be stored in a format of objects
         # obtain the number of sketches to be clustered
+        self.config = config
         self.N = len(objs)
 
         self.org_objs = []
-        for i in range(len(objs)):
+        for i in range(self.N):
             tmp = self._get_combinations(objs[i], i)
             for obj in tmp:
                 self.org_objs.append(obj)
         
         self.org_objs = np.array(self.org_objs)
+        if self.config.verbose >=1:
+            print("[StrokeClustering] info: total {0} combinations were added".format(len(self.org_objs)))
+
     
     @classmethod
-    def fromDir(cls, dir, n=None):
+    def fromDir(cls, dir, config, n=None):
         """Explore the directory and cluster all the sketches inside the directory
-        centroids will be taken only from the strokes combinations of the target sketch in the target-file
 
         Args:
             dir (str): a directoy where the sketches exits
         """
-        objs = []
+        objs = [] # sketches will be stored in the format of a single object
         for path in pathlib.Path(dir).iterdir():
             if path.is_file():
                 file = os.path.basename(path)
@@ -420,13 +424,15 @@ class DBScanClustering:
                     except:
                         print("could not convert file " + file)
         
-        return cls(objs)
+        return cls(objs, config)
 
-    def _get_combinations(self, obj:UnlabeledObject, id, mx_dis = 30):
+    def _get_combinations(self, obj:UnlabeledObject, id):
         """for a given object, obtain all possible combinations of strokes
 
         Args:
             obj ([UnlabeledObject]): [description]
+            id (int): unique id to label the combination of a specific sketch
+            mx_dis (int): maximum distance between any two strokes TODO: experiment removing this parameter
 
         Returns: list of dict, each of have information of obj, id, l, r
         """
@@ -435,7 +441,7 @@ class DBScanClustering:
         for i in range(len(stroke_lst)):
             tmp, total_len, last_obj = [], 0, None
             for j in range(i, len(stroke_lst)):
-                if total_len > 200 or (j != i and self._objs_dist(UnlabeledObject([stroke_lst[j-1]]), UnlabeledObject([stroke_lst[j]])) > mx_dis):
+                if total_len > self.config.mx_len or (j != i and self._objs_dist(UnlabeledObject([stroke_lst[j-1]]), UnlabeledObject([stroke_lst[j]])) > self.config.mx_dis):
                     break
                 tmp.append(stroke_lst[j].get_copy())
                 total_len += len(stroke_lst[j])
@@ -490,9 +496,10 @@ class DBScanClustering:
         if len(false_pos) > 0:
             plt.scatter(tsne_embeddings[false_pos, 0], tsne_embeddings[false_pos, 1], marker = 'o', c='fuchsia', s=5**2, alpha=0.6)
 
-        if save_path != None:
+        if self.config.verbose >= 4 and save_path != None:
             plt.savefig(save_path)
-        else:
+        
+        if self.config.verbose >= 5:
             plt.show()
     
     def _visualize_samples(self, objs, save_path=None):
@@ -509,16 +516,17 @@ class DBScanClustering:
                 objs[i*dim+j].visualize(ax=axs[i, j], show=False)
                 axs[i, j].set_axis_off()
         
-        if save_path != None:
+        if self.config.verbose >= 4 and save_path != None:
             plt.savefig(save_path)
-        else:
+        
+        if self.config.verbose >= 5:
             plt.show()
 
-    def _visualize_random_samples(self, labels, save_path=None, k=5):
+    def _visualize_random_samples(self, labels, save_path=None):
         """Visualizing reandom samples from each cluster
         """ 
         n_clusters = max(labels)
-        fig, axs = plt.subplots(n_clusters, k+1) 
+        fig, axs = plt.subplots(n_clusters, self.config.num_vis_samples_per_cluster+1) 
         for i in range(n_clusters):
             cluster = np.where(labels==i)[0]
 
@@ -527,14 +535,15 @@ class DBScanClustering:
             axs[i, 0].set_axis_off()
             axs[i, 0].set_title(f"{str(len(cluster))}" , loc='left')
             
-            inds = rnd.choices(range(len(cluster)), k=k)
+            inds = rnd.choices(range(len(cluster)), k=self.config.num_vis_samples_per_cluster)
             for j, ind in enumerate(inds):
                 self.org_objs[cluster[ind]]['obj'].visualize(ax=axs[i, j+1], show=False)
                 axs[i, j+1].set_axis_off()
 
-        if save_path != None:
+        if self.config.verbose >= 4 and save_path != None:
             plt.savefig(save_path)
-        else:
+        
+        if self.config.verbose >= 5:
             plt.show()
 
     def _filter(self, lst, indcies):
@@ -603,8 +612,8 @@ class DBScanClustering:
                     indices.append(ind)
         print("[StrokeClustering] info: total {0} object not found in combinations. Might be eliminated as a part of other selected object".format(tot))
         if len(obj_to_vis) > 0:
-            self._visualize_samples(obj_to_vis[:16], save_path=save_path)
-        return indices, len(indices) + tot
+            self._visualize_samples(obj_to_vis[:self.config.num_vis_samples], save_path=save_path)
+        return indices, len(indices) + tot, tot
     
     def _find_false_positive(self, pred_objs, true_objs, save_path=None):
         indices, tot = [], 0
@@ -623,37 +632,54 @@ class DBScanClustering:
                 else:
                     indices.append(ind)
         if len(obj_to_vis) > 0:
-            self._visualize_samples(obj_to_vis[:16], save_path=save_path)
-        return indices, len(indices) + tot
+            self._visualize_samples(obj_to_vis[:self.config.num_vis_samples], save_path=save_path)
+        return indices, len(indices) + tot, tot
 
-
-    def evaluate(self, true_objs, save_dir = None, mn_samples=0.08, eps=7):
+    def segment(self, true_objs=None):
+        fp_lst, fn_lst, tp_lst, num_objs_discarded = [], [], [], []
+        precision_lst, recall_lst, wrong_eliminated_objs = [], [], []
+        mn_samples, eps = self.config.mnPts, self.config.eps
         if mn_samples <= 1:
             mn_samples = int(self.N * mn_samples)
         
         # logging
-        print("[StrokeClustering] info: eps initial value:{0}".format(eps))
-        print("[StrokeClustering] info: mn_samples:{0}".format(mn_samples))
+        if self.config.verbose:
+            print("[StrokeClustering] info: eps initial value:{0}".format(eps))
+            print("[StrokeClustering] info: mn_samples:{0}".format(mn_samples))
 
         # obtain embeddings
         self.org_embds = ObjectUtil.get_embedding([obj['obj'] for obj in self.org_objs])
-        print("original embeddings obtained")
+        if self.config.verbose:
+            print("original embeddings obtained")
 
-        for d in range(60):
-            labels = np.asarray(DBSCAN(eps=eps + d * 0.1, min_samples=mn_samples).fit(self.org_embds).labels_)
+        for d in range(self.config.iterations):
+            labels = np.asarray(DBSCAN(eps=eps + d * self.config.eps_inc_rate, min_samples=mn_samples).fit(self.org_embds).labels_)
             pred_objs = [tpl['obj'] for tpl in self.org_objs[labels != -1]]
-            fn_ind, fn = self._find_false_negative(pred_objs, true_objs, save_path=os.path.join(save_dir, 'res-fn'))
-            print("[StokeClustering] info: iter {1} - total {0} false negative".format(fn, d))
-            fp_ind, fp = self._find_false_positive(pred_objs, true_objs, save_path=os.path.join(save_dir, 'res-fp'))
-            print("[StokeClustering] info: iter {1} - total {0} false positive".format(fp, d))
-            tp = len(pred_objs) - fp
-            print("[StokeClustering] info: iter {1} total {0} true positive".format(tp, d))
-            print("[StokeClustering] info: iter {1} precision:{0}".format((tp)/(tp+fp), d))
-            print("[StokeClustering] info: iter {1} recall:{0}".format((tp)/(tp+fn), d))
+            pred_segs = [(tpl['l'], tpl['r']) for tpl in self.org_objs[labels != -1]]
+
+            if true_objs is not None:
+                fn_ind, fn, tot = self._find_false_negative(pred_objs, true_objs, save_path=os.path.join(self.config.fn_fig_dir, f'iter_{d}.png'))    
+                fp_ind, fp, _ = self._find_false_positive(pred_objs, true_objs, save_path=os.path.join(self.config.fp_fig_dir, f'iter_{d}.png'))
+                tp = len(pred_objs) - fp
+                
+                if self.config.verbose >= 1:
+                    print("[StokeClustering] info: iter {1} - total {0} false positive".format(fp, d))
+                    print("[StokeClustering] info: iter {1} - total {0} false negative".format(fn, d))
+                    print("[StokeClustering] info: iter {1} total {0} true positive".format(tp, d))
+                    print("[StokeClustering] info: iter {1} precision:{0}".format((tp)/(tp+fp), d))
+                    print("[StokeCllsustering] info: iter {1} recall:{0}".format((tp)/(tp+fn), d))
+                    fp_lst.append(fp)
+                    fn_lst.append(fn)
+                    tp_lst.append(tp)
+                    precision_lst.append((tp)/(tp+fp))
+                    recall_lst.append((tp)/(tp+fn))
+                    wrong_eliminated_objs.append(tot)
 
 
-            self._visualize_TSNE(self.org_embds, labels, false_neg=fn_ind, false_pos=fp_ind, save_path=os.path.join(save_dir, 'iter{0}-TSNE'.format(d)))
-            self._visualize_random_samples(labels, save_path=os.path.join(save_dir, 'iter{0}-samples'.format(d)))
+
+            if self.config.verbose >= 4:
+                self._visualize_TSNE(self.org_embds, labels, false_neg=fn_ind, false_pos=fp_ind, save_path=os.path.join(self.config.tsne_fig_dir, f'iter_{d}.png'))
+                self._visualize_random_samples(labels, save_path=os.path.join(self.config.clusters_fig_dir, f'iter_{d}.png'))
 
 
             n_clusters = max(labels)
@@ -664,32 +690,40 @@ class DBScanClustering:
                 # if np.any([obj['len'] == 1 for obj in cluster]): # check for single stroke obj
                 for obj in cluster:
                     if obj['len'] == 1:
-                        continue # objects on length one or already processed objects do not need to be processed again 
+                        continue # objects of length one or already processed objects do not need to be processed again 
                     self._eliminate_contained(obj) # TODO: we are only eliminating the contained objects 
-                    obj['len'] = 1 # edit len to one. This is used in order to not process the project again
+                    # obj['len'] = 1 # edit len to one. This is used in order to not process the project again # TODO: check this assumption
 
-            print("[StrokeClustering] info: {0} objects were discarded".format(pre_len-len(self.org_objs)))
-            print("-------------------------------------------------------------")
+            if self.config.verbose >= 1:
+                print("[StrokeClustering] info: {0} objects were discarded".format(pre_len-len(self.org_objs)))
+                print("-------------------------------------------------------------")
+                num_objs_discarded.append(pre_len-len(self.org_objs))
 
-        
+        if self.config.verbose >= 3:
+            # preapre summary figures
+            # tp, tn, fp
+            fig, ax = plt.subplots()
+            ax.plot(tp_lst, label='TP')
+            ax.plot(fp_lst, label='FP')
+            ax.plot(fn_lst, label='FN')
+            ax.plot(num_objs_discarded, label='Number of objects discarded')
+            ax.plot(wrong_eliminated_objs, label='Wrong eliminated objects')
+            ax.set_xlabel('Iterations')
+            ax.set_ylabel('Number of Objects')
+            fig.legend()
+            fig.savefig(os.path.join(self.config.exp_dir, 'objects_analysis.png'))
 
-        # STEP 2: recluster
-        labels = np.asarray(DBSCAN(eps=13, min_samples=int(self.N * 0.1)).fit(self.org_embds).labels_)
-        self.org_objs = np.asarray(self.org_objs)
-        pred_objs = [tpl['obj'] for tpl in self.org_objs[labels != -1]]
-        print("[StokeClustering] info: total {0} predicted objects".format(len(pred_objs)))
-        fn_ind, fn = self._find_false_negative(pred_objs, true_objs, save_path=os.path.join(save_dir, 'res-fn'))
-        print("[StokeClustering] info: total {0} false negative".format(fn))
-        fp_ind, fp = self._find_false_positive(pred_objs, true_objs, save_path=os.path.join(save_dir, 'res-fp'))
-        print("[StokeClustering] info: total {0} false positive".format(fp))
-        tp = len(pred_objs) - fp
-        print("[StokeClustering] info: total {0} true positive".format(tp))
-        print("[StokeClustering] info: precision", (tp)/(tp+fp))
-        print("[StokeClustering] info: recall", (tp)/(tp+fn))
-        self._visualize_TSNE(self.org_embds, labels, false_neg=fn_ind, false_pos=fp_ind, save_path=os.path.join(save_dir, 'res-TSNE'))
-        self._visualize_random_samples(labels, save_path=os.path.join(save_dir, 'res-samples'))
+            # precision recall
+            fig, ax = plt.subplots()
+            ax.plot(precision_lst, label='Precision')
+            ax.plot(recall_lst, label='Recall')
+            ax.set_xlabel('Iterations')
+            ax.set_ylabel('Value')
+            fig.legend()
+            fig.savefig(os.path.join(self.config.exp_dir, 'precision_recall.png'))
 
-
+        # return found objects
+        return pred_objs, pred_segs
 
 
         
