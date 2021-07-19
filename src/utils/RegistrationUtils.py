@@ -58,7 +58,7 @@ class RegistrationUtils:
         # a is the shearing parallel to the x axis
         # b is the shearing parallel to the y axis
     @staticmethod
-    def _shearing_cost(a, b, mn_x, mn_y, mx_x, mx_y, ln, fac_x=10, fac_y=10):
+    def _shearing_cost(a, b, ln, fac_x=10, fac_y=10):
         a = abs(a)
         b = abs(b)
 
@@ -80,7 +80,7 @@ class RegistrationUtils:
         # a is the translation along to the x axis
         # b is the translation along to the y axis
     @staticmethod
-    def _scaling_cost(a, b, ln, fac_x=10, fac_y=10, flip_x=-1, flip_y=-1):
+    def _scaling_cost(a, b, ln, fac_x=5, fac_y=5, flip_x=-1, flip_y=-1):
         if flip_x == -1:
             flip_x = fac_x * 1.5
         if flip_y == -1:
@@ -102,18 +102,18 @@ class RegistrationUtils:
 
     # default rotation cost functionreg.total_cost(reg.original_obj[], t)
     @staticmethod
-    def _rotation_cost(r, ln, fac_r=2.5):
+    def _rotation_cost(r, ln, fac_r=15.0):
         r = abs(r)
         cost = ln * (fac_r * r)
         return cost
     
     @staticmethod
     # obtain total transformation **parameters** cost
-    def total_transformation_cost(p, mn_x, mx_x, mn_y, mx_y, ln):
+    def total_transformation_cost(p, ln):
         tot = 0.0
         tot += RegistrationUtils._scaling_cost(p[0], p[1], ln) 
         tot += RegistrationUtils._rotation_cost(p[2], ln)
-        tot += RegistrationUtils._shearing_cost(p[3], p[4], mn_x, mn_y, mx_x, mx_y, ln)
+        tot += RegistrationUtils._shearing_cost(p[3], p[4], ln)
         tot += RegistrationUtils._translation_cost(p[5], p[6], ln)
         return 0
 
@@ -371,6 +371,23 @@ class RegistrationUtils:
         return ret
 
 
+    @staticmethod
+    def pad_sketches(sketches, maxlen=128, inf=1e9):
+        """
+        add padding at the end of the sketches 
+        """
+        converted_sketches = []
+        for i in range(len(sketches)):
+            tmp = []
+            if len(sketches[i]) >= maxlen:
+                tmp = np.array(sketches[i][:maxlen-1])
+            else:
+                tmp = sketches[i]
+            # add at least one padding
+            extra = np.repeat(np.array([[inf, inf, 1]]), maxlen-len(tmp), axis=0)
+            converted_sketches.append(np.concatenate((tmp, extra), axis=0))
+        return np.asarray(converted_sketches)
+
 
 
 
@@ -409,7 +426,6 @@ class RegisterTwoObjects:
         
         dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, p, target_nn = self.target_nn, 
                                                             target_dis=target_dis, original_dis=original_dis) 
-        
         return dissimilarity + (tran_cost / (len(self.ref_obj) + len(self.tar_obj)))   
 
 
@@ -445,7 +461,7 @@ class RegisterTwoObjects:
         self.mn_y, self.mx_y = min(self.ref_obj.get_y()), max(self.ref_obj.get_y())
 
         minimizer_kwargs = {"method": "BFGS", "args" : (params, target_dis, original_dis)}
-        res = basinhopping(self.total_dissimalirity, p, minimizer_kwargs=minimizer_kwargs, disp=False, niter=1)
+        res = basinhopping(self.total_dissimalirity, p, minimizer_kwargs=minimizer_kwargs, disp=True, niter=2)
         d, p = res.fun, res.x 
         return d, p
 

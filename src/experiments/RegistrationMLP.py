@@ -1,45 +1,56 @@
 import sys
 sys.path.insert(0, '../')
 
-from animator.SketchAnimation import SketchAnimation
-from register.Registration import Registration, RegisterTwoObjects
-from matplotlib import pyplot as plt
 import numpy as np
-from utils.RegistrationUtils import RegistrationUtils
+from utils.Config import Config 
+from registrationNN.models import registration_model, model_visualizer
 from utils.ObjectUtil import ObjectUtil
-import copy
-from sketch_object.UnlabeledObject import UnlabeledObject
-from sketch_object.Stroke import Stroke
-from tools.ClassEvaluation import ClassEvaluation
-from tools.ObjectParsing import ObjectParsing
-from tools.StrokeClustering import DensityClustering
-from tools.ParsingEvaluation import ParsingEvaluation
-from registrationNN.models import registration_model
+from sklearn.model_selection import train_test_split
+import os
+from munch import Munch
 import time
-import pathlib
-import os.path as path
-import matplotlib.pyplot as plt
+import random
+import json
+
+model_config = Config.default_model_config(10)
+model_config.n_files = 200
+model_config.k_select = 10
+model_config.epochs = 200
+model_config.num_vis_samples = 5 
+model_config.obj_accepted_labels = ['Circle', 'Star', 'Triangle']
+
+print(f"[RegisterationMLP.py] {time.ctime()}: Expermint {model_config.exp_id} started")
+
+org_objs, tar_objs = [], []
+objs, labels = ObjectUtil.extract_objects_from_directory(model_config.dataset_path, n_files=model_config.n_files, \
+                acceptable_labels=model_config.obj_accepted_labels)
+labels, objs = np.asarray(labels), np.asarray(objs)
+
+for obj, lbl in zip(objs, labels):
+    matched_objs = objs[labels == lbl]
+
+    # choose k random matched objects
+    matched_objs = random.choices(matched_objs, k=model_config.k_select)
+
+    for obj2 in matched_objs:
+        org_objs.append(obj)
+        tar_objs.append(obj2)
 
 
-# train a MLP for registration
-dir = 'ASIST_Dataset/Data/Data_B/Circle'
-dir = path.join(path.abspath(path.join(__file__ ,"../../..")), dir)
-objs, labels = [], []
-n, N = 0, 120
-for path in pathlib.Path(dir).iterdir():
-    if n >= N:
-        break
-    a, b = ObjectUtil.xml_to_UnlabeledObjects(str(path))
-    if n > 110:
-        print(path)
-        objs.extend(a)
-        labels.extend(b)
-    n += len(a)
+# split train test
+train_org_sketches, val_org_sketches, train_tar_sketches, val_tar_sketches = train_test_split(org_objs, tar_objs, random_state=model_config.seed, test_size=0.2)
 
-# print(len(objs))
-fig, axs = plt.subplots(4, 4)
-for i, obj in enumerate(objs):
-    obj.visualize(ax=axs[int(i/4), int(i%4)], show=False)
 
-# plt.show()
-registration_model(objs)
+# save experiment configurations
+config_json = json.dumps(dict(model_config), indent=4)
+with open(os.path.join(model_config.exp_dir, 'config.txt'), 'w') as f:
+    f.write(config_json)
+
+# redirect output to log
+# sys.stdout = open(os.path.join(model_config.exp_dir, 'log.out'), 'w+')
+
+model = registration_model(model_config)
+model.fit(train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches)
+
+# visualize model and save results
+model_visualizer.visualize_model(model, train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches, model_config)

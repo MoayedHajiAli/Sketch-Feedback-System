@@ -1,6 +1,6 @@
 from utils.RegistrationUtils import RegistrationUtils
 from utils.ObjectUtil import ObjectUtil
-from tools.StrokeClustering import DensityClustering, DBScanClustering
+from tools.StrokeClustering import DensityClustering, DBSCAN_segmentation
 from sketch_object.UnlabeledObject import UnlabeledObject
 import numpy as np 
 from progress.bar import Bar
@@ -15,27 +15,32 @@ import pandas as pd
 pd.set_option('max_columns', None)
 
 class ParsingEvaluation:
+    """
+    Pefroming an experiment on object-level segmentation
+    """
+    def __init__(self, config):
+        self.config = config
 
-    def __init__(self, test_dir, tar_file=None, n_files=-1, re_sampling=0.0):
-        self.test_dir = test_dir
-        self.tar_file = tar_file
-
-        # obtain all objects with their indices and labels
-        if self.tar_file:
-            self.tar_objs, self.tar_lbs, self.tar_segs = ObjectUtil.xml_to_IndexedUnlabeledObjects(tar_file, re_sampling=re_sampling)
-            print("[ParsingEvaluation] taget object contains", len(self.tar_objs), "objects")
-        self.test_objs, self.test_lbs, self.test_segs = self.explore(test_dir, n_files=n_files)
+        # obtain all objects with their labels and index of start and end stroke (all unordered objects will be discarded)
+        if self.config.tar_file:
+            self.tar_objs, self.tar_lbs, self.tar_segs = ObjectUtil.xml_to_IndexedUnlabeledObjects(self.config.tar_file, re_sampling=self.config.re_sampling)
+            print("[ParsingEvaluation] target object contains", len(self.tar_objs), "objects")
+        
+        self.test_objs, self.test_lbs, self.test_segs = self.extract_objs_from_dir(self.config.test_dir, n_files=self.config.n_files, re_sampling=self.config.re_sampling)
+        self.test_objs, self.test_lbs, self.test_segs = \
+                        np.asarray(self.test_objs), np.asarray(self.test_lbs), np.asarray(self.test_segs)
         print("[ParsingEvaluation] testing directory contains", sum([len(a) for a in self.test_objs]), "objects")
-        self.n_files = n_files
 
-        # remove unwanted objects
-        self.clean()
+        # remove unwanted objects such as number
+        self.clean(self.config.accepted_labels, verbose=self.config.verbose)
 
-        if self.tar_file:
-            print("[ParsingEvaluation] after cleaning, taget object contains", len(self.tar_objs), "objects")
-        print("[ParsingEvaluation] after cleaning, testing directory contains", sum([len(a) for a in self.test_objs]), "objects")
+        if self.config.verbose >= 1:
+            if self.config.tar_file:
+                print("[ParsingEvaluation] after cleaning, taget object contains", len(self.tar_objs), "objects")
+            
+            print("[ParsingEvaluation] after cleaning, testing directory contains", sum([len(a) for a in self.test_objs]), "objects")
 
-    def explore(self, directory, n_files=-1, re_sampling=0.0):
+    def extract_objs_from_dir(self, directory, n_files=-1, re_sampling=0.0):
         # explore n_files in the directory. extracts the objects and their stroke's ordering 
         unorderd_objs = 0
 
@@ -45,7 +50,7 @@ class ParsingEvaluation:
 
         for path in pathlib.Path(directory).iterdir():
             if path.is_dir():
-                self.explore(path)
+                self.extract_objs_from_dir(path)
             elif path.is_file():
                 if n_files != -1 and len(objs) > n_files:
                     break
@@ -76,34 +81,48 @@ class ParsingEvaluation:
         print("[ParsingEvaluation] warn:", unorderd_objs, "unordered objects were found and discarded" )
         return objs, labels, segs
 
-    def clean(self, org_removable_labels = ['Number'], tar_removable_labels = ['Number']):
+    def clean(self, accepted_labels, verbose=0):
         """Clean the target and orignal storkes by removing unrelated objects such as handwritting
         """
-        if self.tar_file:
+        if self.config.tar_file:
             i = 0
             while i < len(self.tar_objs):
-                if self.tar_lbs[i] in tar_removable_labels:
+                if self.tar_lbs[i] not in accepted_labels:
                     self.tar_lbs.pop(i)
                     self.tar_objs.pop(i)
                     self.tar_segs.pop(i)
                 else:
                     i += 1
         
+        inds = []
         for i in range(len(self.test_objs)):
             j = 0
             while j < len(self.test_objs[i]):
-                if self.test_lbs[i][j] in org_removable_labels:
+                if self.test_lbs[i][j] not in accepted_labels:
                     self.test_lbs[i].pop(j)
                     self.test_objs[i].pop(j)
                     self.test_segs[i].pop(j)
                 else:
                     j += 1
+            if j == 0 and verbose >= 2:
+                print("[ParsingEvaluation] warn: found a sketch with no object in the accepted labels")
+            if j > 0:
+                inds.append(i)
+        self.test_objs = np.asarray(self.test_objs)[inds]
+        self.test_segs = np.asarray(self.test_segs)[inds]
+        self.test_lbs = np.asarray(self.test_lbs)[inds]
+
+        if verbose >= 1:
+                print("[ParsingEvaluation] info: finished cleaning sketches")
+    
+
 
     def evaluate(self):
-        if self.tar_file:
+        # comine the objects to their sketches (this way unlabeled objects will be removed from the sketches)
+        if self.config.tar_file:
             tar_sketch = UnlabeledObject(np.concatenate([obj.get_strokes() for obj in self.tar_objs]))
         
-        c , n = 0, 0
+        c, n = 0, 0
         tmp_sketch = []
         for sketch in self.test_objs:
             tmp = []
@@ -115,69 +134,25 @@ class ParsingEvaluation:
             try:
                 tmp_sketch.append(UnlabeledObject(np.concatenate((tmp))))
             except Exception as e:
-                print(len(tmp), len(sketch))
+                print("[ParsingEvaluation] error:", len(tmp), len(sketch))
 
-        print("[ParsingEvaluation] Total number of objects: ", n)
-        print("[ParsingEvaluation] Single stroke objects: ", c)
-        print("[ParsingEvaluation] Single stroke/number of objects ration: ", c/n)
+        if self.config.verbose >= 1:
+            print("[ParsingEvaluation] Total number of objects: ", n)
+            print("[ParsingEvaluation] Single stroke objects: ", c)
+            print("[ParsingEvaluation] Single stroke/number of objects ration: ", c/n)
 
+        # combine the objects to sketches
         test_sketch_lst = [UnlabeledObject(np.concatenate([obj.get_strokes() for obj in sketch])) for sketch in self.test_objs]
 
         st = time.time()
-        clustering = DBScanClustering(test_sketch_lst)
-        pred_test_objs, pred_test_segs = clustering.evaluate()
-        # clustering = DensityClustering(tar_sketch, test_sketch_lst)
-        # pred_tar_objs, pred_tar_segs, pred_test_objs, pred_test_segs = clustering.mut_execlusive_cluster()
         
-        # tp = 0
-        # for p_obj, lbl_lst in zip(pred_tar_objs, self.tar_lbs):
-        #     # if the object belong to the target sketch
-        #     if p_obj in self.tar_objs: 
-        #             tp += 1
-        #     # p_obj.visualize()
-        
-        # print("[ParsingEvaluation] info: target object segmentation accuracy", tp/len(self.tar_objs))
+        clustering = DBSCAN_segmentation(test_sketch_lst, self.config)
+        pred_test_objs, pred_test_segs = clustering.segment(np.concatenate(self.test_objs))
         
         n = sum([len(a) for a in pred_test_objs])
-        print("[ParsingEvaluation] info: clustering predicted total", n, "objects")
-        # find test set accuracy
-        tp = tn = fp = fn = 0
-        fn_objs, fp_objs = [], []
-        print("target labels", self.tar_lbs)
-        for t_objs, lbl_lst, p_objs in zip(self.test_objs, self.test_lbs, pred_test_objs):
-            c = 0
-            for t_obj, lbl in zip(t_objs, lbl_lst):
-                # if the object belong to the target sketch
-                if lbl in self.tar_lbs:
-                    if t_obj in p_objs: 
-                        tp += 1
-                        c += 1
-                    else:
-                        fn += 1
-                        fn_objs.append(t_obj)
+        if self.config.verbose >= 1:
+            print("[ParsingEvaluation] info: clustering predicted total", n, "objects")
+        
+        
+        print(f"[ParsingEvaluation] info: Running time:{(time.time() - st) / 60 } Minutes")
 
-                else:
-                    if t_obj not in p_objs:
-                        tn += 1
-                    
-            for obj in p_objs:
-                # obj.visualize()
-                if obj not in t_objs:
-                    fp_objs.append(obj)
-            
-            
-        fp = n - tp
-
-        # obtain clustered 
-        print("[ParsingEvaluation] info: Running time in hours: ", (time.time() - st) / 60 / 60)
-
-        print("true positive:", tp)
-        print("false positive:", fp)
-        print("true negative:", tn)
-        print("false negative:", fn)
-        print("precision", (tp)/(tp+fp))
-        print("recall", (tp)/(tp+fn))
-        print("accuracy", (tp+tn)/(tp+fp+tn+fn))
-
-
-        return tp, fp, tn, fn

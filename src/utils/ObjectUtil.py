@@ -10,13 +10,14 @@ import copy
 import warnings
 from sketchformer.basic_usage.sketchformer import continuous_embeddings
 from rdp import rdp
+import pathlib
 
 class ObjectUtil:
     sketchformer = None
 
     @staticmethod
     def xml_to_pointsDict(file, flip = False, shift_x=0.0, shift_y=0.0):
-        """for a given file, read the file and transform it to an dictonary of points
+        """for a given file, read the file and transform it to an dictonary of points where for each point id, return x, y and time
         Params:
             flip : flip the image vertically
             mn_len : ignore any strokes with length smaller than mn_len
@@ -42,7 +43,6 @@ class ObjectUtil:
 
             x += shift_x
             y += shift_y
-
             point_dic[el.attributes['id'].value] = (x, y, time)
         
         return point_dic
@@ -54,7 +54,8 @@ class ObjectUtil:
 
     @staticmethod
     def xml_to_StrokesDict(file, re_sampling=0.0, mn_len=5, flip=False, shift_x=0.0, shift_y=0.0):
-        """for a given file, read the file and transform it to a dictionary of strokes
+        """for a given file, read the file and transform it to a dictionary of strokes where for each stroke id, we store a stoke 
+        containing all of the points
         Params:
             flip : flip the image vertically
             mn_len : ignore any strokes with length smaller than mn_len
@@ -340,12 +341,19 @@ class ObjectUtil:
         ret = []
         for sketch in sketches:
             pt_lst, strokes = [], []
-            last_tm = 1.0
+            last_tm = 0.0
             x, y = 0, 0
+            # append the omitted points 
+            pt_lst.append(Point(x, y, last_tm))
+            last_tm += 1
+
             for p in sketch:
                 if p[2] == 1:
                     # obtain a new stroke
                     if len(pt_lst) > 0:
+                        pt_lst.append(Point(p[0] + x, p[1] + y, last_tm))
+                        last_tm += 1
+                        x, y = p[0] + x, p[1] + y
                         strokes.append(Stroke(pt_lst))
                         pt_lst = []
                 else:
@@ -359,7 +367,7 @@ class ObjectUtil:
         return ret
 
     @staticmethod
-    def poly_to_stroke3(sketches, scale=100.0, step=5, eps=1.5):
+    def poly_to_stroke3(sketches, scale=100.0, step=5, eps=1.5, red_rdp=True, normalize=True):
         """convert the given sketches to stroke-3 (x, y, p) format, where x, y are 
          the point relative position to the previous point together with its binary pen state.
          for any two consecutive strokes, a point in the middle will be added with a pen state 1 (pen lifted)
@@ -376,27 +384,36 @@ class ObjectUtil:
 
         sketches = tmp
 
-        # find the dimentions of the storkes and reduce
-        for sketch in sketches:
-            mx_w, mx_h, mn_w, mn_h = -1, -1, 1e9, 1e9
-            for stroke in sketch.get_strokes():
-                # get dimentions
-                mx_w = max([p.x for p in stroke.get_points()])
-                mn_w = min([p.x for p in stroke.get_points()])
-                mx_h = max([p.y for p in stroke.get_points()])
-                mn_h = min([p.y for p in stroke.get_points()])
+        if normalize:
+            # find the dimentions of the storkes and reduce
+            for sketch in sketches:
+                mx_w, mx_h, mn_w, mn_h = -1, -1, 1e9, 1e9
+                for stroke in sketch.get_strokes():
+                    # get dimentions
+                    mx_w = max(mx_w, max([p.x for p in stroke.get_points()]))
+                    mn_w = min(mn_w, min([p.x for p in stroke.get_points()]))
+                    mx_h = max(mx_h, max([p.y for p in stroke.get_points()]))
+                    mn_h = min(mn_h, min([p.y for p in stroke.get_points()]))
 
-            w, h = mx_w - mn_w, mx_h - mn_h
-            mx_wh = max(w, h)
+                w, h = mx_w - mn_w, mx_h - mn_h
+                mx_wh = max(w, h)
 
-            # normalize strokes
-            for stroke in sketch.get_strokes():
-                for p in stroke.get_points():
-                    p.x = ((p.x - mn_w) / mx_wh * 2.0 - 1.0) * scale
-                    p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
+                # normalize strokes
+                try:
+                    for stroke in sketch.get_strokes():
+                        for p in stroke.get_points():
+                            p.x = ((p.x - mn_w) / mx_wh * 2.0 - 1.0) * scale
+                            p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
+                except:
+                    print("[ObjectUtil] could not normalize stroke as mx_wh is {0}".format(mx_wh))
+                    print("[ObjectUtil] sketch len is:{0}".format(len(sketch)))
+                    print(sketch.get_strokes()[0].get_points()[0])
+                    print(sketch.get_strokes()[0].get_points()[1])
+
         
         # reduce using rdp
-        sketches = ObjectUtil.reduce_rdp(sketches, epsilon=eps)
+        if red_rdp:
+            sketches = ObjectUtil.reduce_rdp(sketches, epsilon=eps)
         # TODO: using rdp for some small sketches are making the sketch so small that it 
         # is raising an error in the sketchformer  when getting the embeddings.
 
@@ -425,9 +442,9 @@ class ObjectUtil:
         return converted_sketches
 
     @staticmethod 
-    def poly_to_accumulative_stroke3(sketches, scale=100.0, step=5, eps=1.5):
+    def poly_to_accumulative_stroke3(sketches, scale=100.0, step=5, eps=1.5, red_rdp=True, normalize=True):
         # convert to stroke-3
-        sketches = ObjectUtil.poly_to_stroke3(sketches, scale=scale, step=step, eps=eps)
+        sketches = ObjectUtil.poly_to_stroke3(sketches, scale=scale, step=step, eps=eps, red_rdp=red_rdp, normalize=normalize)
 
         # accumulate the strokes
         for sketch in sketches:
@@ -551,7 +568,36 @@ class ObjectUtil:
             reduced_objs.append(UnlabeledObject(reduced_strokes))
             
         return reduced_objs
-         
+
+
+    def extract_objects_from_directory(directory, n_files = -1, re_sampling=0.0, acceptable_labels=None):
+        # objs : (N x M) M ordered objects for N sketches
+        # labels: (N x M) for each object m in sketch n, store its label
+        objs, labels = [], []
+        for path in pathlib.Path(directory).iterdir():
+            if path.is_dir():
+                tmp_objs, tmp_labels = ObjectUtil.extract_objects_from_directory(path, n_files, acceptable_labels=acceptable_labels)
+                if n_files != -1:
+                    n_files -= len(tmp_objs)
+                objs.extend(tmp_objs)
+                labels.extend(tmp_labels)
+
+            elif path.is_file():
+                if n_files != -1 and len(objs) > n_files:
+                    break
+                if str(path).endswith(".xml"): 
+                    try:
+                        # extract all objects in the file along with their labels, and indices
+                        tmp_objs, tmp_labels = ObjectUtil.xml_to_UnlabeledObjects(str(path), re_sampling=re_sampling)
+                        tmp_objs, tmp_labels = np.asarray(tmp_objs), np.asarray(tmp_labels) 
+                        inds = [i for i, lbl in enumerate(tmp_labels) if lbl in acceptable_labels]
+                        objs.extend(tmp_objs[inds])
+                        labels.extend(tmp_labels[inds])
+                        n_files -= len(inds)
+                    except Exception as e: 
+                        print("ObjectUtil] error: could not read file succefully " + str(path))
+                        print(str(e))
+        return objs, labels
 
                 
 

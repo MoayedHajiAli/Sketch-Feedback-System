@@ -25,6 +25,9 @@ class UnlabeledObject:
             return len(self) == len(other) and all([x == y for x, y in zip(self.get_strokes(), other.get_strokes())])
         else:
             return False  
+    
+    def __str__(self):
+        return "[" + ', '.join([str(st) for st in self.get_strokes()]) + ']'
 
     def move_step(self, steps):
         for stroke in self.strokes_lst:
@@ -89,7 +92,8 @@ class UnlabeledObject:
             stroke.reset()
 
     # for a given transformation parameters, transform all the points
-    def transform(self, t, upd_step=False, restore_origin=False):
+    # TODO: for registering we need to restore origin, however for allignment with deep learning, we do not (FIX)
+    def transform(self, t, upd_step=True, restore_origin=True):
         xo = yo = 0
         if restore_origin:
             xo, yo = self.origin_x, self.origin_y
@@ -97,7 +101,7 @@ class UnlabeledObject:
             stroke.transform(t, xo, yo, upd_step=upd_step)
 
     # update step vector to prepare for the SketchAnimationing
-    def upd_step_vector(self, t, restore_origin=False):
+    def upd_step_vector(self, t, restore_origin=True):
         xo = yo = 0
         if restore_origin:
             xo, yo = self.origin_x, self.origin_y
@@ -125,3 +129,5 @@ class UnlabeledObject:
             st_lst.append(st.get_copy())
         
         return UnlabeledObject(st_lst)
+    
+    
