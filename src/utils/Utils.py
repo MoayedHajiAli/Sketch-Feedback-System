@@ -4,8 +4,6 @@ class Utils:
     """
     General utils to be used
     """
-    
-
     @staticmethod
     def save_obj_pkl(dictionary, path):
         with open(path, 'wb') as f:

@@ -293,6 +293,12 @@ class Encoder(tf.keras.layers.Layer):
         self.dropout = tf.keras.layers.Dropout(rate)
 
     def call(self, x, training, mask):
+        """
+        x(batch_size, input_seq_len, 5)
+        mask(batch_size, 1, 1, input_seq_len)
+        """
+        print("encoder inp shape", x.shape)
+        print("encoder mask shape", mask.shape)
         seq_len = tf.shape(x)[1]
 
         # print("before", x.shape)
@@ -311,7 +317,7 @@ class Encoder(tf.keras.layers.Layer):
 
         # print("after", x.shape)
 
-        return x  # (batch_size, input_seq_len, d_model)
+        return x  # x(batch_size, input_seq_len, d_model)
 
 
 class Decoder(tf.keras.layers.Layer):

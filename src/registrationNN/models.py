@@ -26,9 +26,9 @@ import time
 class registration_model:
     def knn_loss(self, sketches, p):
         # constants
-        scaling_f = 5
-        shearing_f = 5
-        rotation_f = 1.5
+        scaling_f = 2
+        shearing_f = 2
+        rotation_f = 1.0
 
         sketches = tf.identity(sketches)
         # sketches (batch, 2, 126, 3, 1)  p(batch, 7)
@@ -105,9 +105,9 @@ class registration_model:
     @staticmethod
     def np_knn_loss(sketches, p, maxlen=128):
         # constants
-        scaling_f = 5
-        shearing_f = 5
-        rotation_f = 1.5
+        scaling_f = 2
+        shearing_f = 2
+        rotation_f = 1.0
         
         sketches = copy.deepcopy(sketches)
         # sketches = tf.identity(sketches)
@@ -168,13 +168,13 @@ class registration_model:
         sm_cost /= maxlen - np.sum(org_pen, axis=-1) + maxlen - np.sum(tar_pen, axis=-1) 
 
         # # add scaling cost
-        # tran_cost = sum(max((p[:, 0] ** 2), 1 / (p[:, 0] ** 2)) * scaling_f)
-        # tran_cost += sum(max(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
+        # tran_cost = np.sum(np.maximum((p[:, 0] ** 2), 1 / (p[:, 0] ** 2)) * scaling_f)
+        # tran_cost += np.sum(np.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
         # # add roation cost
-        # tran_cost += sum((p[:, 2] ** 2) * rotation_f)
+        # tran_cost += np.sum((p[:, 2] ** 2) * rotation_f)
         # # add shearing cost
-        # tran_cost += sum((p[:, 3] ** 2) * shearing_f)
-        # tran_cost += sum((p[:, 4] ** 2) * shearing_f)
+        # tran_cost += np.sum((p[:, 3] ** 2) * shearing_f)
+        # tran_cost += np.sum((p[:, 4] ** 2) * shearing_f)
         # add shearing cos
 
         return sm_cost # + np.sqrt(tran_cost)      

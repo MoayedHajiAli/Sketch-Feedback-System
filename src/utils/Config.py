@@ -12,21 +12,21 @@ class Config:
         # dataset realted
         config.n_file = 5000
         config.k_select = 200
-        config.obj_accepted_labels = ['Circle', 'Star', 'Triangle', 'Star Bullet', 'Square', 'Arrow Right', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus']
+        # config.obj_accepted_labels = ['Circle', 'Star', 'Triangle', 'Star Bullet', 'Square', 'Arrow Right', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus']
+        config.obj_accepted_labels = ['Circle', 'Triangle', 'Square', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus']
         config.dataset_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), 'ASIST_Dataset/Data/Data_A')
         config.seed = 1
 
         # model related
         config.batch_size = 128
-        config.learning_rate = 2e-3
+        config.learning_rate = 1e-4
         config.epochs = 200
         config.load = False
         config.load_ckpt = False
         config.save = True
         config.save_ckpt = True
         config.save_best_only = True
-        config.exp_dir = "../registrationNN/saved_models/experiment{0}".format(str(exp_id)) # save path
-        config.hist_path = config.exp_dir + "/hist.pkl"
+        config.exp_dir = "../registrationNN/saved_models/experiment_{0}".format(str(exp_id)) # save path
         config.ckpt_path = config.exp_dir + "/cp-{epoch:04d}.ckpt"
         config.verbose = 5
 
@@ -34,10 +34,13 @@ class Config:
         config.vis_train = True
         config.vis_test = True
         config.fine_tune = True
-        config.fine_tune_epochs = 10
+        config.fine_tune_epochs = 100
         config.iter_refine_prediction = True
         config.vis_transformation = False
-        config.vis_dir = "../registrationNN/saved_results/experiment{0}".format(str(exp_id))
+        config.vis_dir = "../registrationNN/saved_results/experiment_{0}".format(str(exp_id))
+        config.hist_path = config.vis_dir + "/hist.pkl"
+        config.config_path = config.vis_dir + "/config.txt"
+        config.log_path = config.vis_dir + "/log.txt"
         config.num_vis_samples = 10
 
         os.makedirs(config.exp_dir, exist_ok=True)
@@ -59,7 +62,7 @@ class Config:
         config.seed = 1
         config.verbose = 4 # 1-3 for normal messages, 4 to save visualizations and 5 to show visualization
         config.re_sampling = 0.0
-        config.exp_dir = '../results_log/segmentation/iterative/experiment{0}'.format(exp_id)
+        config.exp_dir = '../results_log/segmentation/iterative/experiment_{0}'.format(exp_id)
 
         # algorithm related
         config.iterations = 60

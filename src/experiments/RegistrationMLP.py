@@ -12,12 +12,13 @@ import time
 import random
 import json
 
-model_config = Config.default_model_config(10)
-model_config.n_files = 200
-model_config.k_select = 10
+exp_id = 'penalty-test'
+model_config = Config.default_model_config(exp_id)
+model_config.n_files = 500
+model_config.k_select = 100
 model_config.epochs = 200
 model_config.num_vis_samples = 5 
-model_config.obj_accepted_labels = ['Circle', 'Star', 'Triangle']
+model_config.obj_accepted_labels = ['Triangle']
 
 print(f"[RegisterationMLP.py] {time.ctime()}: Expermint {model_config.exp_id} started")
 
@@ -43,11 +44,11 @@ train_org_sketches, val_org_sketches, train_tar_sketches, val_tar_sketches = tra
 
 # save experiment configurations
 config_json = json.dumps(dict(model_config), indent=4)
-with open(os.path.join(model_config.exp_dir, 'config.txt'), 'w') as f:
+with open(model_config.config_path, 'w') as f:
     f.write(config_json)
 
 # redirect output to log
-# sys.stdout = open(os.path.join(model_config.exp_dir, 'log.out'), 'w+')
+# sys.stdout = open(model_config.log_path, 'w+')
 
 model = registration_model(model_config)
 model.fit(train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches)
