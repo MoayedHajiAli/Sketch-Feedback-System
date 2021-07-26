@@ -111,6 +111,13 @@ class Config:
         config.pretrained_model_path = ''
         config.fine_tune_epochs = 200
 
+        config.org_flip = False
+        config.org_shift_x = 0
+        config.org_shift_y = 0
+        config.tar_flip = False
+        config.tar_shift_x = 0
+        config.tar_shift_y = 0
+
         # saving and visualization related
         config.vis_video = False
         config.load_trans_params = False

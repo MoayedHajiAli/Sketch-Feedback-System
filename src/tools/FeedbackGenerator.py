@@ -12,7 +12,7 @@ from animator.SketchAnimation import SketchAnimation
 import pickle5 as pickle
 import os
 
-class videoGenerator:
+class VideoGenerator:
     def __init__(self, alignment_model, config):
         self.config = config
 
@@ -47,6 +47,10 @@ class videoGenerator:
             trans_params, losses = self.alignment_model.predict(org_objs, tar_objs) # trans_params(N * M, 7)
             trans_params = np.reshape(trans_params, (n, m, 7))
             losses = np.reshape(losses, (n, m))
+
+            if self.config.verbose > 2:
+                print(f'[VideoGenerator] info: pair-wise transformation parameters: {trans_params}')
+                print(f'[VideoGenerator] info: pair-wise disimilarity: {losses}')
 
             final_params = self.optimal_transformation(org_sketch, tar_sketch, losses, trans_params) # note: new objects might be added to org_sketch
 
@@ -100,9 +104,14 @@ class videoGenerator:
             if dissimilarity > self.config.mx_dissimilarity:
                 non_added_object = dissimilarity != RegistrationUtils.inf
                 
+                if non_added_object and self.config.verbose > 1:
+                    print(f'[VideoGenerator] info: Original object {i} could not find a good match. Lowest dissimilarity: {dissimilarity}')
+
                 # handle the case when n > m or when the object does not have any good match
                 # by making the object vanish into its origin
                 if n > m or non_added_object:
+                    if self.config.verbose > 1:
+                        print(f'[VideoGenerator] info: Original object {i} will vanish as it could not find any match')
                     trans_matrix[i, ind] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, org_objs[i].origin_x, org_objs[i].origin_y])        
                 
                 # handle the case when m > n or when the object does not have any good match
