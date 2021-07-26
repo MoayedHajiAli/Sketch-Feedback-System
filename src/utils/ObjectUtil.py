@@ -87,7 +87,11 @@ class ObjectUtil:
         # re-sample the objecte
         if re_sampling != 0.0:
             for id in stroke_dict:
-                stroke_dict[id] = ObjectUtil.stroke_restructure(stroke_dict[id], max(mn_len, int(re_sampling * len(stroke_dict[id]))))
+                if re_sampling > 1:
+                    # resample to a fixed length
+                    stroke_dict[id] = ObjectUtil.stroke_restructure(stroke_dict[id], re_sampling)
+                elif re_sampling <= 1:
+                    stroke_dict[id] = ObjectUtil.stroke_restructure(stroke_dict[id], max(mn_len, int(re_sampling * len(stroke_dict[id]))))
 
         return stroke_dict
 
@@ -258,6 +262,7 @@ class ObjectUtil:
 
         return tot
 
+    
     # for a given stroke, and target number of points, restructure the objects by placing
     # the points at equal distances
     @staticmethod

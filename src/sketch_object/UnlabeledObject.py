@@ -92,18 +92,23 @@ class UnlabeledObject:
             stroke.reset()
 
     # for a given transformation parameters, transform all the points
-    # TODO: for registering we need to restore origin, however for allignment with deep learning, we do not (FIX)
-    def transform(self, t, upd_step=True, restore_origin=True):
+    # TODO: for registering we need to restore origin????? (why), however for allignment with deep learning, we do not (FIX)
+    def transform(self, t, upd_step=True, object_origin=False):
+        """
+        upd_step: it updates the step vecotr so that the object will be prepared for transformation animation
+        object_origin: if true then performe the transformation around the point with the minimum x in the origin, otherwise consider (0, 0) to be
+        the origin.
+        """
         xo = yo = 0
-        if restore_origin:
+        if object_origin:
             xo, yo = self.origin_x, self.origin_y
         for stroke in self.strokes_lst:
             stroke.transform(t, xo, yo, upd_step=upd_step)
 
     # update step vector to prepare for the SketchAnimationing
-    def upd_step_vector(self, t, restore_origin=True):
+    def upd_step_vector(self, t, object_origin=True):
         xo = yo = 0
-        if restore_origin:
+        if object_origin:
             xo, yo = self.origin_x, self.origin_y
         for stroke in self.strokes_lst:
             stroke.upd_step_vector(t, xo, yo)

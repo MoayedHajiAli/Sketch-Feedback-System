@@ -7,7 +7,7 @@ Created on 01/05/19
 
 import tensorflow as tf
 from tensorflow.keras import backend as K
-from ..utils import scaled_dot_product_attention, positional_encoding
+from ..utils import scaled_dot_product_attention, positional_encoding, create_padding_mask
 
 
 class SelfAttnV1(tf.keras.layers.Layer):
@@ -144,6 +144,78 @@ class SelfAttnV2(tf.keras.layers.Layer):
             return input_shape[0], input_shape[-1]
 
 
+
+class SelfAttnV3(tf.keras.layers.Layer):
+    """
+    Keras attention layer for a sequence
+    learn weight for each time step
+    This implementation uses the attention formula proposed by  Sukhbaatar etal. 2015
+    https://papers.nips.cc/paper/5846-end-to-end-memory-networks.pdf
+
+    Example:
+        from tensorflow.keras.layers import Input, LSTM
+        from attn_rnn import AttnRNN
+
+        input_data = Input(shape=(32,128))  # [?, 32, 128]
+        x = LSTM(10, return_sequences=True)(input_data)  # [?, 32, 10]
+        x, w = SelfAttn()(x)  # x: [?, 10], w: [?, 32]
+
+        where w is the attention weight for each time step (useful for visualisation/ClassEvaluation)
+    """
+
+    def __init__(self, units=None, **kwargs):
+        """
+        Layer initialisation
+        :param units: define the embedding dimension. If not specified (default),
+                      it will be set to feat dimension.
+        :param kwargs:
+        """
+        self.units = units
+        super().__init__(**kwargs)
+
+    def build(self, input_shape):
+        assert len(input_shape) == 3
+        fdim = input_shape[-1]
+        if self.units is None:
+            self.units = fdim
+
+        self.W = self.add_weight(name='W_attn',
+                                 shape=(fdim, self.units),
+                                 initializer='normal',
+                                 trainable=True)
+        self.b = self.add_weight(name='b_attn',
+                                 shape=(self.units,),
+                                 initializer='zeros',
+                                 trainable=True)
+        self.V = self.add_weight(name='V_attn',
+                                 shape=(self.units, 1),
+                                 initializer='uniform',
+                                 trainable=True)
+        super().build(input_shape)
+
+    def call(self, x):
+        """
+        ui = tanh(xW+b)
+        a = softmax(uV)
+        o = sum(a*x)
+        :param x: input tensor [batch_size, time_step, feat_len]
+        :return: output tensor [batch_size, feat_len]
+        """
+        # print("x", x.shape)
+        # ui = tanh(xW+b)
+        ui = K.tanh(K.bias_add(K.dot(x, self.W), self.b))  # [B, T, L]
+        # print("ui", ui.shape)
+        # a = softmax(uV)
+        ai = K.softmax(K.dot(ui, self.V), axis=1)  # [B, T, 1]
+        # print("ai", ai.shape)
+        o = K.sum(x * ai, axis=1, keepdims=False)
+        # print("o", o.shape)
+        return o
+
+    def compute_output_shape(self, input_shape):
+        return input_shape[0], self.units
+
+
 class MultiHeadAttention(tf.keras.layers.Layer):
     """
     multi head attention for transformer
@@ -267,6 +339,57 @@ class DecoderLayer(tf.keras.layers.Layer):
         out3 = self.layernorm3(ffn_output + out2)  # (batch_size, target_seq_len, d_model)
 
         return out3, attn_weights_block1, attn_weights_block2
+
+
+class UnmaskedEncoder(tf.keras.layers.Layer):
+
+    def __init__(self, num_layers, d_model, num_heads, dff, input_vocab_size,
+                 maximum_position_encoding=1000, rate=0.1,
+                 use_continuous_input=True):
+        super().__init__()
+
+        self.d_model = d_model
+        self.num_layers = num_layers
+
+        if use_continuous_input:
+            self.embedding = tf.keras.layers.Dense(d_model)
+        else:
+            self.embedding = tf.keras.layers.Embedding(input_vocab_size, d_model)
+
+        self.pos_encoding = positional_encoding(maximum_position_encoding,
+                                                self.d_model)
+
+        self.enc_layers = [EncoderLayer(d_model, num_heads, dff, rate)
+                           for _ in range(num_layers)]
+
+        self.dropout = tf.keras.layers.Dropout(rate)
+
+    def call(self, x, training):
+        """
+        x(batch_size, input_seq_len, 5)
+        mask(batch_size, 1, 1, input_seq_len)
+        """
+        mask = create_padding_mask(x)
+        seq_len = tf.shape(x)[1]
+
+        # print("before", x.shape)
+        # adding embedding and position encoding.
+        x = self.embedding(x)  # (batch_size, input_seq_len, d_model)
+        # print("after", x.shape)
+        x *= tf.math.sqrt(tf.cast(self.d_model, tf.float32))
+        x += self.pos_encoding[:, :seq_len, ...]
+        # print("after2", x.shape)
+
+        x = self.dropout(x, training=training)
+        # print("after3", x.shape)
+
+        for i in range(self.num_layers):
+            x = self.enc_layers[i](x, training, mask)
+
+
+        return x  # x(batch_size, input_seq_len, d_model)
+
+
 
 
 class Encoder(tf.keras.layers.Layer):
