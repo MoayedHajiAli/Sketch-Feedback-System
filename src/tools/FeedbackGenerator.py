@@ -9,6 +9,8 @@ from sketch_object.UnlabeledObject import UnlabeledObject
 import copy
 from sketch_object.Stroke import Stroke
 from animator.SketchAnimation import SketchAnimation
+import pickle5 as pickle
+import os
 
 class videoGenerator:
     def __init__(self, alignment_model, config):
@@ -27,28 +29,41 @@ class videoGenerator:
         """
         n, m = len(org_sketch), len(tar_sketch)
 
-        # prepare pair-wise set
-        org_objs, tar_objs = [], []
-        for obj1 in org_sketch:
-            for obj2 in tar_sketch:
-                org_objs.append(obj1)
-                tar_objs.append(obj2)
+        if self.config.load_trans_params:
+            with open(os.path.join(self.config.video_dir, 'transformation_parameters.pkl'), 'rb') as f:
+                final_params = pickle.load(f)
+    
+        else:
+            # prepare pair-wise set
+            org_objs, tar_objs = [], []
+            for obj1 in org_sketch:
+                for obj2 in tar_sketch:
+                    org_objs.append(obj1)
+                    tar_objs.append(obj2)
 
-        trans_params, losses = self.alignment_model.predict(org_objs, tar_objs) # trans_params(N * M, 7)
-        trans_params = np.reshape(trans_params, (n, m, 7))
-        losses = np.reshape(losses, (n, m))
 
-        final_params = self.optimal_transformation(org_sketch, tar_sketch, losses, trans_params) # note: new objects might be added to org_sketch
-        
-        # generate the video based on the final params
+            self.alignment_model.fine_tune(org_objs, tar_objs, self.config.fine_tune_epochs)
 
-        # obtain sequential transformation params
-        # t = []
-        # for lst in final_params:
-        #     t.append(RegistrationUtils.obtain_transformation_matrix(lst))
+            trans_params, losses = self.alignment_model.predict(org_objs, tar_objs) # trans_params(N * M, 7)
+            trans_params = np.reshape(trans_params, (n, m, 7))
+            losses = np.reshape(losses, (n, m))
 
-        anim = SketchAnimation(org_sketch, tar_sketch)
-        anim.seq_animate_all(final_params, save=True, file=self.config.save_video_path)
+            final_params = self.optimal_transformation(org_sketch, tar_sketch, losses, trans_params) # note: new objects might be added to org_sketch
+
+             # save final params in a pickle file 
+            with open(os.path.join(self.config.video_dir, 'transformation_parameters.pkl'), 'wb') as f:
+                pickle.dump(final_params, f)
+       
+        if self.config.vis_video:
+            # generate the video based on the final params
+
+            # obtain sequential transformation params
+            # t = []
+            # for lst in final_params:
+            #     t.append(RegistrationUtils.obtain_transformation_matrix(lst))
+
+            anim = SketchAnimation(org_sketch, tar_sketch)
+            anim.seq_animate_all(final_params, save=True, file=self.config.save_video_path)
         
 
     def optimal_transformation(self, org_objs, tar_objs, dissimilarity_matrix, trans_matrix):

@@ -31,7 +31,7 @@ class Config:
         config.save_ckpt = True
         config.save_best_only = True
         config.exp_dir = "../registrationNN/saved_models/{0}".format(str(exp_id)) # save path
-        config.ckpt_path = config.exp_dir + "/cp-best.ckpt"
+        config.ckpt_path = config.exp_dir + "/cp-best-loss.ckpt"
         config.verbose = 5
 
         # visualization realted
@@ -109,7 +109,11 @@ class Config:
         config.video_dir = '../../generated_videos/{0}/{1}'.format(question_name, sketch1_id)
         config.save_video_path = os.path.join(config.video_dir, f'{sketch2_id}.mp4')
         config.pretrained_model_path = ''
-        config.fine_tune_epochs = 100
+        config.fine_tune_epochs = 200
+
+        # saving and visualization related
+        config.vis_video = False
+        config.load_trans_params = False
 
         os.makedirs(config.video_dir, exist_ok=True)
 

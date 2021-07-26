@@ -90,17 +90,17 @@ class NNModel:
 
             # add penalty to the transformation parameters
             # @size p: (batch, 7)
-            # add scaling cost
-            tran_cost = K.sum(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
-            tran_cost += K.sum(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
-            # add roation cost
-            tran_cost += K.sum((p[:, 2] ** 2) * rotation_f)
-            # add shearing cost
-            tran_cost += K.sum((p[:, 3] ** 2) * shearing_f)
-            tran_cost += K.sum((p[:, 4] ** 2) * shearing_f)
+            # # add scaling cost
+            # tran_cost = K.sum(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
+            # tran_cost += K.sum(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
+            # # add roation cost
+            # tran_cost += K.sum((p[:, 2] ** 2) * rotation_f)
+            # # add shearing cost
+            # tran_cost += K.sum((p[:, 3] ** 2) * shearing_f)
+            # tran_cost += K.sum((p[:, 4] ** 2) * shearing_f)
             # add shearing cost
 
-            return sm_cost  + K.sqrt(tran_cost)    
+            return sm_cost # + K.sqrt(tran_cost)    
         return knn_loss     
 
     @staticmethod
@@ -185,22 +185,22 @@ class NNModel:
         tar_reshaped = Reshape((128, 3))(tar_inputs)
         
         # Conv encoder
-        # org_fe_layer0 = Dense(64, activation='relu')(org_reshaped) # 128, 64
-        # org_fe_layer0 = LayerNormalization()(org_fe_layer0)
-        # org_fe_layer0 = Reshape((128, 64, 1))(org_fe_layer0)
-        # org_fe_layer1 = Conv2D(1, (3, 3), 1)(org_fe_layer0) 
-        # org_fe_layer1 = MaxPool2D((3, 3))(org_fe_layer1)
-        # org_fe_layer1 = Reshape((42 * 20,)) (org_fe_layer1)
+        org_fe_layer0 = Dense(64, activation='relu')(org_reshaped) # 128, 64
+        org_fe_layer0 = LayerNormalization()(org_fe_layer0)
+        org_fe_layer0 = Reshape((128, 64, 1))(org_fe_layer0)
+        org_fe_layer1 = Conv2D(1, (3, 3), 1)(org_fe_layer0) 
+        org_fe_layer1 = MaxPool2D((3, 3))(org_fe_layer1)
+        org_fe_layer1 = Reshape((42 * 20,)) (org_fe_layer1)
 
         # sketchformer encoder + self attention
-        org_enc = UnmaskedEncoder(
-            num_layers=1,
-            d_model=128,
-            num_heads=4, dff=256,
-            input_vocab_size=None, rate=0.1,
-            use_continuous_input=True)(org_reshaped)
+        # org_enc = UnmaskedEncoder(
+        #     num_layers=1,
+        #     d_model=128,
+        #     num_heads=4, dff=256,
+        #     input_vocab_size=None, rate=0.1,
+        #     use_continuous_input=True)(org_reshaped)
 
-        org_fe_layer1 = SelfAttnV3(128)(org_enc)    
+        # org_fe_layer1 = SelfAttnV3(128)(org_enc)    
         
         
         org_fe_layer2= Dense(64, activation='relu')(org_fe_layer1)
@@ -211,22 +211,22 @@ class NNModel:
         
 
         # Conv encoder 
-        # tar_fe_layer0= Dense(64, activation='relu')(tar_reshaped)
-        # tar_fe_layer0 = LayerNormalization()(tar_fe_layer0)
-        # tar_fe_layer0 = Reshape((128, 64, 1))(tar_fe_layer0)
-        # tar_fe_layer1 = Conv2D(1, (3, 3), 1)(tar_fe_layer0)
-        # tar_fe_layer1 = MaxPool2D((3, 3))(tar_fe_layer1)
-        # tar_fe_layer1 = Reshape((42 * 20, )) (tar_fe_layer1)
+        tar_fe_layer0= Dense(64, activation='relu')(tar_reshaped)
+        tar_fe_layer0 = LayerNormalization()(tar_fe_layer0)
+        tar_fe_layer0 = Reshape((128, 64, 1))(tar_fe_layer0)
+        tar_fe_layer1 = Conv2D(1, (3, 3), 1)(tar_fe_layer0)
+        tar_fe_layer1 = MaxPool2D((3, 3))(tar_fe_layer1)
+        tar_fe_layer1 = Reshape((42 * 20, )) (tar_fe_layer1)
 
         # sketchformer encoder + self attention
 
-        tar_enc = UnmaskedEncoder(
-            num_layers=2,
-            d_model=128,
-            num_heads=4, dff=256,
-            input_vocab_size=None, rate=0.1,
-            use_continuous_input=True)(tar_reshaped)
-        tar_fe_layer1 = SelfAttnV3(128)(tar_enc)
+        # tar_enc = UnmaskedEncoder(
+        #     num_layers=2,
+        #     d_model=128,
+        #     num_heads=4, dff=256,
+        #     input_vocab_size=None, rate=0.1,
+        #     use_continuous_input=True)(tar_reshaped)
+        # tar_fe_layer1 = SelfAttnV3(128)(tar_enc)
 
 
         tar_fe_layer2 = Dense(64, activation='relu')(tar_fe_layer1)
@@ -245,6 +245,30 @@ class NNModel:
                           optimizer=Adam(learning_rate=self.model_config.learning_rate))
 
     
+    def fine_tune(self, train_org_sketches, train_tar_sketches, epochs):
+        # convert sketches into stroke-3 format
+        train_org_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_org_sketches)
+        train_tar_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_tar_sketches)
+        
+        # add padding
+        train_org_sketches = RegistrationUtils.pad_sketches(train_org_sketches, maxlen=128)
+        train_tar_sketches = RegistrationUtils.pad_sketches(train_tar_sketches, maxlen=128)
+        org_sketches, tar_sketches = train_org_sketches, train_tar_sketches
+
+        org_sketches = np.expand_dims(org_sketches, axis=-1)
+        tar_sketches = np.expand_dims(tar_sketches, axis=-1)
+        cmb_sketches = np.stack((org_sketches, tar_sketches), axis=1)
+
+        # fit model
+        model_history = self.model.fit(x=[org_sketches, tar_sketches], 
+                                       y=cmb_sketches, 
+                                       batch_size=self.model_config.batch_size,
+                                       epochs=epochs)
+        return model_history.history
+            
+        
+
+
     def fit(self, train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches):
         print("Devices:", device_lib.list_local_devices())
         print(f"length of original sketchs:{len(train_org_sketches)}")
