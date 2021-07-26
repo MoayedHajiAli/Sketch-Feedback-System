@@ -91,3 +91,25 @@ class Config:
         os.makedirs(config.tsne_fig_dir, exist_ok=True)
 
         return config
+
+
+    def default_video_config(question_name, sketch1_id, sketch2_id):
+        # prepare configuration
+        config = Munch()
+
+        # experiment realted
+        config.org_sketch_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), f'ASIST_Dataset/Data/Data_A/{question_name}/{sketch1_id}.xml')
+        config.tar_sketch_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), f'ASIST_Dataset/Data/Data_A/{question_name}/{sketch2_id}.xml')
+        config.seed = 1
+        config.verbose = 4 # 1-3 for normal messages, 4 to save visualizations and 5 to show visualization
+        config.re_sampling = 0.0
+        config.mx_dissimilarity = 50
+        config.construction_step_size = 0.001
+        config.video_dir = '../results_log/generated_videos/{0}/{1}'.format(question_name, sketch1_id)
+        config.save_video_path = os.path.join(config.video_dir, f'{sketch2_id}.mp4')
+        config.pretrained_model_path = ''
+        config.fine_tune_epochs = 100
+
+        os.makedirs(config.video_dir, exist_ok=True)
+
+        return config
