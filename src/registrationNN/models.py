@@ -7,7 +7,7 @@ from keras.models import load_model
 from keras.initializers import HeNormal
 from keras import Model
 from utils.ObjectUtil import ObjectUtil
-from keras_preprocessing.sequence import pad_sequences
+from sketch_object.UnlabeledObject import UnlabeledObject
 import numpy as np
 import tensorflow as tf
 from utils.ObjectUtil import ObjectUtil
@@ -22,9 +22,11 @@ import os
 from tensorflow.python.client import device_lib
 from datetime import datetime
 import time
-from sketchformer.builders.utils import create_padding_mask
+from multiprocessing import Pool
+from scipy.optimize import minimize, basinhopping, approx_fprime
+import time
 
-class registration_model:
+class NNModel:
     def get_knn_loss(self, scaling_f, shearing_f, rotation_f):
         def knn_loss(sketches, p):
 
@@ -275,7 +277,7 @@ class registration_model:
                 def on_epoch_begin(self, epoch, logs=None):
                     params = self.model.predict((org_sketches, tar_sketches))
                     print("Start epoch {} of training; params predictions of first sketch: {}".format(epoch, params[0:1]))
-                    loss = registration_model.np_knn_loss(cmb_sketches[0:1], params[0:1])
+                    loss = NNModel.np_knn_loss(cmb_sketches[0:1], params[0:1])
                     print("Start epoch {} of training; loss of first sketch: {}".format(epoch, loss))
             
         if self.model_config.load_ckpt:
@@ -338,14 +340,50 @@ class registration_model:
             self.init_model()
             
     
-    def predict(self, org_sketches, tar_sketches):
-        return self.model.predict((org_sketches, tar_sketches))
+    def predict(self, org_obj, tar_obj):
+        """ind the transformation alignment parameters for each of the org_sketches to its correspondance in the tar_sketches
+
+        Args:
+            org_obj (list(UnlabeldObject)): list of N sketches
+            tar_obj (list(UnlabeldObject)): list of target N sketches
+        """
+        # convert sketches into stroke-3 format
+        org_obj_stroke3 = ObjectUtil.poly_to_accumulative_stroke3(org_obj)
+        tar_obj_stroke3 = ObjectUtil.poly_to_accumulative_stroke3(tar_obj)
+        
+        # add padding
+        org_obj_stroke3 = RegistrationUtils.pad_sketches(org_obj_stroke3, maxlen=128)
+        tar_obj_stroke3 = RegistrationUtils.pad_sketches(tar_obj_stroke3, maxlen=128)
+
+        org_obj_stroke3 = np.expand_dims(org_obj_stroke3, axis=-1)
+        tar_obj_stroke3 = np.expand_dims(tar_obj_stroke3, axis=-1)
+        cmb_obj_stroke3 = np.stack((org_obj_stroke3, tar_obj_stroke3), axis=1)
+
+        params = self.predict_from_stroke3(self, org_obj, tar_obj)
+
+        # find the loss
+        losses = self.np_knn_loss(cmb_obj_stroke3, params)
+        return params, losses
+
+
+    def predict_from_stroke3(self, org_obj, tar_obj):
+        """ find the transformation alignment parameters for each of the org_sketches to its correspondance in the tar_sketches
+
+        Args:
+            org_obj (array(B x 128 x 3 x 1)): list of B sketches to aligne in stroke-3 format
+            tar_obj (array(B x 128 x 3 x 1)): list of B sketches to be aligned to in stroke-3 format
+
+        Returns:
+            [array] : B x 7 list of transformation parameters in the corresponding order of : 
+        """
+        return self.model.predict((org_obj, tar_obj))
         # tf.keras.utils.plot_model(self.model, to_file='model.png', show_layer_names=True, rankdir='TB', show_shapes=True)
         
 
 
 class model_visualizer():
     def visualize_model(model, train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches, model_config):
+        
         # convert sketches into stroke-3 format
         train_org_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_org_sketches)
         train_tar_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_tar_sketches)
@@ -378,7 +416,7 @@ class model_visualizer():
         if model_config.vis_transformation:
             # animate the tranformation
             print("[models.py] visualizing transformation")
-            params = model.predict(org_sketches, tar_sketches)
+            params = model.predict_from_stroke3(org_sketches, tar_sketches)
             inds = rnd.choices(range(len(org_sketches)), k=model_config.num_vis_samples)
 
             for i in inds:
@@ -395,7 +433,7 @@ class model_visualizer():
             os.makedirs(vis_dir, exist_ok=True)
 
             print(f"[models.py] {time.ctime()}: Saving training visualizations")
-            params = model.predict(org_sketches, tar_sketches)
+            params = model.predict_from_stroke3(org_sketches, tar_sketches)
             for j in range(model_config.num_vis_samples):
                 inds = rnd.choices(range(len(org_objs)), k=5)
                 fig, axs = plt.subplots(len(inds), 3)
@@ -413,7 +451,7 @@ class model_visualizer():
         # visualizing the validation
         if model_config.vis_test:
             # predict transformation
-            params = model.predict(val_org_sketches, val_tar_sketches)
+            params = model.predict_from_stroke3(val_org_sketches, val_tar_sketches)
             print("[model.py] resulted average loss without refinment", np.mean(model.np_knn_loss(val_cmb_sketches, params)))
 
             vis_dir = os.path.join(model_config.vis_dir, 'testing', 'wo_refinment')
@@ -444,7 +482,7 @@ class model_visualizer():
 
                 for i in range(model_config.num_vis_samples):
                     # predict tranformation in every iteration 
-                    params = model.predict(val_org_sketches, val_tar_sketches)
+                    params = model.predict_from_stroke3(val_org_sketches, val_tar_sketches)
                     print("resulted average loss with iterative refinment at iter {0}: {1}".format(i, np.mean(model.np_knn_loss(val_cmb_sketches, params))))
                     inds = vis_inds[i]
                     fig, axs = plt.subplots(len(inds), 3)
@@ -486,7 +524,7 @@ class model_visualizer():
                 ax.plot(refine_history.history['loss'])
                 plt.savefig(vis_dir + "/loss.png")
 
-                params = model.predict(val_org_sketches, val_tar_sketches)
+                params = model.predict_from_stroke3(val_org_sketches, val_tar_sketches)
                 print(f"[models.py] {time.ctime()}: resulted average loss after refinment", np.mean(model.np_knn_loss(val_cmb_sketches, params)))
                 print(f"[models.py] {time.ctime()}: Saving testing with fine-tune visualizations")
 
@@ -502,3 +540,139 @@ class model_visualizer():
                         val_org_objs[ind].reset()
 
                     plt.savefig(vis_dir + "/res{0}.png".format(i))
+
+# TODO: the follwoing two models were not tested after restructing the code
+class RegisterTwoObjects:
+    
+    def __init__(self, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, cost_fun):
+        self.tar_obj = tar_obj
+        self.ref_obj = ref_obj
+        self.total_cost = cost_fun
+
+    ##################
+    # TODO: delete this method
+    # test numerical gradient optimization
+    def num_optimize(self, t):
+        eps = 0.001
+        lr = 0.1
+        t = np.array(t)
+        cur, prev = 100, 0
+        for _ in range(200): 
+            if _ % 50 == 0:
+                self.ref_obj.transform(RegistrationUtils.obtain_transformation_matrix(t))
+                self.ref_obj.visualize()
+                self.ref_obj.reset()
+            # obtain the gradient
+            grad = approx_fprime(t, RegistrationUtils.embedding_dissimilarity, eps, self.ref_obj, self.tar_obj)
+            t -= lr * np.array(grad)
+
+        return -1, t
+
+    # total dissimilarity including the cost of the transformation
+    def total_dissimalirity(self, p, params = True, target_dis=True, original_dis=True):
+        tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(self.ref_obj))
+        if params:
+            p = RegistrationUtils.obtain_transformation_matrix(p)
+        
+        dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, p, target_nn = self.target_nn, 
+                                                            target_dis=target_dis, original_dis=original_dis) 
+        return dissimilarity + (tran_cost / (len(self.ref_obj) + len(self.tar_obj)))   
+
+
+    def optimize(self, p = None, params = True, target_dis=True, original_dis=True):
+        """optimize the disimilarity function.
+    
+            Params: 
+                p: the transoformation parameters 
+                params: if True, the function expects and return an array of parameters of shape(7), which specify the tarnsformation
+                        paramerts for scaling_x, scaling_y, rotations, shearing_x, shearing_y, translation_x, translation_y.
+                        if False, the function expects and return an array of parameters of shape(6), which specify the tarnsformation
+                        array values
+            """ 
+        # find t if not specifies
+        if p is None:
+            x_dif = self.tar_obj.origin_x - self.ref_obj.origin_x
+            y_dif = self.tar_obj.origin_y - self.ref_obj.origin_y
+            if params:
+                # p = np.array([random.uniform(1, 2), random.uniform(1, 2), 0.0, random.uniform(0, 1), random.uniform(0, 1), x_dif, y_dif])
+                p = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
+            else:
+                p = np.array([1.0, 0.0, x_dif, 0.0, 1.0, y_dif])  
+
+        # track function for scipy minimize
+        def _track(xk):
+            print(xk)
+
+        #self.target_nn = NearestSearch(self.tar_obj.get_x(), self.tar_obj.get_y())
+        self.target_nn = None
+
+        # calculate min/max coordinates for the referenced object
+        self.mn_x, self.mx_x = min(self.ref_obj.get_x()), max(self.ref_obj.get_x())
+        self.mn_y, self.mx_y = min(self.ref_obj.get_y()), max(self.ref_obj.get_y())
+
+        minimizer_kwargs = {"method": "BFGS", "args" : (params, target_dis, original_dis)}
+        res = basinhopping(self.total_dissimalirity, p, minimizer_kwargs=minimizer_kwargs, disp=True, niter=2)
+        d, p = res.fun, res.x 
+        return d, p
+
+
+class BlackBoxModel:
+
+    def __init__(self):
+        self.sh_cost, self.tr_cost = RegistrationUtils._shearing_cost, RegistrationUtils._translation_cost, 
+        self.ro_cost, self.sc_cost = RegistrationUtils._rotation_cost, RegistrationUtils._scaling_cost
+
+    def predict(self, original_obj, target_obj):
+        n, m = len(self.original_obj), len(self.target_obj)
+        dim = max(n,m)
+        self.res_matrix = np.zeros((dim, dim))
+        self.tra_matrix = np.zeros((dim, dim, 7))   
+
+        # prepare queue of regiteration objects for multiprocessing
+        pro_queue = []
+        for obj1 in self.original_obj:
+            for obj2 in self.target_obj:
+                pro_queue.append(RegisterTwoObjects(obj1, obj2, self.total_cost))
+
+        # register all the objects using pooling
+        res = []
+        with Pool(self.core_cnt) as p:
+            res = list(p.map(self._optimize, pro_queue))
+
+        # fill the result in the res_matrix
+        t = 0
+        for i in range(dim):
+            # t = np.random.rand(7)
+            for j in range(dim):
+                if i >= n or j >= m:
+                    d, p = RegistrationUtils.inf, np.zeros(7)
+                else:
+                    d, p = res[t]
+                    t += 1
+                self.res_matrix[i, j] = d
+                self.tra_matrix[i, j] = p
+        self.res_matrix = np.asarray(self.res_matrix)
+
+        return self.res_matrix, self.tra_matrix
+
+    
+    # wrapper function for calling optimize on a RegisterTwoObjects
+    def _optimize(self, reg):
+        x_dif = reg.tar_obj.origin_x - reg.ref_obj.origin_x
+        y_dif = reg.tar_obj.origin_y - reg.ref_obj.origin_y
+        p = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
+        return reg.optimize(p = p, params=True)
+
+
+    # obtain total transformation **parameters** cost
+    def total_cost(self, p, mn_x, mx_x, mn_y, mx_y, ln):
+        tot = 0.0
+        tot += self.sc_cost(p[0], p[1], ln)
+        tot += self.ro_cost(p[2], ln)
+        tot += self.sh_cost(p[3], p[4], mn_x, mn_y, mx_x, mx_y, ln)
+        tot += self.tr_cost(p[5], p[6], ln)
+        return tot
+
+
+if __name__ == "__main__":
+    pass
