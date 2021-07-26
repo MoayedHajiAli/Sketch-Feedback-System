@@ -8,6 +8,7 @@ from utils.RegistrationUtils import RegistrationUtils
 from sketch_object.UnlabeledObject import UnlabeledObject
 import copy
 from sketch_object.Stroke import Stroke
+from animator.SketchAnimation import SketchAnimation
 
 class videoGenerator:
     def __init__(self, alignment_model, config):
@@ -37,9 +38,18 @@ class videoGenerator:
         trans_params = np.reshape(trans_params, (n, m, 7))
         losses = np.reshape(losses, (n, m))
 
-        final_params = self.optimal_transformation(org_sketch, tar_sketch, losses, trans_params)
+        final_params = self.optimal_transformation(org_sketch, tar_sketch, losses, trans_params) # note: new objects might be added to org_sketch
         
         # generate the video based on the final params
+
+        # obtain sequential transformation params
+        # t = []
+        # for lst in final_params:
+        #     t.append(RegistrationUtils.obtain_transformation_matrix(lst))
+
+        anim = SketchAnimation(org_sketch, tar_sketch)
+        anim.seq_animate_all(final_params, save=True, file=self.config.save_video_path)
+        
 
     def optimal_transformation(self, org_objs, tar_objs, dissimilarity_matrix, trans_matrix):
         """Based on the optimal assignment solution, ditribute the transformation parameters for each original object.

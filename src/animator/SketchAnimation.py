@@ -8,7 +8,6 @@ from utils.RegistrationUtils import RegistrationUtils
 
 
 class SketchAnimation():
-
     original_labels = []
     target_labels = []
     dim = [[0, 2000], [-200, 1000]]
@@ -142,7 +141,7 @@ class SketchAnimation():
             ind = int(i/steps)
             for obj, t in zip(self.original_obj, trans_matrix):
                 obj.upd_step_vector(t[ind])
-            time.sleep(0.5)
+            # time.sleep(0.5) # TODO: check if needed
 
         # move objects
         self.move_all(self.original_obj, steps)
@@ -157,9 +156,8 @@ class SketchAnimation():
         if (i % obj_steps) % steps == 0:
             # apply the next transformation
             ind = int((i % obj_steps)/steps)
-            print(i, ind, obj_ind)
             self.original_obj[obj_ind].upd_step_vector(trans_matrix[obj_ind][ind])
-            time.sleep(0.2)
+            # time.sleep(0.2) # TODO check if needed
 
         # move objects
         self.original_obj[obj_ind].move_step(steps)
@@ -188,11 +186,15 @@ class SketchAnimation():
 
         # animate
         anim = animation.FuncAnimation(self.fig, func=self._seq_obj_anim,
-                                       init_func=self._init_animation, frames=5 * 5 * steps, interval=1, blit=True,
-                                       repeat_delay=2000, fargs=[5 * steps, steps, t], repeat=False)
+                                       init_func=self._init_animation, 
+                                       frames=5 * 5 * steps,
+                                       interval=1.5,
+                                       blit=True,
+                                       fargs=[5 * steps, steps, t])
         if save:
             self._save_anim(anim, file)
-        plt.show()
+        else:
+            plt.show()
         return anim
 
 
