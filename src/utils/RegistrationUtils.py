@@ -5,11 +5,6 @@ from sketch_object.UnlabeledObject import UnlabeledObject
 import copy
 from utils.NearestSearch import NearestSearch
 from utils.ObjectUtil import ObjectUtil
-from scipy.optimize import minimize, basinhopping, approx_fprime
-import sys
-import time
-import random
-import scipy
 import sklearn
 
 class RegistrationUtils:
@@ -388,82 +383,6 @@ class RegistrationUtils:
             converted_sketches.append(np.concatenate((tmp, extra), axis=0))
         return np.asarray(converted_sketches)
 
-
-
-
-class RegisterTwoObjects:
-    
-    def __init__(self, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, cost_fun):
-        self.tar_obj = tar_obj
-        self.ref_obj = ref_obj
-        self.total_cost = cost_fun
-
-
-    ##################
-    # TODO: delete this method
-    # test numerical optimization
-    def num_optimize(self, t):
-        eps = 0.001
-        lr = 0.1
-        t = np.array(t)
-        cur, prev = 100, 0
-        for _ in range(200): 
-            if _ % 50 == 0:
-                self.ref_obj.transform(RegistrationUtils.obtain_transformation_matrix(t))
-                self.ref_obj.visualize()
-                self.ref_obj.reset()
-            # obtain the gradient
-            grad = approx_fprime(t, RegistrationUtils.embedding_dissimilarity, eps, self.ref_obj, self.tar_obj)
-            t -= lr * np.array(grad)
-
-        return -1, t
-
-    # total dissimilarity including the cost of the transformation
-    def total_dissimalirity(self, p, params = True, target_dis=True, original_dis=True):
-        tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(self.ref_obj))
-        if params:
-            p = RegistrationUtils.obtain_transformation_matrix(p)
-        
-        dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, p, target_nn = self.target_nn, 
-                                                            target_dis=target_dis, original_dis=original_dis) 
-        return dissimilarity + (tran_cost / (len(self.ref_obj) + len(self.tar_obj)))   
-
-
-    def optimize(self, p = None, params = True, target_dis=True, original_dis=True):
-        """optimize the disimilarity function.
-    
-            Params: 
-                p: the transoformation parameters 
-                params: if True, the function expects and return an array of parameters of shape(7), which specify the tarnsformation
-                        paramerts for scaling_x, scaling_y, rotations, shearing_x, shearing_y, translation_x, translation_y.
-                        if False, the function expects and return an array of parameters of shape(6), which specify the tarnsformation
-                        array values
-            """ 
-        # find t if not specifies
-        if p is None:
-            x_dif = self.tar_obj.origin_x - self.ref_obj.origin_x
-            y_dif = self.tar_obj.origin_y - self.ref_obj.origin_y
-            if params:
-                # p = np.array([random.uniform(1, 2), random.uniform(1, 2), 0.0, random.uniform(0, 1), random.uniform(0, 1), x_dif, y_dif])
-                p = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
-            else:
-                p = np.array([1.0, 0.0, x_dif, 0.0, 1.0, y_dif])  
-
-        # track function for scipy minimize
-        def _track(xk):
-            print(xk)
-
-        #self.target_nn = NearestSearch(self.tar_obj.get_x(), self.tar_obj.get_y())
-        self.target_nn = None
-
-        # calculate min/max coordinates for the referenced object
-        self.mn_x, self.mx_x = min(self.ref_obj.get_x()), max(self.ref_obj.get_x())
-        self.mn_y, self.mx_y = min(self.ref_obj.get_y()), max(self.ref_obj.get_y())
-
-        minimizer_kwargs = {"method": "BFGS", "args" : (params, target_dis, original_dis)}
-        res = basinhopping(self.total_dissimalirity, p, minimizer_kwargs=minimizer_kwargs, disp=True, niter=2)
-        d, p = res.fun, res.x 
-        return d, p
 
     
 

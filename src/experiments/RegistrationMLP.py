@@ -3,7 +3,7 @@ sys.path.insert(0, '../')
 
 import numpy as np
 from utils.Config import Config 
-from registrationNN.models import registration_model, model_visualizer
+from registrationNN.models import NNModel, model_visualizer
 from utils.ObjectUtil import ObjectUtil
 from sklearn.model_selection import train_test_split
 import os
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     # redirect output to log
     sys.stdout = open(model_config.log_path, 'w+')
 
-    model = registration_model(model_config)
+    model = NNModel(model_config)
     model.fit(train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches)
 
     # # visualize model and save results

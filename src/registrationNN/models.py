@@ -359,7 +359,7 @@ class NNModel:
         tar_obj_stroke3 = np.expand_dims(tar_obj_stroke3, axis=-1)
         cmb_obj_stroke3 = np.stack((org_obj_stroke3, tar_obj_stroke3), axis=1)
 
-        params = self.predict_from_stroke3(self, org_obj, tar_obj)
+        params = self.predict_from_stroke3(org_obj_stroke3, tar_obj_stroke3)
 
         # find the loss
         losses = self.np_knn_loss(cmb_obj_stroke3, params)

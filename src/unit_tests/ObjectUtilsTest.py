@@ -14,7 +14,7 @@ from tools.ClassEvaluation import ClassEvaluation
 from tools.ObjectParsing import ObjectParsing
 from tools.StrokeClustering import DensityClustering
 from tools.ParsingEvaluation import ParsingEvaluation
-from registrationNN.models import registration_model
+from registrationNN.models import NNModel
 import unittest
 
 

@@ -30,8 +30,8 @@ class Config:
         config.save = True
         config.save_ckpt = True
         config.save_best_only = True
-        config.exp_dir = "../registrationNN/saved_models/experiment_{0}".format(str(exp_id)) # save path
-        config.ckpt_path = config.exp_dir + "/cp-{epoch:04d}.ckpt"
+        config.exp_dir = "../registrationNN/saved_models/{0}".format(str(exp_id)) # save path
+        config.ckpt_path = config.exp_dir + "/cp-best.ckpt"
         config.verbose = 5
 
         # visualization realted
@@ -41,7 +41,7 @@ class Config:
         config.fine_tune_epochs = 100
         config.iter_refine_prediction = True
         config.vis_transformation = False
-        config.vis_dir = "../registrationNN/saved_results/experiment_{0}".format(str(exp_id))
+        config.vis_dir = "../registrationNN/saved_results/{0}".format(str(exp_id))
         config.hist_path = config.vis_dir + "/hist.pkl"
         config.config_path = config.vis_dir + "/config.txt"
         config.log_path = config.vis_dir + "/log.txt"
@@ -66,7 +66,7 @@ class Config:
         config.seed = 1
         config.verbose = 4 # 1-3 for normal messages, 4 to save visualizations and 5 to show visualization
         config.re_sampling = 0.0
-        config.exp_dir = '../results_log/segmentation/iterative/experiment_{0}'.format(exp_id)
+        config.exp_dir = '../results_log/segmentation/iterative/{0}'.format(exp_id)
 
         # algorithm related
         config.iterations = 60
@@ -105,7 +105,8 @@ class Config:
         config.re_sampling = 0.0
         config.mx_dissimilarity = 50
         config.construction_step_size = 0.001
-        config.video_dir = '../results_log/generated_videos/{0}/{1}'.format(question_name, sketch1_id)
+        config.mn_len = 5
+        config.video_dir = '../../generated_videos/{0}/{1}'.format(question_name, sketch1_id)
         config.save_video_path = os.path.join(config.video_dir, f'{sketch2_id}.mp4')
         config.pretrained_model_path = ''
         config.fine_tune_epochs = 100
