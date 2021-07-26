@@ -14,7 +14,7 @@ from utils.ObjectUtil import ObjectUtil
 from utils.Utils import Utils
 from utils.RegistrationUtils import RegistrationUtils
 from animator.SketchAnimation import SketchAnimation
-from sketchformer.builders.layers.transformer import Encoder, SelfAttnV1
+from sketchformer.builders.layers.transformer import UnmaskedEncoder, SelfAttnV3
 import copy
 from matplotlib import pyplot as plt
 import random as rnd
@@ -22,92 +22,87 @@ import os
 from tensorflow.python.client import device_lib
 from datetime import datetime
 import time
+from sketchformer.builders.utils import create_padding_mask
 
 class registration_model:
-    def knn_loss(self, sketches, p):
-        # constants
-        scaling_f = 5
-        shearing_f = 5
-        rotation_f = 1.5
+    def get_knn_loss(self, scaling_f, shearing_f, rotation_f):
+        def knn_loss(sketches, p):
 
-        sketches = tf.identity(sketches)
-        # sketches (batch, 2, 126, 3, 1)  p(batch, 7)
-        org = sketches[:, 0, :, :2, 0]
-        tar = sketches[:, 1, :, :2, 0]
-        # org: (batch, 126, 2)  tar: (batch, 126, 2)
-        org_pen = sketches[:, 0, :, 2, 0]
-        tar_pen = sketches[:, 1, :, 2, 0]
-        # org_pen: (batch, 126) tar_pen: (batch, 126)   represents the pen state in stroke-3 format
+            sketches = tf.identity(sketches)
+            # sketches (batch, 2, 126, 3, 1)  p(batch, 7)
+            org = sketches[:, 0, :, :2, 0]
+            tar = sketches[:, 1, :, :2, 0]
+            # org: (batch, 126, 2)  tar: (batch, 126, 2)
+            org_pen = sketches[:, 0, :, 2, 0]
+            tar_pen = sketches[:, 1, :, 2, 0]
+            # org_pen: (batch, 126) tar_pen: (batch, 126)   represents the pen state in stroke-3 format
 
-        # obtain transformation matrix parameters
-        t = []
-        t.append(p[:, 0] * (K.cos(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) - p[:, 4] * K.sin(p[:, 2])))
-        t.append(p[:, 0] * (p[:, 3] * K.cos(p[:, 2]) - K.sin(p[:, 2])))
-        t.append(p[:, 5])
-        t.append(p[:, 1] * (K.sin(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) + p[:, 4] * K.cos(p[:, 2])))
-        t.append(p[:, 1] * (p[:, 3] * K.sin(p[:, 2]) + K.cos(p[:, 2])))
-        t.append(p[:, 6])
-        t = K.expand_dims(t, -1)
-        # t: (batch, 6, 1)
+            # obtain transformation matrix parameters
+            t = []
+            t.append(p[:, 0] * (K.cos(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) - p[:, 4] * K.sin(p[:, 2])))
+            t.append(p[:, 0] * (p[:, 3] * K.cos(p[:, 2]) - K.sin(p[:, 2])))
+            t.append(p[:, 5])
+            t.append(p[:, 1] * (K.sin(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) + p[:, 4] * K.cos(p[:, 2])))
+            t.append(p[:, 1] * (p[:, 3] * K.sin(p[:, 2]) + K.cos(p[:, 2])))
+            t.append(p[:, 6])
+            t = K.expand_dims(t, -1)
+            # t: (batch, 6, 1)
 
-        # apply transformation on all points in original 
-        org_x = org[:, :, 0] * t[0] + org[:, :, 1] * t[1] + t[2]
-        org_y = org[:, :, 0] * t[3] + org[:, :, 1] * t[4] + t[5]
+            # apply transformation on all points in original 
+            org_x = org[:, :, 0] * t[0] + org[:, :, 1] * t[1] + t[2]
+            org_y = org[:, :, 0] * t[3] + org[:, :, 1] * t[4] + t[5]
 
-        # org_x: represent x coords (batch, 126)
-        # org_y: represent x coords (batch, 126)
-        org_x = K.expand_dims(org_x, 2)
-        org_y = K.expand_dims(org_y, 2)
-        # org_x: (represent x coords) (batch, 126, 1)
-        # org_y: (represent x coords) (batch, 126, 1)
+            # org_x: represent x coords (batch, 126)
+            # org_y: represent x coords (batch, 126)
+            org_x = K.expand_dims(org_x, 2)
+            org_y = K.expand_dims(org_y, 2)
+            # org_x: (represent x coords) (batch, 126, 1)
+            # org_y: (represent x coords) (batch, 126, 1)
 
-        org_cmb = tf.concat([org_x, org_y], axis=-1)
-        # org_cmb : (batch, 126, 2)
+            org_cmb = tf.concat([org_x, org_y], axis=-1)
+            # org_cmb : (batch, 126, 2)
 
-        org_cmb = K.expand_dims(org_cmb, 1)
-        # org_cmb: (batch, 1, 126, 2)
+            org_cmb = K.expand_dims(org_cmb, 1)
+            # org_cmb: (batch, 1, 126, 2)
 
-        tar_cmb = K.expand_dims(tar, 2)
-        # tar_cmb: (batch, 126, 1, 2)
+            tar_cmb = K.expand_dims(tar, 2)
+            # tar_cmb: (batch, 126, 1, 2)
 
-        # obtain pairwise differences between original and target sketches
-        diff = org_cmb - tar_cmb
-        # diff: (batch, 126, 126, 2)
- 
-        sm = K.sum(diff ** 2, axis=-1)
-        sm_sqrt = K.sqrt(sm)
-        # sm_sqrt: (batch, 126, 126)
+            # obtain pairwise differences between original and target sketches
+            diff = org_cmb - tar_cmb
+            # diff: (batch, 126, 126, 2)
+    
+            sm = K.sum(diff ** 2, axis=-1)
+            sm_sqrt = K.sqrt(sm)
+            # sm_sqrt: (batch, 126, 126)
 
-        # obtain nearest points from org->tar + from tar->org
-        mn = K.min(sm_sqrt, axis=-2) * (1 - org_pen) + K.min(sm_sqrt, axis=-1) * (1 - tar_pen)
-        # mn: (batch, 126)
+            # obtain nearest points from org->tar + from tar->org
+            mn = K.min(sm_sqrt, axis=-2) * (1 - org_pen) + K.min(sm_sqrt, axis=-1) * (1 - tar_pen)
+            # mn: (batch, 126)
 
-        sm_cost = K.sum(mn, axis=1) 
-        # sm_cost: (batch, )
+            sm_cost = K.sum(mn, axis=1) 
+            # sm_cost: (batch, )
 
-        # normalize with the number of points
-        sm_cost /= 128 - K.sum(org_pen, axis=-1) + 128 - K.sum(tar_pen, axis=-1) 
+            # normalize with the number of points
+            sm_cost /= 128 - K.sum(org_pen, axis=-1) + 128 - K.sum(tar_pen, axis=-1) 
 
-        # add penalty to the transformation parameters
-        # @size p: (batch, 7)
-        # add scaling cost
-        # tran_cost = K.sum(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
-        # tran_cost += K.sum(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
-        # # add roation cost
-        # tran_cost += K.sum((p[:, 2] ** 2) * rotation_f)
-        # # add shearing cost
-        # tran_cost += K.sum((p[:, 3] ** 2) * shearing_f)
-        # tran_cost += K.sum((p[:, 4] ** 2) * shearing_f)
-        # add shearing cost
+            # add penalty to the transformation parameters
+            # @size p: (batch, 7)
+            # add scaling cost
+            tran_cost = K.sum(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
+            tran_cost += K.sum(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
+            # add roation cost
+            tran_cost += K.sum((p[:, 2] ** 2) * rotation_f)
+            # add shearing cost
+            tran_cost += K.sum((p[:, 3] ** 2) * shearing_f)
+            tran_cost += K.sum((p[:, 4] ** 2) * shearing_f)
+            # add shearing cost
 
-        return sm_cost # + K.sqrt(tran_cost)         
+            return sm_cost  + K.sqrt(tran_cost)    
+        return knn_loss     
 
     @staticmethod
     def np_knn_loss(sketches, p, maxlen=128):
-        # constants
-        scaling_f = 5
-        shearing_f = 5
-        rotation_f = 1.5
         
         sketches = copy.deepcopy(sketches)
         # sketches = tf.identity(sketches)
@@ -152,7 +147,7 @@ class registration_model:
         # obtain pairwise differences between original and target sketches
         diff = org_cmb - tar_cmb
         # diff: (batch, 126, 126, 2)
- 
+
         sm = np.sum(diff ** 2, axis=-1)
         sm_sqrt = np.sqrt(sm)
         # sm_sqrt: (batch, 126, 126)
@@ -167,17 +162,17 @@ class registration_model:
         # normalize with the number of points
         sm_cost /= maxlen - np.sum(org_pen, axis=-1) + maxlen - np.sum(tar_pen, axis=-1) 
 
-        # # add scaling cost
-        # tran_cost = sum(max((p[:, 0] ** 2), 1 / (p[:, 0] ** 2)) * scaling_f)
-        # tran_cost += sum(max(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
+        # # # add scaling cost
+        # tran_cost = np.sum(np.maximum((p[:, 0] ** 2), 1 / (p[:, 0] ** 2)) * scaling_f)
+        # tran_cost += np.sum(np.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
         # # add roation cost
-        # tran_cost += sum((p[:, 2] ** 2) * rotation_f)
+        # tran_cost += np.sum((p[:, 2] ** 2) * rotation_f)
         # # add shearing cost
-        # tran_cost += sum((p[:, 3] ** 2) * shearing_f)
-        # tran_cost += sum((p[:, 4] ** 2) * shearing_f)
-        # add shearing cos
+        # tran_cost += np.sum((p[:, 3] ** 2) * shearing_f)
+        # tran_cost += np.sum((p[:, 4] ** 2) * shearing_f)
+        # # add shearing cos
 
-        return sm_cost # + np.sqrt(tran_cost)      
+        return sm_cost # + np.sqrt(tran_cost)  
     
 
     def init_model(self):
@@ -186,39 +181,56 @@ class registration_model:
         org_reshaped = Reshape((128, 3))(org_inputs)
         tar_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
         tar_reshaped = Reshape((128, 3))(tar_inputs)
+        
+        # Conv encoder
+        # org_fe_layer0 = Dense(64, activation='relu')(org_reshaped) # 128, 64
+        # org_fe_layer0 = LayerNormalization()(org_fe_layer0)
+        # org_fe_layer0 = Reshape((128, 64, 1))(org_fe_layer0)
+        # org_fe_layer1 = Conv2D(1, (3, 3), 1)(org_fe_layer0) 
+        # org_fe_layer1 = MaxPool2D((3, 3))(org_fe_layer1)
+        # org_fe_layer1 = Reshape((42 * 20,)) (org_fe_layer1)
 
-        org_fe_layer0 = Dense(64, activation='relu')(org_reshaped)
-        org_fe_layer0 = LayerNormalization()(org_fe_layer0)
-        org_fe_layer0 = Reshape((128, 64, 1))(org_fe_layer0)
-        org_fe_layer1 = Conv2D(1, (3, 3), 1)(org_fe_layer0) 
-        org_fe_layer1 = MaxPool2D((3, 3))(org_fe_layer1)
-        org_fe_layer1 = Reshape((42 * 20,)) (org_fe_layer1)
-        # org_fe_layer1 = Flatten()(org_fe_layer0)
+        # sketchformer encoder + self attention
+        org_enc = UnmaskedEncoder(
+            num_layers=1,
+            d_model=128,
+            num_heads=4, dff=256,
+            input_vocab_size=None, rate=0.1,
+            use_continuous_input=True)(org_reshaped)
 
-        # org_enc = Encoder(1, 128, 4, 256, None)(org_inputs)
-        # org_embd = SelfAttnV1(128)(org_enc)
-
+        org_fe_layer1 = SelfAttnV3(128)(org_enc)    
+        
+        
         org_fe_layer2= Dense(64, activation='relu')(org_fe_layer1)
         org_fe_layer2 = LayerNormalization()(org_fe_layer2)
         org_fe_layer3= Dense(32, activation='relu')(org_fe_layer2)
         org_fe_layer3 = LayerNormalization()(org_fe_layer3)
         org_fe = Model(org_inputs, org_fe_layer3)
+        
+
+        # Conv encoder 
+        # tar_fe_layer0= Dense(64, activation='relu')(tar_reshaped)
+        # tar_fe_layer0 = LayerNormalization()(tar_fe_layer0)
+        # tar_fe_layer0 = Reshape((128, 64, 1))(tar_fe_layer0)
+        # tar_fe_layer1 = Conv2D(1, (3, 3), 1)(tar_fe_layer0)
+        # tar_fe_layer1 = MaxPool2D((3, 3))(tar_fe_layer1)
+        # tar_fe_layer1 = Reshape((42 * 20, )) (tar_fe_layer1)
+
+        # sketchformer encoder + self attention
+
+        tar_enc = UnmaskedEncoder(
+            num_layers=2,
+            d_model=128,
+            num_heads=4, dff=256,
+            input_vocab_size=None, rate=0.1,
+            use_continuous_input=True)(tar_reshaped)
+        tar_fe_layer1 = SelfAttnV3(128)(tar_enc)
 
 
-        tar_fe_layer0= Dense(64, activation='relu')(tar_reshaped)
-        tar_fe_layer0 = LayerNormalization()(tar_fe_layer0)
-        tar_fe_layer0 = Reshape((128, 64, 1))(tar_fe_layer0)
-        tar_fe_layer1 = Conv2D(1, (3, 3), 1)(tar_fe_layer0)
-        tar_fe_layer1 = MaxPool2D((3, 3))(tar_fe_layer1)
-        tar_fe_layer1 = Reshape((42 * 20, )) (tar_fe_layer1)
-        # tar_fe_layer1 = Flatten()(tar_fe_layer0)
-
-        # tar_enc = Encoder(1, 128, 4, 256, None)(tar_inputs)
-        # tar_embd = SelfAttnV1(128)(tar_enc)
         tar_fe_layer2 = Dense(64, activation='relu')(tar_fe_layer1)
         tar_fe_layer2 = LayerNormalization()(tar_fe_layer2)
         tar_fe_layer3 = Dense(32, activation='relu')(tar_fe_layer2)
-        tar_fe_layer3 = LayerNormalization()(tar_fe_layer3)
+        tar_fe_layer3 = LayerNormalization()(tar_fe_layer3) # 32
         tar_fe = Model(tar_inputs, tar_fe_layer3)
 
         merged_fe = concatenate([org_fe.output, tar_fe.output])
@@ -227,7 +239,8 @@ class registration_model:
         params = Dense(7, activation="linear", kernel_initializer=HeNormal(seed=6))(layer1)
 
         self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
-        self.model.compile(loss=self.knn_loss, optimizer=Adam(learning_rate=self.model_config.learning_rate))
+        self.model.compile(loss=self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f),
+                          optimizer=Adam(learning_rate=self.model_config.learning_rate))
 
     
     def fit(self, train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches):
@@ -261,15 +274,9 @@ class registration_model:
         class epoch_callback(Callback):
                 def on_epoch_begin(self, epoch, logs=None):
                     params = self.model.predict((org_sketches, tar_sketches))
-                    print("Start epoch {} of training; params predictions: {}".format(epoch, params[0:1]))
+                    print("Start epoch {} of training; params predictions of first sketch: {}".format(epoch, params[0:1]))
                     loss = registration_model.np_knn_loss(cmb_sketches[0:1], params[0:1])
-                    print("Start epoch {} of training; loss: {}".format(epoch, loss))
-
-                def on_epoch_end(self, epoch, logs={}):
-                    params = self.model.predict((org_sketches, tar_sketches))
-                    print("End epoch {} of training; params predictions: {}".format(epoch, params[0:1]))
-                    loss = registration_model.np_knn_loss(cmb_sketches[0:1], params[0:1])
-                    print("End epoch {} of training; loss: {}".format(epoch, loss))
+                    print("Start epoch {} of training; loss of first sketch: {}".format(epoch, loss))
             
         if self.model_config.load_ckpt:
             # restore latest checkpoint
@@ -325,7 +332,8 @@ class registration_model:
 
         if model_config.load:
             print("[model.py] loading saved model of experiment", model_config.exp_id)
-            self.model = load_model(model_config.exp_dir, custom_objects={'knn_loss': self.knn_loss})
+            self.model = load_model(model_config.exp_dir,
+                         custom_objects={'knn_loss': self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f)})
         else:
             self.init_model()
             

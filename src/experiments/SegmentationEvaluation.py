@@ -33,6 +33,7 @@ import os
 exp_config = Config.default_segmentation_config(exp_id=14)
 exp_config.iterations = 10
 exp_config.mx_dis = 1000
+exp_config.eps = 4
 
 # redirect output to log
 # sys.stdout = open(os.path.join(model_config.exp_dir, 'log.out'), 'w+')
