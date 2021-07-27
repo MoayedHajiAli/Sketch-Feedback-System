@@ -1,3 +1,4 @@
+from registrationNN.models import model_visualizer
 from utils.ObjectUtil import ObjectUtil
 import numpy as np
 from utils.RegistrationUtils import RegistrationUtils
@@ -29,7 +30,7 @@ class VideoGenerator:
         """
         n, m = len(org_sketch), len(tar_sketch)
 
-        if self.config.load_trans_params:
+        if self.config.load_trans_params and os.path.exists(os.path.join(self.config.video_dir, 'transformation_parameters.pkl')):
             with open(os.path.join(self.config.video_dir, 'transformation_parameters.pkl'), 'rb') as f:
                 final_params = pickle.load(f)
     
@@ -48,16 +49,18 @@ class VideoGenerator:
             trans_params = np.reshape(trans_params, (n, m, 7))
             losses = np.reshape(losses, (n, m))
 
+            final_params = self.optimal_transformation(org_sketch, tar_sketch, losses, trans_params) # note: new objects might be added to org_sketch
             if self.config.verbose > 2:
                 print(f'[VideoGenerator] info: pair-wise transformation parameters: {trans_params}')
                 print(f'[VideoGenerator] info: pair-wise disimilarity: {losses}')
+                print(f'[VideoGenerator] info: final transformation params: {final_params}')
 
-            final_params = self.optimal_transformation(org_sketch, tar_sketch, losses, trans_params) # note: new objects might be added to org_sketch
-
-             # save final params in a pickle file 
+            # save final params in a pickle file 
             with open(os.path.join(self.config.video_dir, 'transformation_parameters.pkl'), 'wb') as f:
                 pickle.dump(final_params, f)
        
+        model_visualizer.visualize_model(self.alignment_model, org_sketch, tar_sketch, org_sketch, tar_sketch, self.alignment_model.model_config)
+
         if self.config.vis_video:
             # generate the video based on the final params
 

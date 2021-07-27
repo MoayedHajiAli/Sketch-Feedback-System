@@ -16,8 +16,13 @@ if __name__ == '__main__':
     tar_sketch_id = '2_78a20c33-66ab-4e7c-9064-30a9372e13c6'
 
     config = Config.default_video_config(question_name, org_sketch_id, tar_sketch_id)
+    config.vis_video = True
+    config.load_trans_params = False
+    config.fine_tune_epochs = 300
+
     model_params = Config.default_model_config(model_tag)
     model_params.load = False
+    model_params.learning_rate = 5e-4
     
     # load original and target sketch 
     org_sketch, org_labels = ObjectUtil.xml_to_UnlabeledObjects(config.org_sketch_path, 

@@ -536,6 +536,7 @@ class model_visualizer():
                     val_org_objs = ObjectUtil.accumalitive_stroke3_to_poly(val_org_sketches)
 
             if model_config.fine_tune:
+                # TODO: fix as it is not working
                 vis_dir = os.path.join(model_config.vis_dir, 'testing', 'fine_tune')
                 os.makedirs(vis_dir, exist_ok=True)
                 refine_history = model.model.fit(x=[val_org_sketches, val_tar_sketches], y=val_cmb_sketches, batch_size=model_config.batch_size, epochs=model_config.fine_tune_epochs)

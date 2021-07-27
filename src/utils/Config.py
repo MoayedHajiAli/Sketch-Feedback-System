@@ -115,8 +115,8 @@ class Config:
         config.org_shift_x = 0
         config.org_shift_y = 0
         config.tar_flip = False
-        config.tar_shift_x = 0
-        config.tar_shift_y = 0
+        config.tar_shift_x = 500
+        config.tar_shift_y = 500
 
         # saving and visualization related
         config.vis_video = False
