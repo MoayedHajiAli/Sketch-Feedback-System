@@ -371,9 +371,12 @@ class ObjectUtil:
             ret.append(UnlabeledObject(strokes))
         return ret
 
+
     @staticmethod
     def poly_to_stroke3(sketches, scale=100.0, step=5, eps=1.5, red_rdp=True, normalize=True):
-        """convert the given sketches to stroke-3 (x, y, p) format, where x, y are 
+        """
+        Attention: this method will normalize the strokes
+        convert the given sketches to stroke-3 (x, y, p) format, where x, y are 
          the point relative position to the previous point together with its binary pen state.
          for any two consecutive strokes, a point in the middle will be added with a pen state 1 (pen lifted)
         Args:

@@ -17,13 +17,13 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         exp_id = str(sys.argv[1])
     else:
-        exp_id = 'reflectionQuestion-Conv-without-penalty-small-dataset'
+        exp_id = 'trial_model'
     
     model_config = Config.default_model_config(exp_id)
     model_config.learning_rate = 1e-4
-    model_config.n_files = 500
+    model_config.n_files = 10
     model_config.k_select = 10
-    model_config.epochs = 200
+    model_config.epochs = 10
     model_config.comment = 'no penalty on the movements'
 
     print(f"[RegisterationMLP.py] {time.ctime()}: Expermint {model_config.exp_id} started")

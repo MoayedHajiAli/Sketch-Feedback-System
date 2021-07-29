@@ -22,6 +22,7 @@ class Config:
         config.scaling_f = 2
         config.shearing_f = 2
         config.rotation_f = 1.0
+
         config.batch_size = 128
         config.learning_rate = 5e-5
         config.epochs = 200
@@ -40,7 +41,7 @@ class Config:
         config.fine_tune = True
         config.fine_tune_epochs = 100
         config.iter_refine_prediction = True
-        config.vis_transformation = False
+        config.vis_transformation = True
         config.vis_dir = "../registrationNN/saved_results/{0}".format(str(exp_id))
         config.hist_path = config.vis_dir + "/hist.pkl"
         config.config_path = config.vis_dir + "/config.txt"
@@ -106,8 +107,8 @@ class Config:
         config.mx_dissimilarity = 50
         config.construction_step_size = 0.001
         config.mn_len = 5
-        config.video_dir = '../../generated_videos/{0}/{1}'.format(question_name, sketch1_id)
-        config.save_video_path = os.path.join(config.video_dir, f'{sketch2_id}.mp4')
+        config.video_dir = '../../generated_videos/{0}/{1}/{2}'.format(question_name, sketch1_id, sketch2_id)
+        config.save_video_path = os.path.join(config.video_dir, f'video.mp4')
         config.pretrained_model_path = ''
         config.fine_tune_epochs = 200
 

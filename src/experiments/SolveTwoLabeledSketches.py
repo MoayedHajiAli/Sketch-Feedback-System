@@ -13,16 +13,17 @@ if __name__ == '__main__':
     model_tag = 'trial_model' # deep learning model to use for alignment
     question_name = 'ReflectionQuestion'
     org_sketch_id = '2_58c52b2b-94f4-49e1-b94c-d93964b1319c'
-    tar_sketch_id = '2_78a20c33-66ab-4e7c-9064-30a9372e13c6'
+    tar_sketch_id = '2_a54ad2f8-3660-402e-a00a-d199e4679d39'
 
     config = Config.default_video_config(question_name, org_sketch_id, tar_sketch_id)
     config.vis_video = True
-    config.load_trans_params = False
-    config.fine_tune_epochs = 300
+    config.load_trans_params = True
+    config.fine_tune_epochs = 2
+    config.verbose = 1
 
     model_params = Config.default_model_config(model_tag)
     model_params.load = False
-    model_params.learning_rate = 5e-4
+    model_params.learning_rate = 1e-3
     
     # load original and target sketch 
     org_sketch, org_labels = ObjectUtil.xml_to_UnlabeledObjects(config.org_sketch_path, 

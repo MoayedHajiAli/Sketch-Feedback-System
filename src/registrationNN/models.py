@@ -91,16 +91,16 @@ class NNModel:
             # add penalty to the transformation parameters
             # @size p: (batch, 7)
             # # add scaling cost
-            # tran_cost = K.sum(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
-            # tran_cost += K.sum(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
-            # # add roation cost
-            # tran_cost += K.sum((p[:, 2] ** 2) * rotation_f)
-            # # add shearing cost
-            # tran_cost += K.sum((p[:, 3] ** 2) * shearing_f)
-            # tran_cost += K.sum((p[:, 4] ** 2) * shearing_f)
+            tran_cost = K.sum(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
+            tran_cost += K.sum(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
+            # add roation cost
+            tran_cost += K.sum((p[:, 2] ** 2) * rotation_f)
+            # add shearing cost
+            tran_cost += K.sum((p[:, 3] ** 2) * shearing_f)
+            tran_cost += K.sum((p[:, 4] ** 2) * shearing_f)
             # add shearing cost
 
-            return sm_cost # + K.sqrt(tran_cost)    
+            return sm_cost + K.sqrt(tran_cost)    
         return knn_loss     
 
     @staticmethod
@@ -438,22 +438,27 @@ class model_visualizer():
         val_tar_objs = ObjectUtil.accumalitive_stroke3_to_poly(val_tar_sketches)
 
         if model_config.vis_transformation:
-            # animate the tranformation
+            # animate the tranformation and save the videos
+            vis_dir = os.path.join(model_config.vis_dir, 'transformation videos')
+            os.makedirs(vis_dir, exist_ok=True)
+
             print("[models.py] visualizing transformation")
             params = model.predict_from_stroke3(org_sketches, tar_sketches)
             inds = rnd.choices(range(len(org_sketches)), k=model_config.num_vis_samples)
 
             for i in inds:
+                # transform objects in order to update the step vector
                 org_objs[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
             
             for i in inds:
                 animation = SketchAnimation([org_objs[i]], [tar_objs[i]]) 
                 animation.seq_animate_all([params[i]]) # question: objects are already transformed. Do we need to reset?
-                org_transformed[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i])) # this part is not working. TODO: Fix
+                org_objs[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i])) 
+                org_objs[i].reset()
 
         if model_config.vis_train:
             # visualize samples of transformation without animation
-            vis_dir = os.path.join(model_config.vis_dir, 'on_training')
+            vis_dir = os.path.join(model_config.vis_dir, 'training')
             os.makedirs(vis_dir, exist_ok=True)
 
             print(f"[models.py] {time.ctime()}: Saving training visualizations")

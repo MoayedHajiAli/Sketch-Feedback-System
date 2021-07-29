@@ -10,7 +10,7 @@ from utils.RegistrationUtils import RegistrationUtils
 class SketchAnimation():
     original_labels = []
     target_labels = []
-    dim = [[0, 2000], [-200, 1000]]
+    dim = [[0, 2000], [0, 2000]]
     
     fig, ax = plt.gcf(), plt.gca()
     
@@ -65,13 +65,29 @@ class SketchAnimation():
         self.ax.set_xlim(self.dim[0][0], self.dim[0][1])
         self.ax.set_ylim(self.dim[1][0], self.dim[1][1])
 
-        for pt_lst, obj in zip(self.original_patches, self.original_obj):
+        # fix original video origin to 300, 300
+        org_x, org_y = 1e6, 1e6
+        for obj in self.original_obj:
+            org_x = min(org_x, obj.origin_x)
+            org_y = min(org_y, obj.origin_y)
+        for obj in self.original_obj:
             obj.reset()
+            obj.transform([1.0, 0.0, -(org_x - 300), 0.0, 1.0, -(org_y - 300)], upd_step=False)
+
+        for pt_lst, obj in zip(self.original_patches, self.original_obj):
             for pt, stroke in zip(pt_lst, obj.get_strokes()):
                 pt.set_data(stroke.get_x(), stroke.get_y())
 
-        for pt_lst, obj in zip(self.target_patches, self.target_obj):
+        # fix target origin to 1000, 1000
+        org_x, org_y = 1e6, 1e6
+        for obj in self.target_obj:
+            org_x = min(org_x, obj.origin_x)
+            org_y = min(org_y, obj.origin_y)
+        for obj in self.target_obj:
             obj.reset()
+            obj.transform([1.0, 0.0, -(org_x - 1000), 0.0, 1.0, -(org_y - 1000)], upd_step=False)
+
+        for pt_lst, obj in zip(self.target_patches, self.target_obj):
             for pt, stroke in zip(pt_lst, obj.get_strokes()):
                 pt.set_data(stroke.get_x(), stroke.get_y())
 
@@ -188,7 +204,7 @@ class SketchAnimation():
         anim = animation.FuncAnimation(self.fig, func=self._seq_obj_anim,
                                        init_func=self._init_animation, 
                                        frames=5 * 5 * steps,
-                                       interval=1.5,
+                                       interval=1,
                                        blit=True,
                                        fargs=[5 * steps, steps, t])
         if save:

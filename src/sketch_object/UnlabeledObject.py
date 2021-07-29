@@ -98,6 +98,7 @@ class UnlabeledObject:
         upd_step: it updates the step vecotr so that the object will be prepared for transformation animation
         object_origin: if true then performe the transformation around the point with the minimum x in the origin, otherwise consider (0, 0) to be
         the origin.
+        t (list(6,)): transformation matrix
         """
         xo = yo = 0
         if object_origin:

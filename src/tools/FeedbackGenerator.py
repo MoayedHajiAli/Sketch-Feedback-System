@@ -33,6 +33,9 @@ class VideoGenerator:
         if self.config.load_trans_params and os.path.exists(os.path.join(self.config.video_dir, 'transformation_parameters.pkl')):
             with open(os.path.join(self.config.video_dir, 'transformation_parameters.pkl'), 'rb') as f:
                 final_params = pickle.load(f)
+            
+            if self.config.verbose > 2:
+                print(f'[VideoGenerator] info: final transformation params: {final_params}')
     
         else:
             # prepare pair-wise set
@@ -59,7 +62,9 @@ class VideoGenerator:
             with open(os.path.join(self.config.video_dir, 'transformation_parameters.pkl'), 'wb') as f:
                 pickle.dump(final_params, f)
        
-        model_visualizer.visualize_model(self.alignment_model, org_sketch, tar_sketch, org_sketch, tar_sketch, self.alignment_model.model_config)
+        if self.config.verbose > 3:
+            model_visualizer.visualize_model(self.alignment_model, org_sketch, tar_sketch, org_sketch, tar_sketch, self.alignment_model.model_config)
+
 
         if self.config.vis_video:
             # generate the video based on the final params
