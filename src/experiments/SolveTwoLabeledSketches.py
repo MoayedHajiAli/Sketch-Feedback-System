@@ -18,7 +18,7 @@ if __name__ == '__main__':
     config = Config.default_video_config(question_name, org_sketch_id, tar_sketch_id)
     config.vis_video = True
     config.load_trans_params = True
-    config.fine_tune_epochs = 2
+    config.fine_tune_epochs = 0
     config.verbose = 1
 
     model_params = Config.default_model_config(model_tag)

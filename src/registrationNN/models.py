@@ -27,6 +27,11 @@ from scipy.optimize import minimize, basinhopping, approx_fprime
 import time
 
 class NNModel:
+    """For a given orginal and target object, find the transformation paramters 
+    (7 parameters, with respect to the 0,0 origin) of the original object so that 
+    after the transformation, it best aligns with the target object
+    """
+
     def get_knn_loss(self, scaling_f, shearing_f, rotation_f):
         def knn_loss(sketches, p):
 
@@ -91,16 +96,16 @@ class NNModel:
             # add penalty to the transformation parameters
             # @size p: (batch, 7)
             # # add scaling cost
-            tran_cost = K.sum(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
-            tran_cost += K.sum(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
-            # add roation cost
-            tran_cost += K.sum((p[:, 2] ** 2) * rotation_f)
-            # add shearing cost
-            tran_cost += K.sum((p[:, 3] ** 2) * shearing_f)
-            tran_cost += K.sum((p[:, 4] ** 2) * shearing_f)
+            # tran_cost = K.sum(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
+            # tran_cost += K.sum(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
+            # # add roation cost
+            # tran_cost += K.sum((p[:, 2] ** 2) * rotation_f)
+            # # add shearing cost
+            # tran_cost += K.sum((p[:, 3] ** 2) * shearing_f)
+            # tran_cost += K.sum((p[:, 4] ** 2) * shearing_f)
             # add shearing cost
 
-            return sm_cost + K.sqrt(tran_cost)    
+            return sm_cost # + K.sqrt(tran_cost)    
         return knn_loss     
 
     @staticmethod
@@ -334,21 +339,23 @@ class NNModel:
         # save the model config files
         Utils.save_obj_pkl(model_history.history, self.model_config.hist_path)
 
-        # save train loss curve
-        ax = plt.subplot()
-        ax.set_title("Training loss")
-        ax.set_xlabel("Epochs")
-        ax.set_ylabel("loss")
-        ax.plot(model_history.history['loss'])
-        plt.savefig(self.model_config.vis_dir + '/train_loss.png')
+        if 'loss' in model_history.history.keys():
+            # save train loss curve
+            fig, ax = plt.subplots()
+            ax.set_title("Training loss")
+            ax.set_xlabel("Epochs")
+            ax.set_ylabel("loss")
+            ax.plot(model_history.history['loss'])
+            fig.savefig(self.model_config.vis_dir + '/train_loss.png')
 
-        # save validation loss curve 
-        ax = plt.subplot()
-        ax.set_title("Testing loss")
-        ax.set_xlabel("Epochs")
-        ax.set_ylabel("loss")
-        ax.plot(model_history.history['val_loss'])
-        plt.savefig(self.model_config.vis_dir + '/test_loss.png')
+        if 'val_loss' in model_history.history.keys():
+            # save validation loss curve 
+            fig, ax = plt.subplots()
+            ax.set_title("Testing loss")
+            ax.set_xlabel("Epochs")
+            ax.set_ylabel("loss")
+            ax.plot(model_history.history['val_loss'])
+            fig.savefig(self.model_config.vis_dir + '/test_loss.png')
         
 
     def __init__(self,  model_config):
@@ -388,7 +395,7 @@ class NNModel:
         # find the loss
         losses = self.np_knn_loss(cmb_obj_stroke3, params)
         return params, losses
-
+ 
 
     def predict_from_stroke3(self, org_obj, tar_obj):
         """ find the transformation alignment parameters for each of the org_sketches to its correspondance in the tar_sketches
@@ -408,6 +415,7 @@ class NNModel:
 class model_visualizer():
     def visualize_model(model, train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches, model_config):
         
+        org_trn_obj, tar_trn_obj = train_org_sketches, train_tar_sketches
         # convert sketches into stroke-3 format
         train_org_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_org_sketches)
         train_tar_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_tar_sketches)
@@ -432,11 +440,13 @@ class model_visualizer():
         val_cmb_sketches = np.stack((val_org_sketches, val_tar_sketches), axis=1)
 
         # obtain the poly represenation of the sketches to be used later in visualization and transformation
+        # these objects will have the same normalization as the ones in used with the traning
         org_objs = ObjectUtil.accumalitive_stroke3_to_poly(org_sketches)
         tar_objs = ObjectUtil.accumalitive_stroke3_to_poly(tar_sketches)
         val_org_objs = ObjectUtil.accumalitive_stroke3_to_poly(val_org_sketches)
         val_tar_objs = ObjectUtil.accumalitive_stroke3_to_poly(val_tar_sketches)
 
+        inds = rnd.choices(range(len(org_sketches)), k=model_config.num_vis_samples)
         if model_config.vis_transformation:
             # animate the tranformation and save the videos
             vis_dir = os.path.join(model_config.vis_dir, 'transformation videos')
@@ -444,17 +454,46 @@ class model_visualizer():
 
             print("[models.py] visualizing transformation")
             params = model.predict_from_stroke3(org_sketches, tar_sketches)
-            inds = rnd.choices(range(len(org_sketches)), k=model_config.num_vis_samples)
+            # inds = rnd.choices(range(len(org_sketches)), k=model_config.num_vis_samples)
 
-            for i in inds:
-                # transform objects in order to update the step vector
-                org_objs[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
+            # for i in inds: TODO: no need for such step. Delete
+            #     # transform objects in order to update the step vector
+            #     org_objs[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
             
             for i in inds:
+                print(params[i])
                 animation = SketchAnimation([org_objs[i]], [tar_objs[i]]) 
-                animation.seq_animate_all([params[i]]) # question: objects are already transformed. Do we need to reset?
-                org_objs[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i])) 
+                animation.seq_animate_all([params[i]], 
+                                         denormalize_trans=True,
+                                         save=model_config.save_transformation_vis, 
+                                         file=os.path.join(vis_dir, f'example_{i}.mp4')) 
                 org_objs[i].reset()
+                tar_objs[i].reset()
+
+
+        if model_config.vis_train:
+            # visualize samples of transformation without animation
+            vis_dir = os.path.join(model_config.vis_dir, 'training_denormalized')
+            os.makedirs(vis_dir, exist_ok=True)
+
+            print(f"[models.py] {time.ctime()}: Saving training visualizations")
+            params = model.predict_from_stroke3(org_sketches, tar_sketches)
+            for j in range(model_config.num_vis_samples):
+                # inds = rnd.choices(range(len(org_objs)), k=5)
+                fig, axs = plt.subplots(len(inds), 3)
+                for i, ind in enumerate(inds):
+                    org_trn_obj[ind].reset()
+                    org_trn_obj[ind].visualize(ax=axs[i][0], show=False)
+                    tar_trn_obj[ind].visualize(ax=axs[i][1], show=False)
+                    tar_trn_obj[ind].visualize(ax=axs[i][2], show=False)
+                    org_trn_obj[ind].transform(ObjectUtil.denormalized_transformation(
+                        org_trn_obj[ind],
+                        tar_trn_obj[ind],
+                        RegistrationUtils.obtain_transformation_matrix(params[ind])))
+                    org_trn_obj[ind].visualize(ax=axs[i][2], show=False)
+                    org_trn_obj[ind].reset()
+                    
+                plt.savefig(vis_dir + "/res{0}.png".format(j))
 
         if model_config.vis_train:
             # visualize samples of transformation without animation
@@ -464,7 +503,8 @@ class model_visualizer():
             print(f"[models.py] {time.ctime()}: Saving training visualizations")
             params = model.predict_from_stroke3(org_sketches, tar_sketches)
             for j in range(model_config.num_vis_samples):
-                inds = rnd.choices(range(len(org_objs)), k=5)
+                # inds = rnd.choices(range(len(org_objs)), k=5)
+                print(inds)
                 fig, axs = plt.subplots(len(inds), 3)
                 for i, ind in enumerate(inds):
                     org_objs[ind].reset()
@@ -477,6 +517,36 @@ class model_visualizer():
                     
                 plt.savefig(vis_dir + "/res{0}.png".format(j))
 
+        if model_config.vis_train:
+            # visualize samples of transformation without animation
+            vis_dir = os.path.join(model_config.vis_dir, 'training-sequential')
+            os.makedirs(vis_dir, exist_ok=True)
+
+            print(f"[models.py] {time.ctime()}: Saving training visualizations")
+            params = model.predict_from_stroke3(org_sketches, tar_sketches)
+            for j in range(model_config.num_vis_samples):
+                # inds = rnd.choices(range(len(org_objs)), k=5)
+                print(inds)
+                fig, axs = plt.subplots(len(inds), 3)
+                for i, ind in enumerate(inds):
+                    org_objs[ind].reset()
+                    org_objs[ind].visualize(ax=axs[i][0], show=False)
+                    tar_objs[ind].visualize(ax=axs[i][1], show=False)
+                    tar_objs[ind].visualize(ax=axs[i][2], show=False)
+                    params_6 = RegistrationUtils.obtain_transformation_matrix(params[ind])
+                    # denormalize
+                    params_6 = ObjectUtil.denormalized_transformation(
+                        org_trn_obj[ind],
+                        tar_trn_obj[ind],
+                        params_6)
+                    # get sequential
+                    seq_params = RegistrationUtils.get_seq_translation_matrices(params_6)
+                    for tmp in seq_params:
+                        org_objs[ind].transform(tmp)
+                    org_objs[ind].visualize(ax=axs[i][2], show=False)
+                    org_objs[ind].reset()
+                    
+                plt.savefig(vis_dir + "/res{0}.png".format(j))
         # visualizing the validation
         if model_config.vis_test:
             # predict transformation

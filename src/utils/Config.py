@@ -15,7 +15,7 @@ class Config:
         config.re_sampling = 128 # < 1 it downsamples according to re_sampling * len, =1 disable, > 1 resample to fixed len
         # config.obj_accepted_labels = ['Circle', 'Star', 'Triangle', 'Star Bullet', 'Square', 'Arrow Right', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus']
         config.obj_accepted_labels = ['Circle', 'Triangle', 'Square', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus']
-        config.dataset_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), 'ASIST_Dataset/Data/Data_A/ReflectionQuestion')
+        config.dataset_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), 'ASIST_Dataset/Data/Data_A')
         config.seed = 1
 
         # model related
@@ -37,16 +37,17 @@ class Config:
 
         # visualization realted
         config.vis_train = True
-        config.vis_test = True
-        config.fine_tune = True
+        config.vis_test = False
+        config.fine_tune = False
         config.fine_tune_epochs = 100
-        config.iter_refine_prediction = True
+        config.iter_refine_prediction = False
         config.vis_transformation = True
+        config.save_transformation_vis = False
         config.vis_dir = "../registrationNN/saved_results/{0}".format(str(exp_id))
         config.hist_path = config.vis_dir + "/hist.pkl"
         config.config_path = config.vis_dir + "/config.txt"
         config.log_path = config.vis_dir + "/log.txt"
-        config.num_vis_samples = 10
+        config.num_vis_samples = 5
 
         os.makedirs(config.exp_dir, exist_ok=True)
         os.makedirs(config.vis_dir, exist_ok=True)

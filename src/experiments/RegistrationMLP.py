@@ -17,15 +17,26 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         exp_id = str(sys.argv[1])
     else:
-        exp_id = 'trial_model'
+        exp_id = 'trial_model1'
     
     model_config = Config.default_model_config(exp_id)
-    model_config.learning_rate = 1e-4
-    model_config.n_files = 10
+    model_config.learning_rate = 5e-4
+    model_config.re_sampling = 1.0
+    model_config.n_files = 100
     model_config.k_select = 10
-    model_config.epochs = 10
+    model_config.epochs = 0
     model_config.comment = 'no penalty on the movements'
+    model_config.select_only_matched = True
+    model_config.obj_accepted_labels = ['Triangle', 'Circle', 'Star']
+    model_config.redirect_out = False
 
+    model_config.load = True
+    model_config.load_ckpt = True
+    model_config.save = False
+    model_config.save_ckpt = False
+    model_config.vis_transformation = False
+    model_config.num_vis_samples = 5
+    
     print(f"[RegisterationMLP.py] {time.ctime()}: Expermint {model_config.exp_id} started")
 
     org_objs, tar_objs = [], []
@@ -34,8 +45,21 @@ if __name__ == '__main__':
                                                             acceptable_labels=model_config.obj_accepted_labels)
     labels, objs = np.asarray(labels), np.asarray(objs)
 
+    # validate that objects are distincts 
+    tot = 0
+    for obj1 in objs:
+        for obj2 in objs:
+            if obj1 == obj2:
+                tot += 1
+
+    print(len(objs), tot)
+    
+    random.seed(model_config.seed)
     for obj, lbl in zip(objs, labels):
-        matched_objs = objs[labels == lbl] # TODO test with non-matched objects
+        if model_config.select_only_matched:
+            matched_objs = objs[labels == lbl] # TODO test with non-matched objects
+        else:
+            matched_objs = objs
 
         # choose k random matched objects
         matched_objs = random.choices(matched_objs, k=model_config.k_select)
@@ -55,7 +79,8 @@ if __name__ == '__main__':
         f.write(config_json)
 
     # redirect output to log
-    sys.stdout = open(model_config.log_path, 'w+')
+    if model_config.redirect_out:
+        sys.stdout = open(model_config.log_path, 'w+')
 
     model = NNModel(model_config)
     model.fit(train_org_sketches, train_tar_sketches, val_org_sketches, val_tar_sketches)

@@ -14,7 +14,6 @@ import pathlib
 
 class ObjectUtil:
     sketchformer = None
-
     @staticmethod
     def xml_to_pointsDict(file, flip = False, shift_x=0.0, shift_y=0.0):
         """for a given file, read the file and transform it to an dictonary of points where for each point id, return x, y and time
@@ -371,6 +370,52 @@ class ObjectUtil:
             ret.append(UnlabeledObject(strokes))
         return ret
 
+    @staticmethod
+    def get_normalization_parameters(obj):
+        mx_w, mx_h, mn_w, mn_h = -1, -1, 1e9, 1e9
+        for stroke in obj.get_strokes():
+            # get dimentions
+            mx_w = max(mx_w, max([p.x for p in stroke.get_points()]))
+            mn_w = min(mn_w, min([p.x for p in stroke.get_points()]))
+            mx_h = max(mx_h, max([p.y for p in stroke.get_points()]))
+            mn_h = min(mn_h, min([p.y for p in stroke.get_points()]))
+
+        w, h = mx_w - mn_w, mx_h - mn_h
+        mx_wh = max(w, h)
+        return mn_w, mn_h, mx_wh
+
+    @staticmethod
+    def denormalized_transformation(org_obj, tar_obj, t, scale=100.0):
+        """Given a transformation matrix on the normalized objects, return the
+        correponsing transformation matrix on the non-normalized objects.
+        Attention: Scale should match with the normalization function
+
+        Args:
+            org_obj (UnlabeledObject): org objects
+            tar_obj (UnlabeledObject): Tar objects
+            t (array(6)): transformation parameters
+
+        Returns:
+            t array(6): resulting transformation matrix on the
+        """
+
+        # get the normalization parameters
+        mn_x_0, mn_y_0, f0 = ObjectUtil.get_normalization_parameters(org_obj)
+        mn_x_1, mn_y_1, f1 = ObjectUtil.get_normalization_parameters(tar_obj)
+        
+        t_res = np.zeros(6)
+        t_res[0] = t[0] * f1 / f0
+        t_res[1] = t[1] * f1 / f0
+        t_res[2] = -t[0] * (mn_x_0 * f1 / f0 + f1 / 2) - t[1] * (mn_y_0 * f1 / f0 + f1 / 2) + t[2] * (f1 / (2 * scale)) + f1/2 + mn_x_1
+        # t_res[2] = -f1/f0 * (t[0] * mn_x_0 + t[1] * mn_y_0) - f1 * (t[0] + t[1]) + 2*f1*t[2]/scale + mn_x_1 + 1
+
+        t_res[3] = t[3] * f1 / f0
+        t_res[4] = t[4] * f1 / f0
+        t_res[5] = -t[3] * (mn_x_0 * f1 / f0 + f1 / 2) - t[4] * (mn_y_0 * f1 / f0 + f1 / 2) + t[5] * (f1 / (2 * scale)) + f1/2 + mn_y_1
+        # t_res[5] = -f1/f0 * (t[3] * mn_x_0 + t[4] * mn_y_0) - f1 * (t[3] + t[4]) + 2*f1*t[5]/scale + mn_y_1 + 1
+
+        return t_res
+         
 
     @staticmethod
     def poly_to_stroke3(sketches, scale=100.0, step=5, eps=1.5, red_rdp=True, normalize=True):
@@ -395,24 +440,14 @@ class ObjectUtil:
         if normalize:
             # find the dimentions of the storkes and reduce
             for sketch in sketches:
-                mx_w, mx_h, mn_w, mn_h = -1, -1, 1e9, 1e9
-                for stroke in sketch.get_strokes():
-                    # get dimentions
-                    mx_w = max(mx_w, max([p.x for p in stroke.get_points()]))
-                    mn_w = min(mn_w, min([p.x for p in stroke.get_points()]))
-                    mx_h = max(mx_h, max([p.y for p in stroke.get_points()]))
-                    mn_h = min(mn_h, min([p.y for p in stroke.get_points()]))
-
-                w, h = mx_w - mn_w, mx_h - mn_h
-                mx_wh = max(w, h)
-
+                mn_w, mn_h, mx_wh = ObjectUtil.get_normalization_parameters(sketch)
                 # normalize strokes
                 try:
                     for stroke in sketch.get_strokes():
                         for p in stroke.get_points():
                             p.x = ((p.x - mn_w) / mx_wh * 2.0 - 1.0) * scale
                             p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
-                except:
+                except: 
                     print("[ObjectUtil] could not normalize stroke as mx_wh is {0}".format(mx_wh))
                     print("[ObjectUtil] sketch len is:{0}".format(len(sketch)))
                     print(sketch.get_strokes()[0].get_points()[0])
@@ -577,6 +612,17 @@ class ObjectUtil:
             
         return reduced_objs
 
+    def get_centroid(obj):
+        """For a given object, return the centroid point
+
+        Args:
+            obj (UnlabeledObject): [description]
+        
+        Return:
+            centroid point
+        """
+        sum_x, sum_y = sum(obj.get_x()), sum(obj.get_y())
+        return Point(sum_x / len(obj), sum_y / len(obj))
 
     def extract_objects_from_directory(directory, n_files = -1, re_sampling=0.0, acceptable_labels=None):
         # objs : (N x M) M ordered objects for N sketches

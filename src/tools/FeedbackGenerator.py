@@ -62,21 +62,33 @@ class VideoGenerator:
             with open(os.path.join(self.config.video_dir, 'transformation_parameters.pkl'), 'wb') as f:
                 pickle.dump(final_params, f)
        
+        # fix and object in the target objects
+        cnt_ind = self.get_widest_obj_ind(tar_sketch)
+        
+        # normalize all transformation according to the transformation of the fixed object
+        for i in range(len(final_params)):
+            final_params[i][5] -= final_params[cnt_ind][5]
+            final_params[i][6] -= final_params[cnt_ind][6]
+
         if self.config.verbose > 3:
             model_visualizer.visualize_model(self.alignment_model, org_sketch, tar_sketch, org_sketch, tar_sketch, self.alignment_model.model_config)
 
 
         if self.config.vis_video:
             # generate the video based on the final params
-
-            # obtain sequential transformation params
-            # t = []
-            # for lst in final_params:
-            #     t.append(RegistrationUtils.obtain_transformation_matrix(lst))
-
             anim = SketchAnimation(org_sketch, tar_sketch)
-            anim.seq_animate_all(final_params, save=True, file=self.config.save_video_path)
+            anim.seq_animate_all(final_params, save=True, file=self.config.save_video_path, denormalize_trans=False)
         
+
+    def get_widest_obj_ind(self, objs):
+        mx_width, ind = 0, 0
+        for i, obj in enumerate(objs):
+            width = max(obj.get_x()) - min(obj.get_x())
+            if width > mx_width:
+                mx_width = width
+                ind = i
+        return ind
+
 
     def optimal_transformation(self, org_objs, tar_objs, dissimilarity_matrix, trans_matrix):
         """Based on the optimal assignment solution, ditribute the transformation parameters for each original object.

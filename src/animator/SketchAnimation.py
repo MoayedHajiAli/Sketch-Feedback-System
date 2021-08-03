@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
 from utils.RegistrationUtils import RegistrationUtils
+import copy
 
 
 class SketchAnimation():
@@ -12,25 +13,23 @@ class SketchAnimation():
     target_labels = []
     dim = [[0, 2000], [0, 2000]]
     
-    fig, ax = plt.gcf(), plt.gca()
-    
     def __init__(self, original_obj, target_obj):
         self.original_obj = original_obj
         self.target_obj = target_obj
 
+        # figure
+        self.fig, self.ax = plt.subplots()
+
         # create plot patches for every stroke
         self.original_patches = []
         for obj in self.original_obj:
-            self.original_patches.append([plt.plot([], [])[0] for _ in range(len(obj.get_strokes()))])
+            self.original_patches.append([self.ax.plot([], [])[0] for _ in range(len(obj.get_strokes()))])
 
         self.target_patches = []
         for obj in self.target_obj:
-            self.target_patches.append([plt.plot([], [])[0] for _ in range(len(obj.get_strokes()))])
+            self.target_patches.append([self.ax.plot([], [])[0] for _ in range(len(obj.get_strokes()))])
 
-        # figure
-        self.fig, self.ax = plt.gcf(), plt.gca()
-
-
+        
     # update the coordinates of the all the objects
     # lst: list of objects, x, y: list of x, y traverse for objects
     def move_all(self, lst, steps):
@@ -70,9 +69,11 @@ class SketchAnimation():
         for obj in self.original_obj:
             org_x = min(org_x, obj.origin_x)
             org_y = min(org_y, obj.origin_y)
+
+        self.org_shift = (-(org_x - 300), -(org_y - 300))
         for obj in self.original_obj:
             obj.reset()
-            obj.transform([1.0, 0.0, -(org_x - 300), 0.0, 1.0, -(org_y - 300)], upd_step=False)
+            obj.transform([1.0, 0.0, self.org_shift[0], 0.0, 1.0, self.org_shift[1]], upd_step=False)
 
         for pt_lst, obj in zip(self.original_patches, self.original_obj):
             for pt, stroke in zip(pt_lst, obj.get_strokes()):
@@ -83,9 +84,11 @@ class SketchAnimation():
         for obj in self.target_obj:
             org_x = min(org_x, obj.origin_x)
             org_y = min(org_y, obj.origin_y)
+
+        self.tar_shift = (-(org_x - 1000), -(org_y - 1000))
         for obj in self.target_obj:
             obj.reset()
-            obj.transform([1.0, 0.0, -(org_x - 1000), 0.0, 1.0, -(org_y - 1000)], upd_step=False)
+            obj.transform([1.0, 0.0, self.tar_shift[0], 0.0, 1.0, self.tar_shift[1]], upd_step=False)
 
         for pt_lst, obj in zip(self.target_patches, self.target_obj):
             for pt, stroke in zip(pt_lst, obj.get_strokes()):
@@ -172,7 +175,15 @@ class SketchAnimation():
         if (i % obj_steps) % steps == 0:
             # apply the next transformation
             ind = int((i % obj_steps)/steps)
-            self.original_obj[obj_ind].upd_step_vector(trans_matrix[obj_ind][ind])
+            if ind == 4: # translation
+                tmp = copy.deepcopy(trans_matrix[obj_ind][ind])
+                # tmp[2] += self.tar_shift[0] - self.org_shift[0]
+                # tmp[5] += self.tar_shift[1] - self.org_shift[1]
+                print(tmp)
+                self.original_obj[obj_ind].upd_step_vector(tmp)
+            else:
+                print(trans_matrix[obj_ind][ind])
+                self.original_obj[obj_ind].upd_step_vector(trans_matrix[obj_ind][ind])
             # time.sleep(0.2) # TODO check if needed
 
         # move objects
@@ -192,25 +203,34 @@ class SketchAnimation():
         # p[5]: translation in the x direction
         # p[6]: translation in the y direction
     # the order of transformation is scaling -> rotating -> shearing -> translation
-    def seq_animate_all(self, transformation_params, steps=200, save=False, file="example4.mp4"):
-        # holds 5 sequential transformation matrices: shearing-y -> shearing-x -> rotation -> scaling -> translation
-        t = []
+    def seq_animate_all(self, transformation_params, steps=200, save=False, file="example4.mp4", denormalize_trans=False):
+        # for each object holds 5 sequential transformation matrices: shearing-y -> shearing-x -> rotation -> scaling -> translation
+        t = [] # N x 5
 
         # add scaling transformation matrix
-        for p in transformation_params:
-            t.append(RegistrationUtils.get_seq_translation_matrices(p))
+        for ind, p in enumerate(transformation_params):
+            seq_params = RegistrationUtils.get_seq_translation_matrices(p)
+            if denormalize_trans:
+                for i in range(len(seq_params)):
+                    seq_params[i] = ObjectUtil.denormalized_transformation(self.original_obj[ind], self.target_obj[ind], seq_params[i])
+                    break
+            
+            t.append(seq_params)
+            
 
         # animate
         anim = animation.FuncAnimation(self.fig, func=self._seq_obj_anim,
                                        init_func=self._init_animation, 
-                                       frames=5 * 5 * steps,
+                                       frames=len(self.original_obj) * 5 * steps, # 5 transformation steps for each object
                                        interval=1,
                                        blit=True,
+                                       repeat=False,
                                        fargs=[5 * steps, steps, t])
+
+
+        plt.show()
         if save:
             self._save_anim(anim, file)
-        else:
-            plt.show()
         return anim
 
 
