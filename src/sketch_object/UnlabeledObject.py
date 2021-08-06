@@ -12,6 +12,7 @@ class UnlabeledObject:
         # set a new origin
         ind = np.argmin(self.get_x())
         self.origin_x, self.origin_y = self.get_x()[ind], self.get_y()[ind]
+        self.origin_min_x, self.origin_min_y = min(self.get_x()), min(self.get_y())
 
     def print_strokes(self):
         for i, stroke in enumerate(self.strokes_lst):
@@ -93,26 +94,35 @@ class UnlabeledObject:
 
     # for a given transformation parameters, transform all the points
     # TODO: for registering we need to restore origin????? (why), however for allignment with deep learning, we do not (FIX)
-    def transform(self, t, upd_step=True, object_origin=False):
+    def transform(self, t, upd_step=True, object_origin=False, object_min_origin=False, retain_origin=False):
         """
         upd_step: it updates the step vecotr so that the object will be prepared for transformation animation
         object_origin: if true then performe the transformation around the point with the minimum x in the origin, otherwise consider (0, 0) to be
+        the origin.
+        object_min_origin: if true then performe the transformation around the minx and min_y, otherwise consider (0, 0) to be
         the origin.
         t (list(6,)): transformation matrix
         """
         xo = yo = 0
         if object_origin:
             xo, yo = self.origin_x, self.origin_y
+        if object_min_origin:
+            xo, yo = self.origin_min_x, self.origin_min_y 
+        
         for stroke in self.strokes_lst:
-            stroke.transform(t, xo, yo, upd_step=upd_step)
+            stroke.transform(t, xo, yo, upd_step=upd_step, retain_origin=retain_origin)
 
     # update step vector to prepare for the SketchAnimationing
-    def upd_step_vector(self, t, object_origin=True):
+    def upd_step_vector(self, t, object_origin=True, object_min_origin=False, retain_origin=False):
         xo = yo = 0
         if object_origin:
             xo, yo = self.origin_x, self.origin_y
+        
+        if object_min_origin:
+            xo, yo = self.origin_min_x, self.origin_min_y 
+
         for stroke in self.strokes_lst:
-            stroke.upd_step_vector(t, xo, yo)
+            stroke.upd_step_vector(t, xo, yo, retain_origin=retain_origin)
     
     def corresponding_stroke(self, ind):
         """for a given index, return the index of the stroke that contains this point

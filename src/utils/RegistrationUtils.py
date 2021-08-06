@@ -132,6 +132,93 @@ class RegistrationUtils:
         t[5] = p[6]
         return t
 
+    @staticmethod
+    def obtain_transformation_matrix(p):
+        t = np.zeros(6)
+        t[0] = p[0] * np.cos(p[2])
+        t[1] = p[0] * (p[3] * np.cos(p[2]) - np.sin(p[2]))
+        t[2] = p[5]
+
+        t[3] = p[1] * (np.sin(p[2]) * (1 + p[3] * p[4]) + p[4] * np.cos(p[2]))
+        t[4] = p[1] * (p[3] * np.sin(p[2]) + np.cos(p[2]))
+        t[5] = p[6]
+        return t
+
+    # @staticmethod
+    def obtain_transformation_matrix(p):
+        t = np.zeros(6)
+        t[0] = p[0] * (np.cos(p[2]) - p[4] * np.sin(p[2]))
+        t[1] = -p[1] * np.sin(p[2])
+        t[2] = p[5]
+
+        t[3] = p[0] * (np.sin(p[2]) + p[4] * np.cos(p[2]))
+        t[4] = p[1] * np.cos(p[2])
+        t[5] = p[6]
+        return t
+
+    @staticmethod
+    def decompose_tranformation_matrix(t):
+        """Givne a transformation matrix array(6,), decompose it into scaling_x scaling_y, rotation,
+         shearing in x, 0 (shearing in y), tranlsation_x and translation_y that should be performed in the order of
+         scale -> shear -> rotate
+
+        Args:
+            t (array(6,)): transformation matrix params
+
+        Returns:
+            p (array(7,)): affine transformation params
+        """
+        p = np.zeros(7)
+        # scaling_x
+        p[1] = np.sqrt(t[1] ** 2 + t[4] ** 2)
+        # roation
+        p[2] = np.arctan2(-t[1], t[4])
+        # trans_x
+        p[5] = t[2]
+        # trans_y 
+        p[6] = t[5]
+        # shearing_y 
+        p[4] = (t[3] * np.cos(p[2]) - t[0] * np.sin(p[2])) / (t[0] * np.cos(p[2]) + t[3] * np.sin(p[2])) 
+        # shearing_x
+        p[3] = 0 # (assume to be 0)
+        # scaling_y
+        p[0] = t[0] / (np.cos(p[2]) - p[4] * np.sin(p[2]))
+        # p[1] = p[0] * (t[1] * t[3] - t[4] * t[0]) / (t[0] ** 2 - t[3] ** 2)
+        
+        
+        return p
+
+    
+    # @staticmethod
+    # def decompose_tranformation_matrix(t):
+    #     """Givne a transformation matrix array(6,), decompose it into scaling_x scaling_y, rotation,
+    #      shearing in x, 0 (shearing in y), tranlsation_x and translation_y that should be performed in the order of
+    #      scale -> shear -> rotate
+
+    #     Args:
+    #         t (array(6,)): transformation matrix params
+
+    #     Returns:
+    #         p (array(7,)): affine transformation params
+    #     """
+    #     p = np.zeros(7)
+    #     # scaling_x
+    #     p[0] = np.sqrt(t[0] ** 2 + t[1] ** 2)
+    #     # roation
+    #     p[2] = np.arctan2(t[1], t[0])
+    #     # trans_x
+    #     p[5] = t[2]
+    #     # trans_y 
+    #     p[6] = t[5]
+    #     # shearing_x 
+    #     p[3] = 0
+    #     # shearing_y
+    #     p[4] = np.arctan2(t[4], t[3]) - np.pi/2 - p[2]
+    #     # scaling_y
+    #     p[1] = np.sqrt(t[3] ** 2 + t[4] ** 2) * np.cos(p[4])
+        
+    #     return p
+
     # calculate the turning angle based on three points coordinates
     @staticmethod
     def calc_turning(x0, y0, x1, y1, x2, y2) -> float:
@@ -159,13 +246,14 @@ class RegistrationUtils:
         RegistrationUtils.change_cords(ref_obj, tar_obj, t * xo, t * yo)
 
     
-    """obtain sequential transformation matrix according to transofrmation parameters of shearing, rotation, scaling, and translation
 
-    Returns:
-        array-like(5, 6): a transformation matrix for each transformation type
-    """
     @staticmethod
     def get_seq_translation_matrices(p):
+        """obtain sequential transformation matrix according to transofrmation parameters of shearing, rotation, scaling, and translation
+
+        Returns:
+            array-like(5, 6): a transformation matrix for each transformation type
+        """
         tmp = []
         # shearing parallel to y
         tmp.append([1.0, 0.0, 0.0, p[4], 1.0, 0.0])
@@ -175,6 +263,31 @@ class RegistrationUtils:
         tmp.append([np.cos(p[2]), -np.sin(p[2]), 0.0, np.sin(p[2]), np.cos(p[2]), 0.0])
         # scaling
         tmp.append([p[0], 0.0, 0.0, 0.0, p[1], 0.0])
+        # translation
+        tmp.append([1.0, 0.0, p[5], 0.0, 1.0, p[6]])
+
+        return tmp
+
+    @staticmethod
+    def get_seq_translation_matrices(p):
+        """obtain sequential transformation matrix according to transofrmation parameters in the order of scaling -> shearing_x -> shearing_y -> rotation -> translatin
+
+        Returns:
+            array-like(5, 6): a transformation matrix for each transformation type
+        """
+        tmp = []
+        # scaling
+        tmp.append([p[0], 0.0, 0.0, 0.0, p[1], 0.0])
+
+        # shearing parallel to x
+        tmp.append([1.0, p[3], 0.0, 0.0, 1.0, 0.0])
+        
+        # shearing parallel to y
+        tmp.append([1.0, 0.0, 0.0, p[4], 1.0, 0.0])
+        
+        # rotation
+        tmp.append([np.cos(p[2]), -np.sin(p[2]), 0.0, np.sin(p[2]), np.cos(p[2]), 0.0])
+        
         # translation
         tmp.append([1.0, 0.0, p[5], 0.0, 1.0, p[6]])
 

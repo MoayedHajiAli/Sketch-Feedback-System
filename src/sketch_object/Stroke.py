@@ -72,21 +72,31 @@ class Stroke:
         return Stroke(pt_lst)
 
     # for a given transformation parameters, transform all the points
-    def transform(self, t, xo, yo, upd_step=True):
+    def transform(self, t, xo, yo, upd_step=True, retain_origin=False):
         if upd_step:
             self.step_vector = []
         for p in self.points_lst:
-            x = (p.x - xo) * t[0] + (p.y - yo) * t[1] + t[2] + xo
-            y = (p.x - xo) * t[3] + (p.y - yo) * t[4] + t[5] + yo
+            x = (p.x - xo) * t[0] + (p.y - yo) * t[1] + t[2] 
+            y = (p.x - xo) * t[3] + (p.y - yo) * t[4] + t[5]
+            
+            if retain_origin:
+                x += xo
+                y += yo
+
             if upd_step:
                 self.step_vector.append((x - p.x, y - p.y))
             p.x, p.y = x, y
 
     # update step vector to prepare for the SketchAnimationing
-    def upd_step_vector(self, t, xo, yo):
+    def upd_step_vector(self, t, xo, yo, retain_origin=False):
         self.step_vector = []
         for p in self.points_lst:
-            x = (p.x - xo) * t[0] + (p.y - yo) * t[1] + t[2] + xo
-            y = (p.x - xo) * t[3] + (p.y - yo) * t[4] + t[5] + yo
+            x = (p.x - xo) * t[0] + (p.y - yo) * t[1] + t[2]
+            y = (p.x - xo) * t[3] + (p.y - yo) * t[4] + t[5] 
+
+            if retain_origin:
+                x += xo
+                y += yo
+                
             self.step_vector.append((x - p.x, y - p.y))
 

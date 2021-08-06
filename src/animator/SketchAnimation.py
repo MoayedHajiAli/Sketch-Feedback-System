@@ -11,7 +11,7 @@ import copy
 class SketchAnimation():
     original_labels = []
     target_labels = []
-    dim = [[0, 2000], [0, 2000]]
+    dim = [[-1000, 2000], [-1000, 2000]]
     
     def __init__(self, original_obj, target_obj):
         self.original_obj = original_obj
@@ -74,6 +74,8 @@ class SketchAnimation():
         for obj in self.original_obj:
             obj.reset()
             obj.transform([1.0, 0.0, self.org_shift[0], 0.0, 1.0, self.org_shift[1]], upd_step=False)
+            obj.origin_min_x += self.org_shift[0]
+            obj.origin_min_y += self.org_shift[1]
 
         for pt_lst, obj in zip(self.original_patches, self.original_obj):
             for pt, stroke in zip(pt_lst, obj.get_strokes()):
@@ -89,6 +91,8 @@ class SketchAnimation():
         for obj in self.target_obj:
             obj.reset()
             obj.transform([1.0, 0.0, self.tar_shift[0], 0.0, 1.0, self.tar_shift[1]], upd_step=False)
+            obj.origin_min_x += self.tar_shift[0]
+            obj.origin_min_y += self.tar_shift[1]
 
         for pt_lst, obj in zip(self.target_patches, self.target_obj):
             for pt, stroke in zip(pt_lst, obj.get_strokes()):
@@ -177,13 +181,13 @@ class SketchAnimation():
             ind = int((i % obj_steps)/steps)
             if ind == 4: # translation
                 tmp = copy.deepcopy(trans_matrix[obj_ind][ind])
-                # tmp[2] += self.tar_shift[0] - self.org_shift[0]
-                # tmp[5] += self.tar_shift[1] - self.org_shift[1]
-                print(tmp)
-                self.original_obj[obj_ind].upd_step_vector(tmp)
+                # tmp[2] += self.org_shift[0]
+                # tmp[5] += self.org_shift[1]
+                self.original_obj[obj_ind].upd_step_vector(tmp, object_min_origin=True, retain_origin=False)
+
             else:
                 print(trans_matrix[obj_ind][ind])
-                self.original_obj[obj_ind].upd_step_vector(trans_matrix[obj_ind][ind])
+                self.original_obj[obj_ind].upd_step_vector(trans_matrix[obj_ind][ind], object_min_origin=True, retain_origin=True)
             # time.sleep(0.2) # TODO check if needed
 
         # move objects
@@ -202,20 +206,25 @@ class SketchAnimation():
         # p[4]: shearing in the y axis
         # p[5]: translation in the x direction
         # p[6]: translation in the y direction
-    # the order of transformation is scaling -> rotating -> shearing -> translation
+    # the order of transformation is scaling -> shaering -> roation -> translation
     def seq_animate_all(self, transformation_params, steps=200, save=False, file="example4.mp4", denormalize_trans=False):
         # for each object holds 5 sequential transformation matrices: shearing-y -> shearing-x -> rotation -> scaling -> translation
-        t = [] # N x 5
+        all_t_params = [] # N x 5
 
+        self.denormalize_trans = denormalize_trans
         # add scaling transformation matrix
         for ind, p in enumerate(transformation_params):
-            seq_params = RegistrationUtils.get_seq_translation_matrices(p)
             if denormalize_trans:
-                for i in range(len(seq_params)):
-                    seq_params[i] = ObjectUtil.denormalized_transformation(self.original_obj[ind], self.target_obj[ind], seq_params[i])
-                    break
-            
-            t.append(seq_params)
+                print("Before", p)
+                t = RegistrationUtils.obtain_transformation_matrix(p)
+                # denormalize
+                t_denormalized = ObjectUtil.denormalized_transformation(self.original_obj[ind], self.target_obj[ind], t)
+                # decompose
+                p_denormalized = RegistrationUtils.decompose_tranformation_matrix(t_denormalized)
+                print("After", p_denormalized)
+
+            seq_params = RegistrationUtils.get_seq_translation_matrices(p_denormalized)
+            all_t_params.append(seq_params)
             
 
         # animate
@@ -225,7 +234,7 @@ class SketchAnimation():
                                        interval=1,
                                        blit=True,
                                        repeat=False,
-                                       fargs=[5 * steps, steps, t])
+                                       fargs=[5 * steps, steps, all_t_params])
 
 
         plt.show()

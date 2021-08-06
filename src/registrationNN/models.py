@@ -45,12 +45,20 @@ class NNModel:
             # org_pen: (batch, 126) tar_pen: (batch, 126)   represents the pen state in stroke-3 format
 
             # obtain transformation matrix parameters
+            # t = []
+            # t.append(p[:, 0] * (K.cos(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) - p[:, 4] * K.sin(p[:, 2])))
+            # t.append(p[:, 0] * (p[:, 3] * K.cos(p[:, 2]) - K.sin(p[:, 2])))
+            # t.append(p[:, 5])
+            # t.append(p[:, 1] * (K.sin(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) + p[:, 4] * K.cos(p[:, 2])))
+            # t.append(p[:, 1] * (p[:, 3] * K.sin(p[:, 2]) + K.cos(p[:, 2])))
+            # t.append(p[:, 6])
+
             t = []
-            t.append(p[:, 0] * (K.cos(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) - p[:, 4] * K.sin(p[:, 2])))
-            t.append(p[:, 0] * (p[:, 3] * K.cos(p[:, 2]) - K.sin(p[:, 2])))
+            t.append(p[:, 0] * (K.cos(p[:, 2]) - p[:, 4] * K.sin(p[:, 2])))
+            t.append(-1 * p[:, 1] * K.sin(p[:, 2]))
             t.append(p[:, 5])
-            t.append(p[:, 1] * (K.sin(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) + p[:, 4] * K.cos(p[:, 2])))
-            t.append(p[:, 1] * (p[:, 3] * K.sin(p[:, 2]) + K.cos(p[:, 2])))
+            t.append(p[:, 0] * (K.sin(p[:, 2]) + p[:, 4] * K.cos(p[:, 2])))
+            t.append(p[:, 1] * K.cos(p[:, 2]))
             t.append(p[:, 6])
             t = K.expand_dims(t, -1)
             # t: (batch, 6, 1)
@@ -96,16 +104,16 @@ class NNModel:
             # add penalty to the transformation parameters
             # @size p: (batch, 7)
             # # add scaling cost
-            # tran_cost = K.sum(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
-            # tran_cost += K.sum(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
-            # # add roation cost
-            # tran_cost += K.sum((p[:, 2] ** 2) * rotation_f)
-            # # add shearing cost
-            # tran_cost += K.sum((p[:, 3] ** 2) * shearing_f)
-            # tran_cost += K.sum((p[:, 4] ** 2) * shearing_f)
+            tran_cost = K.sum(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
+            tran_cost += K.sum(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
+            # add roation cost
+            tran_cost += K.sum((p[:, 2] ** 2) * rotation_f)
+            # add shearing cost
+            tran_cost += K.sum((p[:, 3] ** 2) * shearing_f)
+            tran_cost += K.sum((p[:, 4] ** 2) * shearing_f)
             # add shearing cost
 
-            return sm_cost # + K.sqrt(tran_cost)    
+            return sm_cost  + K.sqrt(tran_cost)    
         return knn_loss     
 
     @staticmethod
@@ -122,12 +130,20 @@ class NNModel:
         # org_pen: (batch, 126) tar_pen: (batch, 126)   represents the pen state in stroke-3 format
 
         # obtain transformation matrix parameters
+        # t = []
+        # t.append(p[:, 0] * (np.cos(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) - p[:, 4] * np.sin(p[:, 2])))
+        # t.append(p[:, 0] * (p[:, 3] * np.cos(p[:, 2]) - np.sin(p[:, 2])))
+        # t.append(p[:, 5])
+        # t.append(p[:, 1] * (np.sin(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) + p[:, 4] * np.cos(p[:, 2])))
+        # t.append(p[:, 1] * (p[:, 3] * np.sin(p[:, 2]) + np.cos(p[:, 2])))
+        # t.append(p[:, 6])
+
         t = []
-        t.append(p[:, 0] * (np.cos(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) - p[:, 4] * np.sin(p[:, 2])))
-        t.append(p[:, 0] * (p[:, 3] * np.cos(p[:, 2]) - np.sin(p[:, 2])))
+        t.append(p[:, 0] * (np.cos(p[:, 2]) - p[:, 4] * np.sin(p[:, 2])))
+        t.append(-1 * p[:, 1] * np.sin(p[:, 2]))
         t.append(p[:, 5])
-        t.append(p[:, 1] * (np.sin(p[:, 2]) * (1 + p[:, 3] * p[:, 4]) + p[:, 4] * np.cos(p[:, 2])))
-        t.append(p[:, 1] * (p[:, 3] * np.sin(p[:, 2]) + np.cos(p[:, 2])))
+        t.append(p[:, 0] * (np.sin(p[:, 2]) + p[:, 4] * np.cos(p[:, 2])))
+        t.append(p[:, 1] * np.cos(p[:, 2]))
         t.append(p[:, 6])
         t = np.expand_dims(t, -1)
         # t: (batch, 6, 1)
@@ -461,25 +477,24 @@ class model_visualizer():
             #     org_objs[i].transform(RegistrationUtils.obtain_transformation_matrix(params[i]))
             
             for i in inds:
-                print(params[i])
-                animation = SketchAnimation([org_objs[i]], [tar_objs[i]]) 
+                animation = SketchAnimation([org_trn_obj[i]], [tar_trn_obj[i]]) 
                 animation.seq_animate_all([params[i]], 
                                          denormalize_trans=True,
                                          save=model_config.save_transformation_vis, 
                                          file=os.path.join(vis_dir, f'example_{i}.mp4')) 
-                org_objs[i].reset()
-                tar_objs[i].reset()
+                org_trn_obj[i].reset()
+                tar_trn_obj[i].reset()
 
 
         if model_config.vis_train:
-            # visualize samples of transformation without animation
+            # visualize samples of transformation of original objects with the denormalized matrix
             vis_dir = os.path.join(model_config.vis_dir, 'training_denormalized')
             os.makedirs(vis_dir, exist_ok=True)
 
             print(f"[models.py] {time.ctime()}: Saving training visualizations")
             params = model.predict_from_stroke3(org_sketches, tar_sketches)
             for j in range(model_config.num_vis_samples):
-                # inds = rnd.choices(range(len(org_objs)), k=5)
+                inds = rnd.choices(range(len(org_objs)), k=5)
                 fig, axs = plt.subplots(len(inds), 3)
                 for i, ind in enumerate(inds):
                     org_trn_obj[ind].reset()
@@ -489,7 +504,7 @@ class model_visualizer():
                     org_trn_obj[ind].transform(ObjectUtil.denormalized_transformation(
                         org_trn_obj[ind],
                         tar_trn_obj[ind],
-                        RegistrationUtils.obtain_transformation_matrix(params[ind])))
+                        RegistrationUtils.obtain_transformation_matrix(params[ind])), object_min_origin=True)
                     org_trn_obj[ind].visualize(ax=axs[i][2], show=False)
                     org_trn_obj[ind].reset()
                     
@@ -503,7 +518,7 @@ class model_visualizer():
             print(f"[models.py] {time.ctime()}: Saving training visualizations")
             params = model.predict_from_stroke3(org_sketches, tar_sketches)
             for j in range(model_config.num_vis_samples):
-                # inds = rnd.choices(range(len(org_objs)), k=5)
+                inds = rnd.choices(range(len(org_objs)), k=5)
                 print(inds)
                 fig, axs = plt.subplots(len(inds), 3)
                 for i, ind in enumerate(inds):
@@ -518,33 +533,38 @@ class model_visualizer():
                 plt.savefig(vis_dir + "/res{0}.png".format(j))
 
         if model_config.vis_train:
-            # visualize samples of transformation without animation
+            # visualize samples of transformation of original object, by obtaining sequential transformation
             vis_dir = os.path.join(model_config.vis_dir, 'training-sequential')
             os.makedirs(vis_dir, exist_ok=True)
 
             print(f"[models.py] {time.ctime()}: Saving training visualizations")
             params = model.predict_from_stroke3(org_sketches, tar_sketches)
             for j in range(model_config.num_vis_samples):
-                # inds = rnd.choices(range(len(org_objs)), k=5)
+                inds = rnd.choices(range(len(org_trn_obj)), k=5)
                 print(inds)
                 fig, axs = plt.subplots(len(inds), 3)
                 for i, ind in enumerate(inds):
-                    org_objs[ind].reset()
-                    org_objs[ind].visualize(ax=axs[i][0], show=False)
-                    tar_objs[ind].visualize(ax=axs[i][1], show=False)
-                    tar_objs[ind].visualize(ax=axs[i][2], show=False)
+                    org_trn_obj[ind].reset()
+                    org_trn_obj[ind].visualize(ax=axs[i][0], show=False)
+                    tar_trn_obj[ind].visualize(ax=axs[i][1], show=False)
+                    tar_trn_obj[ind].visualize(ax=axs[i][2], show=False)
                     params_6 = RegistrationUtils.obtain_transformation_matrix(params[ind])
                     # denormalize
                     params_6 = ObjectUtil.denormalized_transformation(
                         org_trn_obj[ind],
                         tar_trn_obj[ind],
                         params_6)
+                    
+                    params_7 = RegistrationUtils.decompose_tranformation_matrix(params_6)
                     # get sequential
-                    seq_params = RegistrationUtils.get_seq_translation_matrices(params_6)
-                    for tmp in seq_params:
-                        org_objs[ind].transform(tmp)
-                    org_objs[ind].visualize(ax=axs[i][2], show=False)
-                    org_objs[ind].reset()
+                    seq_params = RegistrationUtils.get_seq_translation_matrices(params_7)
+                    for k, tmp in enumerate(seq_params):
+                        if k == len(seq_params) - 1:
+                            org_trn_obj[ind].transform(tmp, object_min_origin=True, retain_origin=False)
+                        else:    
+                            org_trn_obj[ind].transform(tmp, object_min_origin=True, retain_origin=True)
+                    org_trn_obj[ind].visualize(ax=axs[i][2], show=False)
+                    org_trn_obj[ind].reset()
                     
                 plt.savefig(vis_dir + "/res{0}.png".format(j))
         # visualizing the validation

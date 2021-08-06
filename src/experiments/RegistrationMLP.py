@@ -17,14 +17,13 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         exp_id = str(sys.argv[1])
     else:
-        exp_id = 'trial_model1'
+        exp_id = 'after-decomposition-penalty'
     
     model_config = Config.default_model_config(exp_id)
-    model_config.learning_rate = 5e-4
-    model_config.re_sampling = 1.0
-    model_config.n_files = 100
-    model_config.k_select = 10
-    model_config.epochs = 0
+    model_config.learning_rate = 1e-3
+    model_config.n_files = 15
+    model_config.k_select = 5
+    model_config.epochs = 200
     model_config.comment = 'no penalty on the movements'
     model_config.select_only_matched = True
     model_config.obj_accepted_labels = ['Triangle', 'Circle', 'Star']
@@ -42,7 +41,8 @@ if __name__ == '__main__':
     org_objs, tar_objs = [], []
     objs, labels = ObjectUtil.extract_objects_from_directory(model_config.dataset_path,
                                                             n_files=model_config.n_files,
-                                                            acceptable_labels=model_config.obj_accepted_labels)
+                                                            acceptable_labels=model_config.obj_accepted_labels,
+                                                            re_sampling = model_config.re_sampling)
     labels, objs = np.asarray(labels), np.asarray(objs)
 
     # validate that objects are distincts 

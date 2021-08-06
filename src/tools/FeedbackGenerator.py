@@ -77,7 +77,7 @@ class VideoGenerator:
         if self.config.vis_video:
             # generate the video based on the final params
             anim = SketchAnimation(org_sketch, tar_sketch)
-            anim.seq_animate_all(final_params, save=True, file=self.config.save_video_path, denormalize_trans=False)
+            anim.seq_animate_all(final_params, save=True, file=self.config.save_video_path, denormalize_trans=True)
         
 
     def get_widest_obj_ind(self, objs):
