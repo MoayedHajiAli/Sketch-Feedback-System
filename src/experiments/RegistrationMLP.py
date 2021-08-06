@@ -24,15 +24,16 @@ if __name__ == '__main__':
     model_config.n_files = 15
     model_config.k_select = 5
     model_config.epochs = 200
+    model_config.re_sampling = 0.5
     model_config.comment = 'no penalty on the movements'
     model_config.select_only_matched = True
-    model_config.obj_accepted_labels = ['Triangle', 'Circle', 'Star']
+    model_config.obj_accepted_labels = ['Triangle']
     model_config.redirect_out = False
 
-    model_config.load = True
-    model_config.load_ckpt = True
-    model_config.save = False
-    model_config.save_ckpt = False
+    model_config.load = False
+    model_config.load_ckpt = False
+    model_config.save = True
+    model_config.save_ckpt = True
     model_config.vis_transformation = False
     model_config.num_vis_samples = 5
     

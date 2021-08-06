@@ -104,7 +104,7 @@ class Config:
         config.tar_sketch_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), f'ASIST_Dataset/Data/Data_A/{question_name}/{sketch2_id}.xml')
         config.seed = 1
         config.verbose = 4 # 1-3 for normal messages, 4 to save visualizations and 5 to show visualization
-        config.re_sampling = 0.0
+        config.re_sampling = 120
         config.mx_dissimilarity = 50
         config.construction_step_size = 0.001
         config.mn_len = 5

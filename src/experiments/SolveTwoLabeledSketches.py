@@ -10,16 +10,16 @@ import time
 
 if __name__ == '__main__':
     print(f'[SolveTwoLabeledSketches] {time.ctime()}: Started generating feedback video')
-    model_tag = 'trial_model' # deep learning model to use for alignment
+    model_tag = 'after-decomposition-penalty' # deep learning model to use for alignment
     question_name = 'ReflectionQuestion'
     org_sketch_id = '2_58c52b2b-94f4-49e1-b94c-d93964b1319c'
     tar_sketch_id = '2_a54ad2f8-3660-402e-a00a-d199e4679d39'
 
     config = Config.default_video_config(question_name, org_sketch_id, tar_sketch_id)
     config.vis_video = True
-    config.load_trans_params = True
-    config.fine_tune_epochs = 0
-    config.verbose = 1
+    config.load_trans_params = False
+    config.fine_tune_epochs = 50
+    config.verbose = 4
 
     model_params = Config.default_model_config(model_tag)
     model_params.load = False

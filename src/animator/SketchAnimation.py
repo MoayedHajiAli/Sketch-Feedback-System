@@ -11,12 +11,17 @@ import copy
 class SketchAnimation():
     original_labels = []
     target_labels = []
-    dim = [[-1000, 2000], [-1000, 2000]]
+    dim = [[-500, 2000], [-500, 2000]]
     
     def __init__(self, original_obj, target_obj):
         self.original_obj = original_obj
         self.target_obj = target_obj
 
+        # take deep copies 
+        for i in range(len(self.original_obj)):
+            self.original_obj[i] = self.original_obj[i].get_copy()
+            self.target_obj[i] = self.target_obj[i].get_copy()
+        
         # figure
         self.fig, self.ax = plt.subplots()
 
@@ -179,10 +184,14 @@ class SketchAnimation():
         if (i % obj_steps) % steps == 0:
             # apply the next transformation
             ind = int((i % obj_steps)/steps)
+            print(ind)
             if ind == 4: # translation
                 tmp = copy.deepcopy(trans_matrix[obj_ind][ind])
-                # tmp[2] += self.org_shift[0]
-                # tmp[5] += self.org_shift[1]
+
+                # tmp[2] += self.tar_shift[0] 
+                # tmp[5] += self.tar_shift[0]
+                tmp[2] += self.org_shift[0]
+                tmp[5] += self.org_shift[1]
                 self.original_obj[obj_ind].upd_step_vector(tmp, object_min_origin=True, retain_origin=False)
 
             else:
@@ -227,7 +236,9 @@ class SketchAnimation():
             all_t_params.append(seq_params)
             
 
+        print("Seq Params:", all_t_params)
         # animate
+        print(len(self.original_obj),  5 * steps)
         anim = animation.FuncAnimation(self.fig, func=self._seq_obj_anim,
                                        init_func=self._init_animation, 
                                        frames=len(self.original_obj) * 5 * steps, # 5 transformation steps for each object
@@ -240,6 +251,8 @@ class SketchAnimation():
         plt.show()
         if save:
             self._save_anim(anim, file)
+
+    
         return anim
 
 

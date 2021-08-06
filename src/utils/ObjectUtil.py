@@ -423,7 +423,6 @@ class ObjectUtil:
         mn_x_0, mn_y_0, f0 = ObjectUtil.get_normalization_parameters(org_obj)
         mn_x_1, mn_y_1, f1 = ObjectUtil.get_normalization_parameters(tar_obj)
         
-        print(f1/f0)
         t_res = np.zeros(6)
         t_res[0] = t[0] * f1 / f0
         t_res[1] = t[1] * f1 / f0
