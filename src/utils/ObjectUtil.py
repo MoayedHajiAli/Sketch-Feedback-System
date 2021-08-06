@@ -14,7 +14,6 @@ import pathlib
 
 class ObjectUtil:
     sketchformer = None
-
     @staticmethod
     def xml_to_pointsDict(file, flip = False, shift_x=0.0, shift_y=0.0):
         """for a given file, read the file and transform it to an dictonary of points where for each point id, return x, y and time
@@ -84,14 +83,14 @@ class ObjectUtil:
             if len(pt_lst) >= mn_len:
                 stroke_dict[strokes_id] = Stroke(pt_lst)
         
-        # re-sample the objecte
-        if re_sampling != 0.0:
-            for id in stroke_dict:
-                if re_sampling > 1:
-                    # resample to a fixed length
-                    stroke_dict[id] = ObjectUtil.stroke_restructure(stroke_dict[id], re_sampling)
-                elif re_sampling <= 1:
-                    stroke_dict[id] = ObjectUtil.stroke_restructure(stroke_dict[id], max(mn_len, int(re_sampling * len(stroke_dict[id]))))
+        # # re-sample the objecte (we are currently resampling the whole object) TODO DELETE
+        # if re_sampling != 0.0:
+        #     for id in stroke_dict:
+        #         if re_sampling > 1:
+        #             # resample to a fixed length
+        #             stroke_dict[id] = ObjectUtil.stroke_restructure(stroke_dict[id], re_sampling)
+        #         elif re_sampling <= 1:
+        #             stroke_dict[id] = ObjectUtil.stroke_restructure(stroke_dict[id], max(mn_len, int(re_sampling * len(stroke_dict[id]))))
 
         return stroke_dict
 
@@ -132,7 +131,11 @@ class ObjectUtil:
                 if id in strokes_dict.keys():
                     strokes_lst.append(strokes_dict[id])
 
-            objs.append(UnlabeledObject(strokes_lst))
+            obj = UnlabeledObject(strokes_lst)
+            if re_sampling != 0.0:
+                obj = ObjectUtil.object_restructure(obj, n=re_sampling)
+
+            objs.append(obj)
         
         if rdp:
             objs = ObjectUtil.reduce_rdp(objs)
@@ -172,7 +175,11 @@ class ObjectUtil:
                     strokes_lst.append(strokes_dict[id])
                     inds_tmp.append(list(strokes_dict.keys()).index(id))
 
-            objs.append(UnlabeledObject(strokes_lst))
+            obj = UnlabeledObject(strokes_lst)
+            if re_sampling != 0.0:
+                obj = ObjectUtil.object_restructure(obj, n=re_sampling)
+            
+            objs.append(obj)
             inds.append(sorted(inds_tmp))
         
         if rdp:
@@ -255,10 +262,16 @@ class ObjectUtil:
     # for a given object, calculate its perimeter
     @staticmethod
     def calc_perimeter(obj) -> float:
-        tot, i = 0, 1
-        while i < len(obj):
-            tot += Point.euclidean_distance(obj.get_points()[i], obj.get_points()[i-1])
-            i += 1
+        tot = 0
+        if isinstance(obj, UnlabeledObject):
+            for stroke in obj.get_strokes():
+                tot += ObjectUtil.calc_perimeter(stroke)
+
+        else:
+            i = 1
+            while i < len(obj):
+                tot += Point.euclidean_distance(obj.get_points()[i], obj.get_points()[i-1])
+                i += 1
 
         return tot
 
@@ -269,7 +282,7 @@ class ObjectUtil:
     def stroke_restructure(stroke:Stroke, n) -> Stroke:
         perimeter = ObjectUtil.calc_perimeter(stroke)
         p = perimeter / (n)
-        # print("Before", len(stroke), perimeter, p)
+        # print("Before", len(stroke), perimeter, n, p)
 
         # given two points, return a placed new point at a distance x between p1, p2
         def _place(p1, p2, x):
@@ -288,12 +301,13 @@ class ObjectUtil:
         lst = [copy.deepcopy(stroke.get_points()[0])]
 
         # j: remaining distance to be traversed from the last iteration
-        j = p
-        tot = 0
-        for i in range(len(stroke) - 1):
-            p1, p2 = stroke.get_points()[i], stroke.get_points()[i + 1]
+        j, tot = p, 0
+        i, en = 0, len(stroke)-1
+        while i != en:
+            p1, p2 = stroke.get_points()[i], stroke.get_points()[(i + 1) % len(stroke)]
             d = Point.euclidean_distance(p1, p2)
             if d == 0:
+                i = (i + 1) % len(stroke)
                 continue
             # c: how much distance from the first point has been traversed toward the second point
             c = 0
@@ -304,20 +318,25 @@ class ObjectUtil:
                 lst.append(_place(p1, p2, c))
             tot += d - c
             j -= d - c
+            i = (i + 1) % len(stroke)
 
         new_stroke = Stroke(lst)
         perimeter = ObjectUtil.calc_perimeter(new_stroke)
-        # print("After", len(new_stroke), perimeter, tot)
+        # print("After ", len(new_stroke), perimeter, tot)
         return new_stroke
 
     @staticmethod
-    def object_restructure(obj:UnlabeledObject, ratio=1.0, n=0, mn_len=10) -> UnlabeledObject:
-        if n == 0:
-            n = len(obj) * ratio
-        peri = ObjectUtil.calc_perimeter(obj)
+    def object_restructure(obj:UnlabeledObject, n, mn_len=10) -> UnlabeledObject:
+        if n < 1.0:
+            n = len(obj) * n
+
+        perimeter = ObjectUtil.calc_perimeter(obj)
+
+        # determine the position of the starting stroke and start point as the one with min x TODO
+
         tmp_lst = []
         for stroke in obj.get_strokes():
-            m = max(ObjectUtil.calc_perimeter(stroke) / peri * n, mn_len)
+            m = max((ObjectUtil.calc_perimeter(stroke) / perimeter) * n, mn_len)
             tmp_lst.append(ObjectUtil.stroke_restructure(stroke, m))
         return UnlabeledObject(tmp_lst)
 
@@ -348,9 +367,9 @@ class ObjectUtil:
             pt_lst, strokes = [], []
             last_tm = 0.0
             x, y = 0, 0
-            # append the omitted points 
-            pt_lst.append(Point(x, y, last_tm))
-            last_tm += 1
+            # # append the omitted points 
+            # pt_lst.append(Point(x, y, last_tm))
+            # last_tm += 1
 
             for p in sketch:
                 if p[2] == 1:
@@ -372,8 +391,92 @@ class ObjectUtil:
         return ret
 
     @staticmethod
-    def poly_to_stroke3(sketches, scale=100.0, step=5, eps=1.5, red_rdp=True, normalize=True):
-        """convert the given sketches to stroke-3 (x, y, p) format, where x, y are 
+    def get_normalization_parameters(obj):
+        mx_w, mx_h, mn_w, mn_h = -1, -1, 1e9, 1e9
+        for stroke in obj.get_strokes():
+            # get dimentions
+            mx_w = max(mx_w, max([p.x for p in stroke.get_points()]))
+            mn_w = min(mn_w, min([p.x for p in stroke.get_points()]))
+            mx_h = max(mx_h, max([p.y for p in stroke.get_points()]))
+            mn_h = min(mn_h, min([p.y for p in stroke.get_points()]))
+
+        w, h = mx_w - mn_w, mx_h - mn_h
+        mx_wh = max(w, h)
+        return mn_w, mn_h, mx_wh
+
+    @staticmethod
+    def denormalized_transformation(org_obj, tar_obj, t, scale=100.0):
+        """Given a transformation matrix on the normalized objects, return the
+        correponsing transformation matrix on the non-normalized objects.
+        Attention: Scale should match with the normalization function
+
+        Args:
+            org_obj (UnlabeledObject): org objects
+            tar_obj (UnlabeledObject): Tar objects
+            t (array(6)): transformation parameters
+
+        Returns:
+            t array(6): resulting transformation matrix on the
+        """
+
+        # get the normalization parameters
+        mn_x_0, mn_y_0, f0 = ObjectUtil.get_normalization_parameters(org_obj)
+        mn_x_1, mn_y_1, f1 = ObjectUtil.get_normalization_parameters(tar_obj)
+        
+        t_res = np.zeros(6)
+        t_res[0] = t[0] * f1 / f0
+        t_res[1] = t[1] * f1 / f0
+        t_res[2] = - t[0] * f1 * mn_x_0 / f0 - t[1] * f1 * mn_y_0 / f0 + f1 * t[2] / scale + mn_x_1 
+        # t_res[2] = -t[0] * (mn_x_0 * f1 / f0 + f1 / 2) - t[1] * (mn_y_0 * f1 / f0 + f1 / 2) + t[2] * (f1 / (2 * scale)) + f1/2 + mn_x_1
+        # t_res[2] = -f1/f0 * (t[0] * mn_x_0 + t[1] * mn_y_0) - f1 * (t[0] + t[1]) + 2*f1*t[2]/scale + mn_x_1 + 1
+
+        t_res[3] = t[3] * f1 / f0
+        t_res[4] = t[4] * f1 / f0
+        t_res[5] = - t[3] * f1 * mn_x_0 / f0 - t[4] * f1 * mn_y_0 / f0 + f1 * t[5] / scale + mn_y_1 
+        # t_res[5] = -t[3] * (mn_x_0 * f1 / f0 + f1 / 2) - t[4] * (mn_y_0 * f1 / f0 + f1 / 2) + t[5] * (f1 / (2 * scale)) + f1/2 + mn_y_1
+        # t_res[5] = -f1/f0 * (t[3] * mn_x_0 + t[4] * mn_y_0) - f1 * (t[3] + t[4]) + 2*f1*t[5]/scale + mn_y_1 + 1
+
+        return t_res
+         
+    def denormalized_transformation(org_obj, tar_obj, t, scale=100.0):
+        """Given a transformation matrix on the normalized objects, return the
+        correponsing transformation matrix on the non-normalized objects.
+        Attention: Scale should match with the normalization function
+
+        Args:
+            org_obj (UnlabeledObject): org objects
+            tar_obj (UnlabeledObject): Tar objects
+            t (array(6)): transformation parameters
+
+        Returns:
+            t array(6): resulting transformation matrix on the
+        """
+
+        # get the normalization parameters
+        mn_x_0, mn_y_0, f0 = ObjectUtil.get_normalization_parameters(org_obj)
+        mn_x_1, mn_y_1, f1 = ObjectUtil.get_normalization_parameters(tar_obj)
+        
+        print(f1/f0)
+        t_res = np.zeros(6)
+        t_res[0] = t[0] * f1 / f0
+        t_res[1] = t[1] * f1 / f0
+        t_res[2] = f1 * t[2] / scale + mn_x_1 
+        # t_res[2] = -t[0] * (mn_x_0 * f1 / f0 + f1 / 2) - t[1] * (mn_y_0 * f1 / f0 + f1 / 2) + t[2] * (f1 / (2 * scale)) + f1/2 + mn_x_1
+        # t_res[2] = -f1/f0 * (t[0] * mn_x_0 + t[1] * mn_y_0) - f1 * (t[0] + t[1]) + 2*f1*t[2]/scale + mn_x_1 + 1
+
+        t_res[3] = t[3] * f1 / f0
+        t_res[4] = t[4] * f1 / f0
+        t_res[5] = f1 * t[5] / scale + mn_y_1 
+        # t_res[5] = -t[3] * (mn_x_0 * f1 / f0 + f1 / 2) - t[4] * (mn_y_0 * f1 / f0 + f1 / 2) + t[5] * (f1 / (2 * scale)) + f1/2 + mn_y_1
+        # t_res[5] = -f1/f0 * (t[3] * mn_x_0 + t[4] * mn_y_0) - f1 * (t[3] + t[4]) + 2*f1*t[5]/scale + mn_y_1 + 1
+
+        return t_res
+
+    @staticmethod
+    def poly_to_stroke3(sketches, scale=100.0, step=5, eps=1.5, red_rdp=False, normalize=True, pos_normalize=True, relative=True):
+        """
+        Attention: this method will normalize the strokes
+        convert the given sketches to stroke-3 (x, y, p) format, where x, y are 
          the point relative position to the previous point together with its binary pen state.
          for any two consecutive strokes, a point in the middle will be added with a pen state 1 (pen lifted)
         Args:
@@ -392,24 +495,18 @@ class ObjectUtil:
         if normalize:
             # find the dimentions of the storkes and reduce
             for sketch in sketches:
-                mx_w, mx_h, mn_w, mn_h = -1, -1, 1e9, 1e9
-                for stroke in sketch.get_strokes():
-                    # get dimentions
-                    mx_w = max(mx_w, max([p.x for p in stroke.get_points()]))
-                    mn_w = min(mn_w, min([p.x for p in stroke.get_points()]))
-                    mx_h = max(mx_h, max([p.y for p in stroke.get_points()]))
-                    mn_h = min(mn_h, min([p.y for p in stroke.get_points()]))
-
-                w, h = mx_w - mn_w, mx_h - mn_h
-                mx_wh = max(w, h)
-
+                mn_w, mn_h, mx_wh = ObjectUtil.get_normalization_parameters(sketch)
                 # normalize strokes
                 try:
                     for stroke in sketch.get_strokes():
                         for p in stroke.get_points():
-                            p.x = ((p.x - mn_w) / mx_wh * 2.0 - 1.0) * scale
-                            p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
-                except:
+                            if pos_normalize:
+                                p.x = ((p.x - mn_w) / mx_wh) * scale
+                                p.y = ((p.y - mn_h) / mx_wh) * scale
+                            else:    
+                                p.x = ((p.x - mn_w) / mx_wh * 2.0 - 1.0) * scale #TODO for segmenentation, use this type of normalization
+                                p.y = ((p.y - mn_h) / mx_wh * 2.0 - 1.0) * scale
+                except: 
                     print("[ObjectUtil] could not normalize stroke as mx_wh is {0}".format(mx_wh))
                     print("[ObjectUtil] sketch len is:{0}".format(len(sketch)))
                     print(sketch.get_strokes()[0].get_points()[0])
@@ -437,24 +534,29 @@ class ObjectUtil:
                     eos = 0 if j < len(strokes_lst[i]) - 1 else 1
                     tmp_stroke_3.append([p.x, p.y, eos])
             
-            # get the relative position
-            tmp_stroke_3 = np.array(tmp_stroke_3)
-            tmp_stroke_3[1:, 0:2] -= tmp_stroke_3[:-1, 0:2]
+            if relative:
+                # get the relative position
+                tmp_stroke_3 = np.array(tmp_stroke_3)
+                tmp_stroke_3[1:, 0:2] -= tmp_stroke_3[:-1, 0:2]
 
-            # omit the first point
-            converted_sketches.append(tmp_stroke_3[1:])
+                # omit the first point
+                converted_sketches.append(tmp_stroke_3[1:])
+            else:
+                converted_sketches.append(tmp_stroke_3)
 
         return converted_sketches
 
     @staticmethod 
-    def poly_to_accumulative_stroke3(sketches, scale=100.0, step=5, eps=1.5, red_rdp=True, normalize=True):
+    def poly_to_accumulative_stroke3(sketches, scale=100.0, step=5, eps=1.5, red_rdp=False, normalize=True):
         # convert to stroke-3
-        sketches = ObjectUtil.poly_to_stroke3(sketches, scale=scale, step=step, eps=eps, red_rdp=red_rdp, normalize=normalize)
-
+        sketches = ObjectUtil.poly_to_stroke3(sketches, scale=scale, step=step, eps=eps, red_rdp=red_rdp, normalize=normalize, relative=False)
         # accumulate the strokes
-        for sketch in sketches:
-            for i in range(1, len(sketch)):
-                sketch[i][0:2] += sketch[i-1][0:2]
+        # for i in range(len(sketches)):
+        #     sketches[i] = np.insert(sketches[i], 0, np.array((0, 0, 0)), axis=0)
+        #     # sketches[i][1:, 0:2] += sketches[i][:-1, 0:2]
+        #     sketch = sketches[i]
+        #     for i in range(1, len(sketch)):
+        #         sketch[i][0:2] += sketch[i-1][0:2]
         
         return sketches
 
@@ -574,14 +676,27 @@ class ObjectUtil:
             
         return reduced_objs
 
+    def get_centroid(obj):
+        """For a given object, return the centroid point
 
+        Args:
+            obj (UnlabeledObject): [description]
+        
+        Return:
+            centroid point
+        """
+        sum_x, sum_y = sum(obj.get_x()), sum(obj.get_y())
+        return Point(sum_x / len(obj), sum_y / len(obj))
+
+
+    cnt = 0
     def extract_objects_from_directory(directory, n_files = -1, re_sampling=0.0, acceptable_labels=None):
         # objs : (N x M) M ordered objects for N sketches
         # labels: (N x M) for each object m in sketch n, store its label
         objs, labels = [], []
         for path in pathlib.Path(directory).iterdir():
             if path.is_dir():
-                tmp_objs, tmp_labels = ObjectUtil.extract_objects_from_directory(path, n_files, acceptable_labels=acceptable_labels)
+                tmp_objs, tmp_labels = ObjectUtil.extract_objects_from_directory(path, n_files, acceptable_labels=acceptable_labels, re_sampling=re_sampling)
                 if n_files != -1:
                     n_files -= len(tmp_objs)
                 objs.extend(tmp_objs)
@@ -599,6 +714,7 @@ class ObjectUtil:
                         objs.extend(tmp_objs[inds])
                         labels.extend(tmp_labels[inds])
                         n_files -= len(inds)
+                        ObjectUtil.cnt += len(inds)
                     except Exception as e: 
                         print("ObjectUtil] error: could not read file succefully " + str(path))
                         print(str(e))

@@ -5,11 +5,6 @@ from sketch_object.UnlabeledObject import UnlabeledObject
 import copy
 from utils.NearestSearch import NearestSearch
 from utils.ObjectUtil import ObjectUtil
-from scipy.optimize import minimize, basinhopping, approx_fprime
-import sys
-import time
-import random
-import scipy
 import sklearn
 
 class RegistrationUtils:
@@ -137,6 +132,93 @@ class RegistrationUtils:
         t[5] = p[6]
         return t
 
+    @staticmethod
+    def obtain_transformation_matrix(p):
+        t = np.zeros(6)
+        t[0] = p[0] * np.cos(p[2])
+        t[1] = p[0] * (p[3] * np.cos(p[2]) - np.sin(p[2]))
+        t[2] = p[5]
+
+        t[3] = p[1] * (np.sin(p[2]) * (1 + p[3] * p[4]) + p[4] * np.cos(p[2]))
+        t[4] = p[1] * (p[3] * np.sin(p[2]) + np.cos(p[2]))
+        t[5] = p[6]
+        return t
+
+    # @staticmethod
+    def obtain_transformation_matrix(p):
+        t = np.zeros(6)
+        t[0] = p[0] * (np.cos(p[2]) - p[4] * np.sin(p[2]))
+        t[1] = -p[1] * np.sin(p[2])
+        t[2] = p[5]
+
+        t[3] = p[0] * (np.sin(p[2]) + p[4] * np.cos(p[2]))
+        t[4] = p[1] * np.cos(p[2])
+        t[5] = p[6]
+        return t
+
+    @staticmethod
+    def decompose_tranformation_matrix(t):
+        """Givne a transformation matrix array(6,), decompose it into scaling_x scaling_y, rotation,
+         shearing in x, 0 (shearing in y), tranlsation_x and translation_y that should be performed in the order of
+         scale -> shear -> rotate
+
+        Args:
+            t (array(6,)): transformation matrix params
+
+        Returns:
+            p (array(7,)): affine transformation params
+        """
+        p = np.zeros(7)
+        # scaling_x
+        p[1] = np.sqrt(t[1] ** 2 + t[4] ** 2)
+        # roation
+        p[2] = np.arctan2(-t[1], t[4])
+        # trans_x
+        p[5] = t[2]
+        # trans_y 
+        p[6] = t[5]
+        # shearing_y 
+        p[4] = (t[3] * np.cos(p[2]) - t[0] * np.sin(p[2])) / (t[0] * np.cos(p[2]) + t[3] * np.sin(p[2])) 
+        # shearing_x
+        p[3] = 0 # (assume to be 0)
+        # scaling_y
+        p[0] = t[0] / (np.cos(p[2]) - p[4] * np.sin(p[2]))
+        # p[1] = p[0] * (t[1] * t[3] - t[4] * t[0]) / (t[0] ** 2 - t[3] ** 2)
+        
+        
+        return p
+
+    
+    # @staticmethod
+    # def decompose_tranformation_matrix(t):
+    #     """Givne a transformation matrix array(6,), decompose it into scaling_x scaling_y, rotation,
+    #      shearing in x, 0 (shearing in y), tranlsation_x and translation_y that should be performed in the order of
+    #      scale -> shear -> rotate
+
+    #     Args:
+    #         t (array(6,)): transformation matrix params
+
+    #     Returns:
+    #         p (array(7,)): affine transformation params
+    #     """
+    #     p = np.zeros(7)
+    #     # scaling_x
+    #     p[0] = np.sqrt(t[0] ** 2 + t[1] ** 2)
+    #     # roation
+    #     p[2] = np.arctan2(t[1], t[0])
+    #     # trans_x
+    #     p[5] = t[2]
+    #     # trans_y 
+    #     p[6] = t[5]
+    #     # shearing_x 
+    #     p[3] = 0
+    #     # shearing_y
+    #     p[4] = np.arctan2(t[4], t[3]) - np.pi/2 - p[2]
+    #     # scaling_y
+    #     p[1] = np.sqrt(t[3] ** 2 + t[4] ** 2) * np.cos(p[4])
+        
+    #     return p
+
     # calculate the turning angle based on three points coordinates
     @staticmethod
     def calc_turning(x0, y0, x1, y1, x2, y2) -> float:
@@ -164,13 +246,14 @@ class RegistrationUtils:
         RegistrationUtils.change_cords(ref_obj, tar_obj, t * xo, t * yo)
 
     
-    """obtain sequential transformation matrix according to transofrmation parameters of shearing, rotation, scaling, and translation
 
-    Returns:
-        array-like(5, 6): a transformation matrix for each transformation type
-    """
     @staticmethod
     def get_seq_translation_matrices(p):
+        """obtain sequential transformation matrix according to transofrmation parameters of shearing, rotation, scaling, and translation
+
+        Returns:
+            array-like(5, 6): a transformation matrix for each transformation type
+        """
         tmp = []
         # shearing parallel to y
         tmp.append([1.0, 0.0, 0.0, p[4], 1.0, 0.0])
@@ -180,6 +263,31 @@ class RegistrationUtils:
         tmp.append([np.cos(p[2]), -np.sin(p[2]), 0.0, np.sin(p[2]), np.cos(p[2]), 0.0])
         # scaling
         tmp.append([p[0], 0.0, 0.0, 0.0, p[1], 0.0])
+        # translation
+        tmp.append([1.0, 0.0, p[5], 0.0, 1.0, p[6]])
+
+        return tmp
+
+    @staticmethod
+    def get_seq_translation_matrices(p):
+        """obtain sequential transformation matrix according to transofrmation parameters in the order of scaling -> shearing_x -> shearing_y -> rotation -> translatin
+
+        Returns:
+            array-like(5, 6): a transformation matrix for each transformation type
+        """
+        tmp = []
+        # scaling
+        tmp.append([p[0], 0.0, 0.0, 0.0, p[1], 0.0])
+
+        # shearing parallel to x
+        tmp.append([1.0, p[3], 0.0, 0.0, 1.0, 0.0])
+        
+        # shearing parallel to y
+        tmp.append([1.0, 0.0, 0.0, p[4], 1.0, 0.0])
+        
+        # rotation
+        tmp.append([np.cos(p[2]), -np.sin(p[2]), 0.0, np.sin(p[2]), np.cos(p[2]), 0.0])
+        
         # translation
         tmp.append([1.0, 0.0, p[5], 0.0, 1.0, p[6]])
 
@@ -388,82 +496,6 @@ class RegistrationUtils:
             converted_sketches.append(np.concatenate((tmp, extra), axis=0))
         return np.asarray(converted_sketches)
 
-
-
-
-class RegisterTwoObjects:
-    
-    def __init__(self, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, cost_fun):
-        self.tar_obj = tar_obj
-        self.ref_obj = ref_obj
-        self.total_cost = cost_fun
-
-
-    ##################
-    # TODO: delete this method
-    # test numerical optimization
-    def num_optimize(self, t):
-        eps = 0.001
-        lr = 0.1
-        t = np.array(t)
-        cur, prev = 100, 0
-        for _ in range(200): 
-            if _ % 50 == 0:
-                self.ref_obj.transform(RegistrationUtils.obtain_transformation_matrix(t))
-                self.ref_obj.visualize()
-                self.ref_obj.reset()
-            # obtain the gradient
-            grad = approx_fprime(t, RegistrationUtils.embedding_dissimilarity, eps, self.ref_obj, self.tar_obj)
-            t -= lr * np.array(grad)
-
-        return -1, t
-
-    # total dissimilarity including the cost of the transformation
-    def total_dissimalirity(self, p, params = True, target_dis=True, original_dis=True):
-        tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(self.ref_obj))
-        if params:
-            p = RegistrationUtils.obtain_transformation_matrix(p)
-        
-        dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, p, target_nn = self.target_nn, 
-                                                            target_dis=target_dis, original_dis=original_dis) 
-        return dissimilarity + (tran_cost / (len(self.ref_obj) + len(self.tar_obj)))   
-
-
-    def optimize(self, p = None, params = True, target_dis=True, original_dis=True):
-        """optimize the disimilarity function.
-    
-            Params: 
-                p: the transoformation parameters 
-                params: if True, the function expects and return an array of parameters of shape(7), which specify the tarnsformation
-                        paramerts for scaling_x, scaling_y, rotations, shearing_x, shearing_y, translation_x, translation_y.
-                        if False, the function expects and return an array of parameters of shape(6), which specify the tarnsformation
-                        array values
-            """ 
-        # find t if not specifies
-        if p is None:
-            x_dif = self.tar_obj.origin_x - self.ref_obj.origin_x
-            y_dif = self.tar_obj.origin_y - self.ref_obj.origin_y
-            if params:
-                # p = np.array([random.uniform(1, 2), random.uniform(1, 2), 0.0, random.uniform(0, 1), random.uniform(0, 1), x_dif, y_dif])
-                p = np.array([1.0, 1.0, 0.0, 0.0, 0.0, x_dif, y_dif])
-            else:
-                p = np.array([1.0, 0.0, x_dif, 0.0, 1.0, y_dif])  
-
-        # track function for scipy minimize
-        def _track(xk):
-            print(xk)
-
-        #self.target_nn = NearestSearch(self.tar_obj.get_x(), self.tar_obj.get_y())
-        self.target_nn = None
-
-        # calculate min/max coordinates for the referenced object
-        self.mn_x, self.mx_x = min(self.ref_obj.get_x()), max(self.ref_obj.get_x())
-        self.mn_y, self.mx_y = min(self.ref_obj.get_y()), max(self.ref_obj.get_y())
-
-        minimizer_kwargs = {"method": "BFGS", "args" : (params, target_dis, original_dis)}
-        res = basinhopping(self.total_dissimalirity, p, minimizer_kwargs=minimizer_kwargs, disp=True, niter=2)
-        d, p = res.fun, res.x 
-        return d, p
 
     
 
