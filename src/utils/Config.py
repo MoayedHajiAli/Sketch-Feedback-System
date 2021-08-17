@@ -15,17 +15,21 @@ class Config:
         config.re_sampling = 120 # < 1 it downsamples according to re_sampling * len, =1 disable, > 1 resample to fixed len
         # config.obj_accepted_labels = ['Circle', 'Star', 'Triangle', 'Star Bullet', 'Square', 'Arrow Right', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus']
         config.obj_accepted_labels = ['Circle', 'Triangle', 'Square', 'Trapezoid Down', 'Trapezoid Up', 'Diamond', 'Square', 'Plus', 'Upsidedown Triangle', 'Minus']
-        config.dataset_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), 'ASIST_Dataset/Data/Data_A')
+        config.dataset_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), 'ASIST_Dataset/Data/Data_B/Triangles')
+        # config.dataset_path = os.path.join(os.path.abspath(os.path.join(__file__ ,"../../..")), 'ASIST_Dataset/Data/Data_B/Triangles')
         config.seed = 1
 
         # model related. When set to zero, the model produce nan 
-        config.scaling_f = 0.0001
-        config.shearing_f = 0.0001
-        config.rotation_f = 0.0001
+        config.scaling_f = 1
+        config.shearing_f = 1
+        config.rotation_f = 1
 
+
+        config.encoder_type = 'cnn' # transformer or cnn
         config.batch_size = 128
         config.learning_rate = 5e-5
-        config.epochs = 200
+        config.decay_rate = 0.02
+        config.epochs = 400
         config.load = False
         config.load_ckpt = False
         config.save = True

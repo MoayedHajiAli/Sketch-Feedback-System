@@ -25,12 +25,34 @@ import time
 from multiprocessing import Pool
 from scipy.optimize import minimize, basinhopping, approx_fprime
 import time
+from .resnet_models import *
 
 class NNModel:
     """For a given orginal and target object, find the transformation paramters 
     (7 parameters, with respect to the 0,0 origin) of the original object so that 
     after the transformation, it best aligns with the target object
     """
+
+    def decompose_tranformation_matrix(self, t):
+        """
+        t ()
+        """
+        p = K.zeros(7)
+        # scaling_x
+        p[1] = np.sqrt(t[1] ** 2 + t[4] ** 2)
+        # roation
+        p[2] = np.arctan2(-t[1], t[4])
+        # trans_x
+        p[5] = t[2]
+        # trans_y 
+        p[6] = t[5]
+        # shearing_y 
+        p[4] = (t[3] * np.cos(p[2]) - t[0] * np.sin(p[2])) / (t[0] * np.cos(p[2]) + t[3] * np.sin(p[2])) 
+        # shearing_x
+        p[3] = 0 # (assume to be 0)
+        # scaling_y
+        p[0] = t[0] / (np.cos(p[2]) - p[4] * np.sin(p[2]))
+        # p[1] = p[0] * (t[1] * t[3] - t[4] * t[0]) / (t[0] ** 2 - t[3] ** 2)
 
     def get_knn_loss(self, scaling_f, shearing_f, rotation_f):
         def knn_loss(sketches, p):
@@ -61,7 +83,9 @@ class NNModel:
             t.append(p[:, 1] * K.cos(p[:, 2]))
             t.append(p[:, 6])
             t = K.expand_dims(t, -1)
-            # t: (batch, 6, 1)
+
+            # t = K.expand_dims(tf.transpose(p), -1)
+            # t: (6, batch, 1)
 
             # apply transformation on all points in original 
             org_x = org[:, :, 0] * t[0] + org[:, :, 1] * t[1] + t[2]
@@ -104,16 +128,16 @@ class NNModel:
             # add penalty to the transformation parameters
             # @size p: (batch, 7)
             # # add scaling cost
-            tran_cost = K.sum(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
-            tran_cost += K.sum(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
+            tran_cost = K.mean(tf.math.maximum(K.square(p[:, 0]), 1 / K.square(p[:, 0])) * scaling_f)
+            tran_cost += K.mean(tf.math.maximum(p[:, 1] ** 2, 1 / (p[:, 1] ** 2)) * scaling_f)
             # add roation cost
-            tran_cost += K.sum((p[:, 2] ** 2) * rotation_f)
+            tran_cost += K.mean((p[:, 2] ** 2) * rotation_f)
             # add shearing cost
-            tran_cost += K.sum((p[:, 3] ** 2) * shearing_f)
-            tran_cost += K.sum((p[:, 4] ** 2) * shearing_f)
+            tran_cost += K.mean((p[:, 3] ** 2) * shearing_f)
+            tran_cost += K.mean((p[:, 4] ** 2) * shearing_f)
             # add shearing cost
 
-            return sm_cost  + K.sqrt(tran_cost)    
+            return sm_cost  + tran_cost  
         return knn_loss     
 
     @staticmethod
@@ -145,8 +169,9 @@ class NNModel:
         t.append(p[:, 0] * (np.sin(p[:, 2]) + p[:, 4] * np.cos(p[:, 2])))
         t.append(p[:, 1] * np.cos(p[:, 2]))
         t.append(p[:, 6])
-        t = np.expand_dims(t, -1)
-        # t: (batch, 6, 1)
+        t = np.expand_dims(t, -1) 
+        # t = np.expand_dims(np.transpose(p), -1)
+        # t: (6, batch, 1)
 
         # apply transformation on all points in original 
         org_x = org[:, :, 0] * t[0] + org[:, :, 1] * t[1] + t[2]
@@ -206,7 +231,7 @@ class NNModel:
         tar_reshaped = Reshape((128, 3))(tar_inputs)
         
         # Conv encoder
-        org_fe_layer0 = Dense(64, activation='relu')(org_reshaped) # 128, 64
+        org_fe_layer0 = Dense(64, activation='relu')(org_reshaped) # len, 64
         org_fe_layer0 = LayerNormalization()(org_fe_layer0)
         org_fe_layer0 = Reshape((128, 64, 1))(org_fe_layer0)
         org_fe_layer1 = Conv2D(1, (3, 3), 1)(org_fe_layer0) 
@@ -259,13 +284,55 @@ class NNModel:
         merged_fe = concatenate([org_fe.output, tar_fe.output])
         # original and target extracted features
         layer1 = Dense(32, activation='relu', kernel_initializer=HeNormal(seed=5))(merged_fe)
-        params = Dense(7, activation="linear", kernel_initializer=HeNormal(seed=6))(layer1)
+        params = Dense(6, activation="linear", kernel_initializer=HeNormal(seed=6))(layer1)
 
         self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
         self.model.compile(loss=self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f),
                           optimizer=Adam(learning_rate=self.model_config.learning_rate))
 
     
+    def init_model(self,):
+        # build the model with stroke-3 format
+        org_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
+        org_reshaped = Reshape((128, 3))(org_inputs)
+        tar_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
+        tar_reshaped = Reshape((128, 3))(tar_inputs)
+        
+
+        org_fe_layer0 = Dense(64, activation='relu')(org_reshaped) # len, 64
+        org_fe_layer0 = LayerNormalization()(org_fe_layer0)
+        x = ResNet().ResNet1D(org_fe_layer0, include_top=False, block=ResNet().basic_1d, blocks = [2, 3, 3, 2],)
+        x = keras.layers.GlobalAveragePooling1D(name="pool5_0")(x)  
+        
+        org_fe_layer2= Dense(64, activation='relu')(x)
+        org_fe_layer2 = LayerNormalization()(org_fe_layer2)
+        org_fe_layer3= Dense(32, activation='relu')(org_fe_layer2)
+        # org_fe_layer2 = LayerNormalization()(org_fe_layer2)
+        org_fe = Model(org_inputs, org_fe_layer3)
+        
+
+        tar_fe_layer0= Dense(64, activation='relu')(tar_reshaped)
+        tar_fe_layer0 = LayerNormalization()(tar_fe_layer0)
+        x = ResNet().ResNet1D(tar_fe_layer0, include_top=False, block=ResNet().basic_1d, id_shift=5, blocks = [2, 3, 3, 2],)
+        x = keras.layers.GlobalAveragePooling1D(name="pool5_1")(x) 
+        tar_fe_layer2 = Dense(64, activation='relu')(x)
+        tar_fe_layer2 = LayerNormalization()(tar_fe_layer2)
+        tar_fe_layer3 = Dense(32, activation='relu')(tar_fe_layer2)
+        # tar_fe_layer3 = LayerNormalization()(tar_fe_layer3) # 32
+        tar_fe = Model(tar_inputs, tar_fe_layer3)
+
+        merged_fe = concatenate([org_fe.output, tar_fe.output])
+        # original and target extracted features
+        layer1 = Dense(32, activation='relu', kernel_initializer=HeNormal(seed=5))(merged_fe)
+        params = Dense(7, activation="linear", kernel_initializer=HeNormal(seed=6))(layer1)
+
+        self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
+        self.model.compile(loss=self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f),
+                          optimizer=Adam(learning_rate=self.model_config.learning_rate, decay=self.model_config.decay_rate))
+
+
+
+
     def fine_tune(self, train_org_sketches, train_tar_sketches, epochs):
         # convert sketches into stroke-3 format
         train_org_sketches = ObjectUtil.poly_to_accumulative_stroke3(train_org_sketches)
@@ -320,6 +387,7 @@ class NNModel:
         # prepare call backs
         class epoch_callback(Callback):
                 def on_epoch_begin(self, epoch, logs=None):
+                    return
                     params = self.model.predict((org_sketches, tar_sketches))
                     print("Start epoch {} of training; params predictions of first sketch: {}".format(epoch, params[0:1]))
                     loss = NNModel.np_knn_loss(cmb_sketches[0:1], params[0:1])
@@ -385,7 +453,14 @@ class NNModel:
                          custom_objects={'knn_loss': self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f)})
         else:
             self.init_model()
-            
+
+            if self.model_config.load_ckpt:
+            # restore latest checkpoint
+                latest_ckpt = tf.train.latest_checkpoint(self.model_config.exp_dir)
+                print("[model.py] latest checkpoint is:", latest_ckpt)
+                self.model.load_weights(latest_ckpt)
+
+           
     
     def predict(self, org_obj, tar_obj):
         """ind the transformation alignment parameters for each of the org_sketches to its correspondance in the tar_sketches
@@ -410,6 +485,7 @@ class NNModel:
 
         # find the loss
         losses = self.np_knn_loss(cmb_obj_stroke3, params)
+
         return params, losses
  
 
@@ -423,7 +499,13 @@ class NNModel:
         Returns:
             [array] : B x 7 list of transformation parameters in the corresponding order of : 
         """
-        return self.model.predict((org_obj, tar_obj))
+        params =  self.model.predict((org_obj, tar_obj))
+        
+        # seq_params = []
+        # for x in params:
+        #     seq_params.append(RegistrationUtils.decompose_tranformation_matrix(x))
+
+        return params
         # tf.keras.utils.plot_model(self.model, to_file='model.png', show_layer_names=True, rankdir='TB', show_shapes=True)
         
 
