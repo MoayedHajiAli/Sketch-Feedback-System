@@ -415,6 +415,7 @@ class RegistrationUtils:
             i = (i + 1 + len(tar_obj)) % len(tar_obj)
         return tot / (len(ref_obj) + len(tar_obj))
         
+        
     @staticmethod
     def identify_similarity(obj1:UnlabeledObject, obj2:UnlabeledObject, t = None, original_dis=True, target_dis=True, turning_f = 1, perimeter_f = 10) -> float:
         # find t if not specifies

@@ -104,21 +104,40 @@ class VideoGenerator:
         """
         
         n, m = len(org_objs), len(tar_objs)
-                 
+        dim = max(n,m)
+        self.res_matrix = np.zeros((dim, dim))
+        self.tra_matrix = np.zeros((dim, dim, 7))  
+
+        # fill the result in the res_matrix
+        for i in range(max(n,m)):
+            for j in range(max(n,m)):
+                if i >= n or j >= m:
+                    d, p = RegistrationUtils.inf, np.zeros(7)
+                else:
+                    d, p = dissimilarity_matrix[i][j], trans_matrix[i][j]
+
+                self.res_matrix[i, j] = d
+                self.tra_matrix[i, j] = p
+
         # calculate the minimum assignment
-        org_asg, tar_asg, total_cost = lapjv(dissimilarity_matrix)
+        org_asg, tar_asg, total_cost = lapjv(self.res_matrix)
+
+        print("Original assignment:", org_asg)
+        print("Matched objects losses:", [self.res_matrix[i][asig] for i, asig in enumerate(org_asg)])
+        print("Total alignment cost:", total_cost)
+
         final_transformation = np.zeros((n, 7))
         added_objects = []
 
         for i, ind in enumerate(org_asg):
-            dissimilarity = dissimilarity_matrix[i, ind]
+            dissimilarity = self.res_matrix[i, ind]
             # if i < n and ind < m:
             # # calculate the disimilarity again after restructing the object TODO: delete
             #     ln = max(len(org_objs[i]), len(tar_objs[ind]))
             #     ref_obj = ObjectUtil.object_restructure(org_objs[i], n=ln)
             #     tar_obj = ObjectUtil.object_restructure(tar_objs[ind], n=ln)
             #     dissimilarity = RegistrationUtils.calc_dissimilarity(ref_obj, tar_obj, trans_matrix[i, ind], cum_ang=False, turning_ang=False)
-            # print(dissimilarity, dissimilarity_matrix[i, ind])
+            # print(dissimilarity, self.res_matrix[i, ind])
             
             # check if one of the objects is recently added (dummy) or their dissimilarity is above the maximum threshold
             if dissimilarity > self.config.mx_dissimilarity:
@@ -132,7 +151,7 @@ class VideoGenerator:
                 if n > m or non_added_object:
                     if self.config.verbose > 1:
                         print(f'[VideoGenerator] info: Original object {i} will vanish as it could not find any match')
-                    trans_matrix[i, ind] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, org_objs[i].origin_x, org_objs[i].origin_y])        
+                    self.tra_matrix[i, ind] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, org_objs[i].origin_x, org_objs[i].origin_y])        
                 
                 # handle the case when m > n or when the object does not have any good match
                 # by creating a new object in the orginal sketch, identical to the target sketch but scalled by a very small scale
@@ -156,7 +175,7 @@ class VideoGenerator:
                     added_objects.append(ind)
 
             if i < n:
-                final_transformation[i] = trans_matrix[i, ind]
+                final_transformation[i] = self.tra_matrix[i, ind]
 
         return final_transformation
 
