@@ -118,7 +118,7 @@ class NNModel:
 
             # obtain nearest points from org->tar + from tar->org
             mn = K.min(sm_sqrt, axis=-2) * (1 - org_pen) + K.min(sm_sqrt, axis=-1) * (1 - tar_pen)
-            mn = mn ** 2
+            # mn = mn ** 2
             # mn: (batch, 126)
 
             sm_cost = K.sum(mn, axis=1) 
@@ -327,7 +327,6 @@ class NNModel:
         #                     MaxPool1D(2)])
         
         org_desctiptor = descriptor(org_reshaped)
-        print(org_desctiptor)
         org_desctiptor = Reshape((32 * 128,)) (org_desctiptor) 
 
         org_fe_layer2= Dense(64, activation='relu')(org_desctiptor)
@@ -355,32 +354,32 @@ class NNModel:
         self.model.compile(loss=self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f),
                           optimizer=Adam(learning_rate=self.model_config.learning_rate))
 
-    def init_model(self):
+    # def init_model(self):
         
-        # build the model with stroke-3 format
-        org_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
-        org_reshaped = Reshape((128, 3))(org_inputs)
-        tar_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
-        tar_reshaped = Reshape((128, 3))(tar_inputs)
-        x = Reshape((3 * 128,)) (org_reshaped) 
-        org_fe_layer3= Dense(32, activation='relu')(x)
-        org_fe_layer3 = LayerNormalization()(org_fe_layer3)
-        org_fe = Model(org_inputs, org_fe_layer3)
+    #     # build the model with stroke-3 format
+    #     org_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
+    #     org_reshaped = Reshape((128, 3))(org_inputs)
+    #     tar_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
+    #     tar_reshaped = Reshape((128, 3))(tar_inputs)
+    #     x = Reshape((3 * 128,)) (org_reshaped) 
+    #     org_fe_layer3= Dense(32, activation='relu')(x)
+    #     org_fe_layer3 = LayerNormalization()(org_fe_layer3)
+    #     org_fe = Model(org_inputs, org_fe_layer3)
         
 
-        x = Reshape((3 * 128,)) (tar_reshaped) 
+    #     x = Reshape((3 * 128,)) (tar_reshaped) 
 
-        tar_fe_layer3= Dense(32, activation='relu')(x)
-        tar_fe_layer3 = LayerNormalization()(tar_fe_layer3)
-        tar_fe = Model(tar_inputs, tar_fe_layer3)
+    #     tar_fe_layer3= Dense(32, activation='relu')(x)
+    #     tar_fe_layer3 = LayerNormalization()(tar_fe_layer3)
+    #     tar_fe = Model(tar_inputs, tar_fe_layer3)
 
-        merged_fe = concatenate([org_fe.output, tar_fe.output])
-        # original and target extracted features
-        params = Dense(7, activation="linear", kernel_initializer=HeNormal(seed=6))(merged_fe)
+    #     merged_fe = concatenate([org_fe.output, tar_fe.output])
+    #     # original and target extracted features
+    #     params = Dense(7, activation="linear", kernel_initializer=HeNormal(seed=6))(merged_fe)
 
-        self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
-        self.model.compile(loss=self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f),
-                          optimizer=Adam(learning_rate=self.model_config.learning_rate))
+    #     self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
+    #     self.model.compile(loss=self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f),
+    #                       optimizer=Adam(learning_rate=self.model_config.learning_rate))
                           
     
     # def init_model(self,):
