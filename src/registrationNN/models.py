@@ -1,11 +1,11 @@
 import keras.backend as K
-from keras.layers import Input, Dense, concatenate, Conv2D, Reshape, Flatten, LayerNormalization, MaxPool2D
+from keras.layers import Input, Dense, concatenate, Conv2D, Conv1D, Reshape, Flatten, MaxPool1D, LayerNormalization, MaxPool2D
 from keras.optimizers import Adam, SGD, RMSprop
 from keras.callbacks import Callback
 from keras.losses import mse
 from keras.models import load_model
 from keras.initializers import HeNormal
-from keras import Model
+from keras import Model, Sequential
 from utils.ObjectUtil import ObjectUtil
 from sketch_object.UnlabeledObject import UnlabeledObject
 import numpy as np
@@ -110,13 +110,15 @@ class NNModel:
             # obtain pairwise differences between original and target sketches
             diff = org_cmb - tar_cmb
             # diff: (batch, 126, 126, 2)
-    
-            sm = K.sum(diff ** 2, axis=-1)
+            
+            diff = diff ** 2
+            sm = K.sum(diff, axis=-1)
             sm_sqrt = K.sqrt(sm)
             # sm_sqrt: (batch, 126, 126)
 
             # obtain nearest points from org->tar + from tar->org
             mn = K.min(sm_sqrt, axis=-2) * (1 - org_pen) + K.min(sm_sqrt, axis=-1) * (1 - tar_pen)
+            mn = mn ** 2
             # mn: (batch, 126)
 
             sm_cost = K.sum(mn, axis=1) 
@@ -231,8 +233,8 @@ class NNModel:
         tar_reshaped = Reshape((128, 3))(tar_inputs)
         
         # Conv encoder
-        org_fe_layer0 = Dense(64, activation='relu')(org_reshaped) # len, 64
-        org_fe_layer0 = LayerNormalization()(org_fe_layer0)
+        org_fe_layer0 = Dense(64, activation='relu')(org_reshaped) # (len, 64)
+        org_fe_layer0 = LayerNormalization()(org_fe_layer0) 
         org_fe_layer0 = Reshape((128, 64, 1))(org_fe_layer0)
         org_fe_layer1 = Conv2D(1, (3, 3), 1)(org_fe_layer0) 
         org_fe_layer1 = MaxPool2D((3, 3))(org_fe_layer1)
@@ -284,41 +286,64 @@ class NNModel:
         merged_fe = concatenate([org_fe.output, tar_fe.output])
         # original and target extracted features
         layer1 = Dense(32, activation='relu', kernel_initializer=HeNormal(seed=5))(merged_fe)
-        params = Dense(6, activation="linear", kernel_initializer=HeNormal(seed=6))(layer1)
+        params = Dense(7, activation="linear", kernel_initializer=HeNormal(seed=6))(layer1)
 
         self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
         self.model.compile(loss=self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f),
                           optimizer=Adam(learning_rate=self.model_config.learning_rate))
 
-    
-    def init_model(self,):
+
+
+    def init_model(self):
+        
         # build the model with stroke-3 format
         org_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
         org_reshaped = Reshape((128, 3))(org_inputs)
         tar_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
         tar_reshaped = Reshape((128, 3))(tar_inputs)
-        
 
-        org_fe_layer0 = Dense(64, activation='relu')(org_reshaped) # len, 64
-        org_fe_layer0 = LayerNormalization()(org_fe_layer0)
-        x = ResNet().ResNet1D(org_fe_layer0, include_top=False, block=ResNet().basic_1d, blocks = [2, 3, 3, 2],)
-        x = keras.layers.GlobalAveragePooling1D(name="pool5_0")(x)  
+        def descriptor(x, c=0):
+            x = Dense(32, activation='relu')(x)
+            x = LayerNormalization()(x)
+            x = Conv1D(64, kernel_size=5, padding='same', dilation_rate=1)(x)
+            x = Conv1D(64, kernel_size=5, padding='same',dilation_rate=3)(x)
+            x = Conv1D(64, kernel_size=3, padding='same',dilation_rate=5)(x)
+            x = MaxPool1D(2)(x)
+            x = Conv1D(128, kernel_size=5, padding='same',dilation_rate=1)(x)
+            x = Conv1D(128, kernel_size=5, padding='same',dilation_rate=3)(x)
+            x = Conv1D(128, kernel_size=3, padding='same',dilation_rate=5)(x)
+            x = MaxPool1D(2)(x)
+            return x
+
+        # descriptor =  Sequential([Dense(32, activation='relu'),
+        #                     LayerNormalization(),
+        #                     Conv1D(64, kernel_size=5, padding='same', dilation_rate=1),
+        #                     Conv1D(64, kernel_size=5, padding='same',dilation_rate=3),
+        #                     Conv1D(64, kernel_size=3, padding='same',dilation_rate=5),
+        #                     MaxPool1D(2),
+        #                     Conv1D(128, kernel_size=5, padding='same',dilation_rate=1),
+        #                     Conv1D(128, kernel_size=5, padding='same',dilation_rate=3),
+        #                     Conv1D(128, kernel_size=3, padding='same',dilation_rate=5),
+        #                     MaxPool1D(2)])
         
-        org_fe_layer2= Dense(64, activation='relu')(x)
+        org_desctiptor = descriptor(org_reshaped)
+        print(org_desctiptor)
+        org_desctiptor = Reshape((32 * 128,)) (org_desctiptor) 
+
+        org_fe_layer2= Dense(64, activation='relu')(org_desctiptor)
         org_fe_layer2 = LayerNormalization()(org_fe_layer2)
         org_fe_layer3= Dense(32, activation='relu')(org_fe_layer2)
-        # org_fe_layer2 = LayerNormalization()(org_fe_layer2)
+        org_fe_layer3 = LayerNormalization()(org_fe_layer3)
         org_fe = Model(org_inputs, org_fe_layer3)
         
 
-        tar_fe_layer0= Dense(64, activation='relu')(tar_reshaped)
-        tar_fe_layer0 = LayerNormalization()(tar_fe_layer0)
-        x = ResNet().ResNet1D(tar_fe_layer0, include_top=False, block=ResNet().basic_1d, id_shift=5, blocks = [2, 3, 3, 2],)
-        x = keras.layers.GlobalAveragePooling1D(name="pool5_1")(x) 
-        tar_fe_layer2 = Dense(64, activation='relu')(x)
+        tar_desctiptor = descriptor(tar_reshaped)
+        tar_desctiptor = Reshape((32 * 128,)) (tar_desctiptor) 
+
+        tar_fe_layer2= Dense(64, activation='relu')(tar_desctiptor)
         tar_fe_layer2 = LayerNormalization()(tar_fe_layer2)
-        tar_fe_layer3 = Dense(32, activation='relu')(tar_fe_layer2)
-        # tar_fe_layer3 = LayerNormalization()(tar_fe_layer3) # 32
+        tar_fe_layer3= Dense(32, activation='relu')(tar_fe_layer2)
+        tar_fe_layer3 = LayerNormalization()(tar_fe_layer3)
         tar_fe = Model(tar_inputs, tar_fe_layer3)
 
         merged_fe = concatenate([org_fe.output, tar_fe.output])
@@ -328,7 +353,74 @@ class NNModel:
 
         self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
         self.model.compile(loss=self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f),
-                          optimizer=Adam(learning_rate=self.model_config.learning_rate, decay=self.model_config.decay_rate))
+                          optimizer=Adam(learning_rate=self.model_config.learning_rate))
+
+    def init_model(self):
+        
+        # build the model with stroke-3 format
+        org_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
+        org_reshaped = Reshape((128, 3))(org_inputs)
+        tar_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
+        tar_reshaped = Reshape((128, 3))(tar_inputs)
+        x = Reshape((3 * 128,)) (org_reshaped) 
+        org_fe_layer3= Dense(32, activation='relu')(x)
+        org_fe_layer3 = LayerNormalization()(org_fe_layer3)
+        org_fe = Model(org_inputs, org_fe_layer3)
+        
+
+        x = Reshape((3 * 128,)) (tar_reshaped) 
+
+        tar_fe_layer3= Dense(32, activation='relu')(x)
+        tar_fe_layer3 = LayerNormalization()(tar_fe_layer3)
+        tar_fe = Model(tar_inputs, tar_fe_layer3)
+
+        merged_fe = concatenate([org_fe.output, tar_fe.output])
+        # original and target extracted features
+        params = Dense(7, activation="linear", kernel_initializer=HeNormal(seed=6))(merged_fe)
+
+        self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
+        self.model.compile(loss=self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f),
+                          optimizer=Adam(learning_rate=self.model_config.learning_rate))
+                          
+    
+    # def init_model(self,):
+    #     # build the model with stroke-3 format
+    #     org_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
+    #     org_reshaped = Reshape((128, 3))(org_inputs)
+    #     tar_inputs = Input(shape=(128, 3, 1), dtype=tf.float32)
+    #     tar_reshaped = Reshape((128, 3))(tar_inputs)
+        
+
+    #     org_fe_layer0 = Dense(64, activation='relu')(org_reshaped) # len, 64
+    #     org_fe_layer0 = LayerNormalization()(org_fe_layer0)
+    #     x = ResNet().ResNet1D(org_fe_layer0, include_top=False, block=ResNet().basic_1d, blocks = [2, 3, 3, 2],)
+    #     x = keras.layers.GlobalAveragePooling1D(name="pool5_0")(x)  
+        
+    #     org_fe_layer2= Dense(64, activation='relu')(x)
+    #     org_fe_layer2 = LayerNormalization()(org_fe_layer2)
+    #     org_fe_layer3= Dense(32, activation='relu')(org_fe_layer2)
+    #     # org_fe_layer2 = LayerNormalization()(org_fe_layer2)
+    #     org_fe = Model(org_inputs, org_fe_layer3)
+        
+
+    #     tar_fe_layer0= Dense(64, activation='relu')(tar_reshaped)
+    #     tar_fe_layer0 = LayerNormalization()(tar_fe_layer0)
+    #     x = ResNet().ResNet1D(tar_fe_layer0, include_top=False, block=ResNet().basic_1d, id_shift=5, blocks = [2, 3, 3, 2],)
+    #     x = keras.layers.GlobalAveragePooling1D(name="pool5_1")(x) 
+    #     tar_fe_layer2 = Dense(64, activation='relu')(x)
+    #     tar_fe_layer2 = LayerNormalization()(tar_fe_layer2)
+    #     tar_fe_layer3 = Dense(32, activation='relu')(tar_fe_layer2)
+    #     # tar_fe_layer3 = LayerNormalization()(tar_fe_layer3) # 32
+    #     tar_fe = Model(tar_inputs, tar_fe_layer3)
+
+    #     merged_fe = concatenate([org_fe.output, tar_fe.output])
+    #     # original and target extracted features
+    #     layer1 = Dense(32, activation='relu', kernel_initializer=HeNormal(seed=5))(merged_fe)
+    #     params = Dense(7, activation="linear", kernel_initializer=HeNormal(seed=6))(layer1)
+
+    #     self.model = Model(inputs=[org_fe.input, tar_fe.input], outputs=params)
+    #     self.model.compile(loss=self.get_knn_loss(self.model_config.scaling_f, self.model_config.shearing_f, self.model_config.rotation_f),
+    #                     optimizer=Adam(learning_rate=self.model_config.learning_rate, decay=self.model_config.decay_rate))
 
 
 
@@ -746,39 +838,21 @@ class model_visualizer():
 # TODO: the follwoing two models were not tested after restructing the code
 class RegisterTwoObjects:
     
-    def __init__(self, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject, cost_fun):
+    def __init__(self, ref_obj:UnlabeledObject, tar_obj:UnlabeledObject):
         self.tar_obj = tar_obj
         self.ref_obj = ref_obj
-        self.total_cost = cost_fun
+        # self.total_cost = cost_fun
 
-    ##################
-    # TODO: delete this method
-    # test numerical gradient optimization
-    def num_optimize(self, t):
-        eps = 0.001
-        lr = 0.1
-        t = np.array(t)
-        cur, prev = 100, 0
-        for _ in range(200): 
-            if _ % 50 == 0:
-                self.ref_obj.transform(RegistrationUtils.obtain_transformation_matrix(t))
-                self.ref_obj.visualize()
-                self.ref_obj.reset()
-            # obtain the gradient
-            grad = approx_fprime(t, RegistrationUtils.embedding_dissimilarity, eps, self.ref_obj, self.tar_obj)
-            t -= lr * np.array(grad)
-
-        return -1, t
 
     # total dissimilarity including the cost of the transformation
     def total_dissimalirity(self, p, params = True, target_dis=True, original_dis=True):
-        tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(self.ref_obj))
+        # tran_cost = self.total_cost(p, self.mn_x, self.mx_x, self.mn_y, self.mx_y, len(self.ref_obj))
         if params:
             p = RegistrationUtils.obtain_transformation_matrix(p)
         
         dissimilarity = RegistrationUtils.calc_dissimilarity(self.ref_obj, self.tar_obj, p, target_nn = self.target_nn, 
                                                             target_dis=target_dis, original_dis=original_dis) 
-        return dissimilarity + (tran_cost / (len(self.ref_obj) + len(self.tar_obj)))   
+        return dissimilarity # + (tran_cost / (len(self.ref_obj) + len(self.tar_obj)))   
 
 
     def optimize(self, p = None, params = True, target_dis=True, original_dis=True):
@@ -813,7 +887,7 @@ class RegisterTwoObjects:
         self.mn_y, self.mx_y = min(self.ref_obj.get_y()), max(self.ref_obj.get_y())
 
         minimizer_kwargs = {"method": "BFGS", "args" : (params, target_dis, original_dis)}
-        res = basinhopping(self.total_dissimalirity, p, minimizer_kwargs=minimizer_kwargs, disp=True, niter=2)
+        res = basinhopping(self.total_dissimalirity, p, minimizer_kwargs=minimizer_kwargs, disp=True, niter=30)
         d, p = res.fun, res.x 
         return d, p
 

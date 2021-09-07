@@ -200,7 +200,8 @@ class ResNet():
         block=0,
         kernel_size=3,
         numerical_name=False,
-        stride=None,
+        stride=1,
+        dilation=1,
         freeze_bn=False):
 
 
@@ -225,19 +226,16 @@ class ResNet():
         stage_char = str(stage + 2)
 
         def f(x):
-            y = keras.layers.ZeroPadding1D(
-                padding=1, 
-                name="padding{}{}_branch2a".format(stage_char, block_char)
-            )(x)
-            
             y = keras.layers.Conv1D(
                 filters,
                 kernel_size,
                 strides=stride,
                 use_bias=False,
+                padding='same',
+                dilation_rate=dilation,
                 name="res{}{}_branch2a".format(stage_char, block_char),
                 **parameters
-            )(y)
+            )(x)
             
             y = BatchNormalization(
                 axis=axis,
@@ -250,16 +248,13 @@ class ResNet():
                 "relu",
                 name="res{}{}_branch2a_relu".format(stage_char, block_char)
             )(y)
-
-            y = keras.layers.ZeroPadding1D(
-                padding=1,
-                name="padding{}{}_branch2b".format(stage_char, block_char)
-            )(y)
             
             y = keras.layers.Conv1D(
                 filters,
                 kernel_size,
                 use_bias=False,
+                padding='same',
+                dilation_rate=dilation,
                 name="res{}{}_branch2b".format(stage_char, block_char),
                 **parameters
             )(y)
@@ -277,6 +272,8 @@ class ResNet():
                     1,
                     strides=stride,
                     use_bias=False,
+                    padding='same',
+                    dilation_rate=dilation,
                     name="res{}{}_branch1".format(stage_char, block_char),
                     **parameters
                 )(x)

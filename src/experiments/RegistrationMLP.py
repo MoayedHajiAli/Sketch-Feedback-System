@@ -20,7 +20,7 @@ if __name__ == '__main__':
         exp_id = 'testing_with_6params_pred_midresnet_basic_block'
     
     model_config = Config.default_model_config(exp_id)
-    model_config.learning_rate = 0.01
+    model_config.learning_rate = 0.005
     model_config.deacy_rate = 0.001
     model_config.n_files = 100
     model_config.k_select = 10

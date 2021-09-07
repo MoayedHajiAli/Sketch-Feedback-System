@@ -20,15 +20,15 @@ class Config:
         config.seed = 1
 
         # model related. When set to zero, the model produce nan 
-        config.scaling_f = 1
-        config.shearing_f = 1
-        config.rotation_f = 1
+        config.scaling_f = 0.00001
+        config.shearing_f = 0.00001
+        config.rotation_f = 0.00001
 
 
         config.encoder_type = 'cnn' # transformer or cnn
         config.batch_size = 128
         config.learning_rate = 5e-5
-        config.decay_rate = 0.02
+        config.decay_rate = 0.00
         config.epochs = 400
         config.load = False
         config.load_ckpt = False
